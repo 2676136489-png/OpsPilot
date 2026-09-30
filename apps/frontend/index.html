@@ -1,0 +1,30 @@
+<!doctype html>
+<!--
+  lang="zh-CN" is not cosmetic. The UI is Chinese; declaring the document as "en"
+  told the browser the page was English, and a browser with auto-translate
+  enabled for English then rewrites the text nodes it finds — wrapping each one
+  in a <font> element. React holds direct references to those text nodes, so the
+  next commit inserts or removes against a node that is no longer in the
+  document and throws "insertBefore: the node before which the new node is to be
+  inserted is not a child of this node". That only reproduces in a browser that
+  is translating, which is why it never appeared in a clean test profile.
+
+  translate="no" plus the google notranslate meta make the opt-out explicit
+  instead of leaving it to the browser to guess the language correctly. It is
+  also what React itself recommends: a tree React mutates should not be machine
+  translated, because translation mutates it behind React's back.
+-->
+<html lang="zh-CN" translate="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="google" content="notranslate" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpsPilot — AI Incident Command Center</title>
+    <meta name="description" content="OpsPilot — AI 驱动的故障诊断与恢复指挥中心" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

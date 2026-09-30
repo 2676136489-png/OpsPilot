@@ -1,0 +1,323 @@
+/* =============================================================================
+   OpsPilot Design System — Tokens
+   -----------------------------------------------------------------------------
+   Single source of truth for every color, size, radius, shadow and easing in
+   the product. Components MUST consume these variables instead of hard-coding
+   values; that is what keeps Incident / Agent / Topology / Evaluations visually
+   coherent without per-page colour inventing.
+
+   Theme discipline
+   ----------------
+   - Severity is the ONLY place red / orange may appear.
+   - Emphasis uses --primary (operator actions) or --agent (AI-driven surfaces).
+   ========================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------------------
+     Surfaces — three layers, light-first
+     ------------------------------------------------------------------------ */
+  --background: #fafafa;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-sunken: #f5f5f5;
+  --surface-inset: #f4f4f5;
+  --surface-hover: #f4f4f5;
+
+  /* Topology canvas — React Flow reads these for grid, edges and minimap mask */
+  --topo-grid: #e8e8ea;
+  --topo-edge: #b4b4bb;
+  --topo-mask: rgb(250 250 250 / 0.72);
+
+  /* Overlay scrim for drawers / modals */
+  --overlay: rgb(9 9 11 / 0.32);
+
+  /* ---------------------------------------------------------------------------
+     Borders — two levels of emphasis
+     ------------------------------------------------------------------------ */
+  --border: #e5e7eb;
+  --border-strong: #d4d4d8;
+  --border-subtle: #f0f0f1;
+
+  /* ---------------------------------------------------------------------------
+     Text
+     ------------------------------------------------------------------------ */
+  --foreground: #09090b;
+  --foreground-secondary: #3f3f46;
+  --muted: #71717a;
+  --muted-foreground: #a1a1aa;
+  --text-on-accent: #ffffff;
+
+  /* ---------------------------------------------------------------------------
+     Brand / semantic accents
+     ------------------------------------------------------------------------ */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-active: #1e40af;
+  --primary-soft: #eff6ff;
+  --primary-border: #bfdbfe;
+
+  /* AI / agent surfaces — distinct from operator blue */
+  --agent: #7c3aed;
+  --agent-hover: #6d28d9;
+  --agent-soft: #f5f3ff;
+  --agent-border: #ddd6fe;
+
+  /* Secondary AI accent used for live / streaming affordances */
+  --accent-ai: #0891b2;
+  --accent-ai-soft: #ecfeff;
+  --accent-ai-border: #a5f3fc;
+
+  /* ---------------------------------------------------------------------------
+     Status — semantic, theme-independent names
+     ------------------------------------------------------------------------ */
+  --success: #16a34a;
+  --success-soft: #f0fdf4;
+  --success-border: #bbf7d0;
+
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
+  --warning-border: #fde68a;
+
+  --critical: #dc2626;
+  --critical-soft: #fef2f2;
+  --critical-border: #fecaca;
+
+  --info: #0284c7;
+  --info-soft: #f0f9ff;
+  --info-border: #bae6fd;
+
+  /* ---------------------------------------------------------------------------
+     Severity scale — the only sanctioned red / orange usage
+     ------------------------------------------------------------------------ */
+  --sev-critical: var(--critical);
+  --sev-critical-soft: var(--critical-soft);
+  --sev-critical-border: var(--critical-border);
+
+  --sev-high: #ea580c;
+  --sev-high-soft: #fff7ed;
+  --sev-high-border: #fed7aa;
+
+  --sev-medium: var(--warning);
+  --sev-medium-soft: var(--warning-soft);
+  --sev-medium-border: var(--warning-border);
+
+  --sev-low: var(--muted);
+  --sev-low-soft: var(--surface-inset);
+  --sev-low-border: var(--border);
+
+  /* ---------------------------------------------------------------------------
+     Service health — topology node + service card states
+     ------------------------------------------------------------------------ */
+  --health-healthy: var(--success);
+  --health-degraded: var(--warning);
+  --health-critical: var(--critical);
+  --health-down: var(--critical);
+  --health-unknown: var(--muted-foreground);
+  --health-investigating: var(--agent);
+
+  /* ---------------------------------------------------------------------------
+     Typography
+     ------------------------------------------------------------------------ */
+  --font-sans:
+    'Inter var', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    monospace;
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 26px;
+  --text-3xl: 34px;
+
+  --leading-tight: 1.25;
+  --leading-snug: 1.4;
+  --leading-normal: 1.6;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  --tracking-tight: -0.011em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+  --tracking-caps: 0.06em;
+
+  /* ---------------------------------------------------------------------------
+     Spacing — 4px base
+     ------------------------------------------------------------------------ */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---------------------------------------------------------------------------
+     Radius
+     ------------------------------------------------------------------------ */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* ---------------------------------------------------------------------------
+     Shadow — restrained, soft, never glowing
+     ------------------------------------------------------------------------ */
+  --shadow-xs: 0 1px 2px rgb(9 9 11 / 0.04);
+  --shadow-sm: 0 1px 3px rgb(9 9 11 / 0.06), 0 1px 2px rgb(9 9 11 / 0.04);
+  --shadow-md: 0 4px 12px rgb(9 9 11 / 0.06), 0 1px 3px rgb(9 9 11 / 0.04);
+  --shadow-lg: 0 12px 32px rgb(9 9 11 / 0.1), 0 2px 8px rgb(9 9 11 / 0.04);
+  --shadow-xl: 0 24px 56px rgb(9 9 11 / 0.14), 0 4px 12px rgb(9 9 11 / 0.06);
+  --ring: 0 0 0 3px rgb(37 99 235 / 0.16);
+  --ring-agent: 0 0 0 3px rgb(124 58 237 / 0.16);
+  --ring-critical: 0 0 0 3px rgb(220 38 38 / 0.16);
+
+  /* ---------------------------------------------------------------------------
+     Motion
+     ------------------------------------------------------------------------ */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-slower: 480ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---------------------------------------------------------------------------
+     Layout
+     ------------------------------------------------------------------------ */
+  --sidebar-width: 232px;
+  --sidebar-width-collapsed: 60px;
+  --topbar-height: 52px;
+  --content-max: 1680px;
+
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-drawer: 200;
+  --z-dropdown: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-palette: 600;
+
+  /* Chart palette — categorical, tuned for light surfaces */
+  --chart-1: #2563eb;
+  --chart-2: #7c3aed;
+  --chart-3: #0891b2;
+  --chart-4: #16a34a;
+  --chart-5: #d97706;
+  --chart-6: #db2777;
+  --chart-grid: #f0f0f1;
+  --chart-axis: #a1a1aa;
+}
+
+/* =============================================================================
+   Dark theme — complete override, driven by [data-theme="dark"] on <html>.
+   Every value above has an equivalent here so no component can "leak" a
+   light-only colour.
+   ========================================================================== */
+[data-theme='dark'] {
+  --background: #09090b;
+  --surface: #131316;
+  --surface-elevated: #1a1a1f;
+  --surface-sunken: #0e0e11;
+  --surface-inset: #1f1f25;
+  --surface-hover: #1f1f25;
+
+  --topo-grid: #23232a;
+  --topo-edge: #4a4a55;
+  --topo-mask: rgb(9 9 11 / 0.72);
+
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --border-subtle: #1f1f23;
+
+  --foreground: #fafafa;
+  --foreground-secondary: #d4d4d8;
+  --muted: #a1a1aa;
+  --muted-foreground: #71717a;
+
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-active: #2563eb;
+  --primary-soft: #172554;
+  --primary-border: #1e3a8a;
+
+  --agent: #a78bfa;
+  --agent-hover: #c4b5fd;
+  --agent-soft: #2e1065;
+  --agent-border: #4c1d95;
+
+  --accent-ai: #22d3ee;
+  --accent-ai-soft: #164e63;
+  --accent-ai-border: #155e75;
+
+  --success: #4ade80;
+  --success-soft: #052e16;
+  --success-border: #166534;
+
+  --warning: #fbbf24;
+  --warning-soft: #451a03;
+  --warning-border: #92400e;
+
+  --critical: #f87171;
+  --critical-soft: #450a0a;
+  --critical-border: #991b1b;
+
+  --info: #38bdf8;
+  --info-soft: #082f49;
+  --info-border: #075985;
+
+  --sev-high: #fb923c;
+  --sev-high-soft: #431407;
+  --sev-high-border: #9a3412;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.5), 0 2px 8px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 24px 56px rgb(0 0 0 / 0.6), 0 4px 12px rgb(0 0 0 / 0.4);
+
+  --chart-grid: #27272a;
+  --chart-axis: #71717a;
+}
+
+/* =============================================================================
+   Reduced motion — one global switch that every animation respects.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0.01ms;
+    --dur-fast: 0.01ms;
+    --dur-base: 0.01ms;
+    --dur-slow: 0.01ms;
+    --dur-slower: 0.01ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

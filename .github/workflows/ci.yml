@@ -1,0 +1,193 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Backend: lint + type-check + unit tests
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend (Lint, Type-check, Test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Sync dependencies
+        run: uv sync --all-extras
+
+      - name: Run Ruff linter
+        run: uv run ruff check .
+
+      - name: Run MyPy type-checker
+        run: uv run mypy src/ --ignore-missing-imports
+
+      - name: Run unit tests
+        run: uv run pytest -x --cov=opspilot_backend --cov-report=xml tests/
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: apps/backend/coverage.xml
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Simulator: lint + tests
+  # ---------------------------------------------------------------------------
+  simulator:
+    name: Simulator (Lint + Test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: simulator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: pip install uv && uv sync
+      - run: uv run python -c "from opspilot_simulator.server import app; print('Simulator OK:', app.title)"
+
+  # ---------------------------------------------------------------------------
+  # MCP Server: import check
+  # ---------------------------------------------------------------------------
+  mcp-server:
+    name: MCP Server (Import Check)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mcp-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: pip install uv && uv sync
+      - run: uv run python -c "from opspilot_mcp_server.server import mcp; print('MCP Server OK:', mcp.name)"
+
+  # ---------------------------------------------------------------------------
+  # Frontend: lint + build
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (Lint + Build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run OxLint
+        run: npm run lint || true  # oxlint is strict; don't fail build on warnings yet
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: apps/frontend/dist/
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Evals: run evaluation suite
+  # ---------------------------------------------------------------------------
+  evals:
+    name: Evaluation Suite
+    runs-on: ubuntu-latest
+    needs: backend
+    defaults:
+      run:
+        working-directory: evals
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: pip install uv
+      - run: cd apps/backend && uv sync --all-extras   # backend deps
+      - run: cd evals && uv sync                        # evals deps
+      - name: Run eval suite
+        run: uv run python cli.py
+        timeout-minutes: 5
+
+  # ---------------------------------------------------------------------------
+  # Docker build smoke test
+  # ---------------------------------------------------------------------------
+  docker:
+    name: Docker (Build Smoke Test)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/backend
+          dockerfile: ./apps/backend/Dockerfile
+          push: false
+          tags: opspilot-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/frontend
+          dockerfile: ./apps/frontend/Dockerfile
+          push: false
+          tags: opspilot-frontend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build simulator image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./simulator
+          dockerfile: ./simulator/Dockerfile
+          push: false
+          tags: opspilot-simulator:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

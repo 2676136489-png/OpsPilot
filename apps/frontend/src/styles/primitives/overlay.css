@@ -1,0 +1,366 @@
+/* =============================================================================
+   Primitives — Overlays: Drawer / Modal / Dropdown / Tooltip / Toast
+   All of these mount into portals and animate via Motion; these rules only
+   describe static structure so Motion can own the transition.
+   ========================================================================== */
+
+/* --- Scrim ---------------------------------------------------------------- */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: var(--z-drawer);
+  backdrop-filter: blur(1.5px);
+}
+
+.scrim-modal {
+  z-index: var(--z-modal);
+}
+
+/* --- Drawer --------------------------------------------------------------- */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 92vw);
+  background: var(--surface-elevated);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-xl);
+}
+
+.drawer-left {
+  right: auto;
+  left: 0;
+  border-left: 0;
+  border-right: 1px solid var(--border);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.drawer-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* --- Modal ---------------------------------------------------------------- */
+.modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  width: min(520px, 92vw);
+  max-height: 86vh;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.modal-wide {
+  width: min(760px, 94vw);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-body {
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* --- Dropdown / Popover --------------------------------------------------- */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: var(--z-dropdown);
+  min-width: 220px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.dropdown-menu-left {
+  right: auto;
+  left: 0;
+}
+
+.dropdown-label {
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.dropdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--text-base);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.dropdown-item:hover {
+  background: var(--surface-inset);
+}
+
+.dropdown-item-title {
+  font-weight: var(--weight-medium);
+}
+
+.dropdown-item-hint {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: var(--space-1) 0;
+  background: var(--border-subtle);
+}
+
+/* --- Tooltip -------------------------------------------------------------- */
+.tooltip {
+  z-index: var(--z-toast);
+  max-width: 260px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--foreground);
+  color: var(--background);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+}
+
+/* --- Toast ---------------------------------------------------------------- */
+.toast-host {
+  position: fixed;
+  bottom: var(--space-5);
+  right: var(--space-5);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(380px, calc(100vw - var(--space-10)));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+}
+
+.toast-success {
+  border-left-color: var(--success);
+}
+.toast-critical {
+  border-left-color: var(--critical);
+}
+.toast-warning {
+  border-left-color: var(--warning);
+}
+.toast-info {
+  border-left-color: var(--info);
+}
+.toast-agent {
+  border-left-color: var(--agent);
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--foreground);
+}
+
+.toast-message {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: var(--leading-snug);
+}
+
+.toast-close {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  background: var(--surface-inset);
+  color: var(--foreground);
+}
+
+/* --- Command palette ------------------------------------------------------ */
+.palette-scrim {
+  z-index: var(--z-palette);
+}
+
+.palette {
+  position: fixed;
+  left: 50%;
+  top: 16vh;
+  transform: translateX(-50%);
+  z-index: var(--z-palette);
+  display: flex;
+  flex-direction: column;
+  width: min(620px, 92vw);
+  max-height: 62vh;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.palette-input {
+  width: 100%;
+  padding: var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  font-size: var(--text-lg);
+  outline: none;
+}
+
+.palette-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.palette-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--text-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.palette-item.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.palette-item-hint {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+}
+
+.palette-group {
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.palette-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-base);
+}

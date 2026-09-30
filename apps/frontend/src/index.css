@@ -1,0 +1,27 @@
+/* =============================================================================
+   OpsPilot — stylesheet entry point
+   -----------------------------------------------------------------------------
+   Import order matters: tokens define the variables everything else consumes,
+   base sets document defaults, then shell / primitives / patterns layer on top.
+   ========================================================================== */
+
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/shell.css';
+
+/* Primitives */
+@import './styles/primitives/button.css';
+@import './styles/primitives/badge.css';
+@import './styles/primitives/card.css';
+@import './styles/primitives/table.css';
+@import './styles/primitives/feedback.css';
+@import './styles/primitives/overlay.css';
+
+/* Patterns — composed, multi-primitive surfaces */
+@import './styles/patterns/metric.css';
+@import './styles/patterns/timeline.css';
+@import './styles/patterns/topology.css';
+@import './styles/patterns/agent.css';
+
+/* Page layouts — structures used by a single route */
+@import './styles/pages.css';

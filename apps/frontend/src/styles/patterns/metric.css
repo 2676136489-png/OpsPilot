@@ -1,0 +1,241 @@
+/* =============================================================================
+   Patterns — MetricCard / StatCard / MetricStrip
+   Used by the Command Center's status bar and the observability page.
+   ========================================================================== */
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  min-width: 0;
+}
+
+.metric-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.metric-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.metric-value-sm {
+  font-size: var(--text-2xl);
+}
+
+.metric-unit {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-normal);
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.metric-sub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  min-height: 16px;
+}
+
+.metric-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.trend-up {
+  color: var(--critical);
+}
+.trend-down {
+  color: var(--success);
+}
+.trend-flat {
+  color: var(--muted);
+}
+
+/* Tone overrides — the value colour carries the meaning */
+.metric-card-critical .metric-value {
+  color: var(--critical);
+}
+.metric-card-warning .metric-value {
+  color: var(--warning);
+}
+.metric-card-success .metric-value {
+  color: var(--success);
+}
+.metric-card-agent .metric-value {
+  color: var(--agent);
+}
+.metric-card-primary .metric-value {
+  color: var(--primary);
+}
+
+/* --- MetricStrip — compact horizontal band, used at the page bottom ------- */
+.metric-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.metric-strip-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3) var(--space-4);
+  border-right: 1px solid var(--border-subtle);
+}
+
+.metric-strip-item:last-child {
+  border-right: 0;
+}
+
+.metric-strip-label {
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-strip-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.metric-strip-spark {
+  height: 22px;
+  margin-top: 2px;
+}
+
+/* --- SLO bar -------------------------------------------------------------- */
+.slo-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.slo-track {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+.slo-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--success);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+.slo-fill-warning {
+  background: var(--warning);
+}
+.slo-fill-critical {
+  background: var(--critical);
+}
+
+/* --- Service card (topology + services page) ------------------------------ */
+.service-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.service-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.service-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.service-name {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2) var(--space-3);
+}
+
+.service-metric {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.service-metric-label {
+  color: var(--muted);
+}
+
+.service-metric-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground-secondary);
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
+}

@@ -1,0 +1,252 @@
+/* =============================================================================
+   Primitives — Skeleton / EmptyState / Spinner / Alert / ConfidenceMeter
+   ========================================================================== */
+
+/* --- Skeleton ------------------------------------------------------------- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-inset);
+  border-radius: var(--radius-sm);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.5),
+    transparent
+  );
+  animation: skeleton-sweep 1.4s var(--ease-in-out) infinite;
+}
+
+[data-theme='dark'] .skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.06),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+@keyframes skeleton-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-text {
+  height: 12px;
+  margin-bottom: var(--space-2);
+}
+
+.skeleton-title {
+  height: 18px;
+  width: 40%;
+  margin-bottom: var(--space-3);
+}
+
+.skeleton-card {
+  height: 88px;
+  border-radius: var(--radius-lg);
+}
+
+/* --- Spinner -------------------------------------------------------------- */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--primary);
+  border-radius: var(--radius-full);
+  animation: btn-spin 0.7s linear infinite;
+  flex: none;
+}
+
+.spinner-lg {
+  width: 28px;
+  height: 28px;
+  border-width: 2.5px;
+}
+
+.loading-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-base);
+}
+
+/* --- EmptyState ----------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-base);
+}
+
+.empty-state-compact {
+  padding: var(--space-6) var(--space-3);
+}
+
+.empty-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-inset);
+  color: var(--muted-foreground);
+  margin-bottom: var(--space-1);
+}
+
+.empty-state-title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--foreground-secondary);
+}
+
+.empty-state-hint {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 42ch;
+  line-height: var(--leading-normal);
+}
+
+.empty-state-critical .empty-state-title {
+  color: var(--critical);
+}
+
+/* --- Alert ---------------------------------------------------------------- */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+}
+
+.alert-critical {
+  background: var(--critical-soft);
+  border-color: var(--critical-border);
+  color: var(--critical);
+}
+.alert-warning {
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+  color: var(--warning);
+}
+.alert-success {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success);
+}
+.alert-info {
+  background: var(--info-soft);
+  border-color: var(--info-border);
+  color: var(--info);
+}
+
+.alert-title {
+  font-weight: var(--weight-semibold);
+}
+
+.alert-body {
+  color: var(--foreground-secondary);
+}
+
+.alert-critical .alert-body,
+.alert-warning .alert-body,
+.alert-success .alert-body,
+.alert-info .alert-body {
+  color: inherit;
+  opacity: 0.88;
+}
+
+/* -----------------------------------------------------------------------------
+   ConfidenceMeter — the diagnosis confidence visual, reused everywhere
+   -------------------------------------------------------------------------- */
+.confidence-meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.meter-bar {
+  position: relative;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  transition: width var(--dur-slower) var(--ease-out);
+}
+
+.meter-fill-agent {
+  background: var(--agent);
+}
+.meter-fill-success {
+  background: var(--success);
+}
+.meter-fill-warning {
+  background: var(--warning);
+}
+.meter-fill-critical {
+  background: var(--critical);
+}
+
+.meter-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.meter-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-medium);
+  color: var(--foreground);
+}
+
+/* --- Progress (determinate, for recovery execution) ----------------------- */
+.progress {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: var(--radius-full);
+  transition: width var(--dur-base) var(--ease-out);
+}

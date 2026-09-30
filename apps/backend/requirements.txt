@@ -1,0 +1,17 @@
+# Runtime dependencies for single-port hosting.
+# Kept in sync with the `dependencies` array in pyproject.toml.
+fastapi>=0.115.0
+uvicorn>=0.30.0
+pydantic>=2.8.0
+pydantic-settings>=2.3.0
+# `Settings` declares env_file=".env", which pydantic-settings reads through
+# python-dotenv. It is a real runtime dependency, not an optional nicety.
+python-dotenv>=1.0.0
+httpx>=0.27.0
+# The `[asyncio]` extra is what pulls in greenlet. SQLAlchemy's async engine
+# imports greenlet at import time and fails with a bare "No module named
+# 'greenlet'" otherwise — it is not optional for us, only unstated.
+sqlalchemy[asyncio]>=2.0.0
+aiosqlite>=0.20.0
+langgraph>=0.2.0
+langchain-core>=0.3.0

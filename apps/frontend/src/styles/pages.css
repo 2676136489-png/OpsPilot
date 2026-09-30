@@ -1,0 +1,471 @@
+/* ==========================================================================
+   Page-level layouts
+   ==========================================================================
+   Patterns that only appear on one page live here rather than in
+   `styles/patterns/`, which is reserved for structures reused across pages.
+   ========================================================================== */
+
+/* --- Incident detail: three-column command view ------------------------- */
+
+.incident-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(260px, 340px);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.incident-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.incident-col-center {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-4));
+}
+
+.incident-desc {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  color: var(--foreground-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+}
+
+.info-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.info-value {
+  font-size: var(--text-sm);
+  color: var(--foreground);
+  text-align: right;
+  word-break: break-word;
+}
+
+.service-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+}
+
+.rc-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: var(--space-2);
+}
+
+.rc-reasoning {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  color: var(--foreground-secondary);
+  white-space: pre-wrap;
+}
+
+/* --- Filters ------------------------------------------------------------ */
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-group-label {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-right: var(--space-2);
+}
+
+/* --- Metric grid -------------------------------------------------------- */
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* --- Topology ----------------------------------------------------------- */
+
+.topo-canvas {
+  position: relative;
+  height: 560px;
+  background: var(--surface);
+}
+
+.topo-canvas .react-flow__attribution {
+  display: none;
+}
+
+.topo-fit {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 5;
+}
+
+.topo-node {
+  width: 188px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--text-sm);
+}
+
+.topo-node-healthy {
+  border-left-color: var(--success);
+}
+.topo-node-degraded {
+  border-left-color: var(--warning);
+}
+.topo-node-down {
+  border-left-color: var(--critical);
+}
+.topo-node-unknown {
+  border-left-color: var(--muted);
+}
+
+.topo-node-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.topo-node-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topo-node-metrics {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: 6px;
+  font-size: var(--text-2xs);
+  color: var(--muted);
+}
+
+.topo-node-badge {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--critical-soft);
+  color: var(--critical);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+}
+
+/* --- Evaluations -------------------------------------------------------- */
+
+.eval-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 150px) minmax(0, 1fr) 52px auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.breakdown-label {
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown-bar {
+  min-width: 60px;
+}
+
+.breakdown-score {
+  font-size: var(--text-sm);
+  text-align: right;
+  color: var(--foreground-secondary);
+}
+
+/*
+ * Label/value line for metrics that are counts or durations rather than
+ * rates. Separate from `.breakdown-row` because that one is a four-column
+ * grid built around a progress bar — dropping a bar-less row into it would
+ * leave the value stranded in the bar column.
+ */
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.stat-label {
+  color: var(--foreground-secondary);
+}
+
+.stat-value {
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+/* Metric definitions — the "how is this number computed" appendix. */
+.def-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: baseline;
+  font-size: var(--text-sm);
+}
+
+.def-key {
+  color: var(--agent);
+  overflow-wrap: anywhere;
+}
+
+.def-desc {
+  color: var(--foreground-secondary);
+}
+
+/* --- Health / metrics lists --------------------------------------------- */
+
+.health-list,
+.metrics-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.health-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 68px 68px 56px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 8px var(--space-4);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+
+.health-row:last-child {
+  border-bottom: none;
+}
+
+.health-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.health-state {
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  text-align: right;
+}
+
+.metrics-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 6px var(--space-4);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-2xs);
+}
+
+.metrics-row:last-child {
+  border-bottom: none;
+}
+
+.metrics-name {
+  color: var(--foreground-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metrics-value {
+  color: var(--foreground);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* --- Approvals ---------------------------------------------------------- */
+
+.approval-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.approval-meta {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-bottom: var(--space-3);
+}
+
+.approval-desc {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+}
+
+.inspection-block {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  margin-bottom: var(--space-3);
+}
+
+/* --- Runbooks ----------------------------------------------------------- */
+
+.runbook-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.runbook-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.runbook-item {
+  border-bottom: 1px solid var(--border);
+}
+
+.runbook-item:last-child {
+  border-bottom: none;
+}
+
+.runbook-item-open {
+  background: var(--surface-sunken);
+}
+
+.runbook-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 11px var(--space-4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.runbook-head:hover {
+  background: var(--surface-hover);
+}
+
+.runbook-title {
+  flex: 1;
+  font-size: var(--text-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.runbook-name {
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.runbook-body {
+  padding: 0 var(--space-4) var(--space-4) calc(var(--space-4) + 21px);
+}
+
+.runbook-symptoms {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: var(--space-2);
+}
+
+.runbook-symptoms li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--foreground-secondary);
+}
+
+.runbook-symptoms svg {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* --- Responsive --------------------------------------------------------- */
+
+@media (max-width: 1280px) {
+  .incident-grid {
+    grid-template-columns: minmax(220px, 1fr) minmax(0, 1.4fr);
+  }
+  .incident-col:last-child {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 860px) {
+  .incident-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .incident-col-center {
+    position: static;
+  }
+  .incident-col:last-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

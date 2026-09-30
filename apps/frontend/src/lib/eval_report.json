@@ -1,0 +1,235 @@
+{
+  "generated_at": "20260930T102252Z",
+  "report": {
+    "total": 12,
+    "errors": 0,
+    "root_cause_accuracy": 1.0,
+    "evidence_accuracy": {
+      "recall": 0.7014,
+      "utilisation": 0.2915,
+      "traceability": 0.3323
+    },
+    "tool_selection_accuracy": 1.0,
+    "investigation": {
+      "avg_steps": 18.9167,
+      "avg_distinct_stages": 14.0,
+      "avg_replan_rounds": 4.9167,
+      "runs_that_replanned": 12,
+      "avg_rejected_hypotheses": 0.0
+    },
+    "recovery": {
+      "success_rate": 1.0,
+      "environment_fixed_rate": 1.0,
+      "effective_action_rate": 1.0,
+      "rollback_rate": 0.0
+    },
+    "verification": {
+      "accuracy": 1.0,
+      "scored_runs": 12,
+      "reported_success_env_broken": 0
+    },
+    "diagnosis_honesty": {
+      "false_diagnosis_rate": 0.0,
+      "answered": 12,
+      "abstained": 0
+    },
+    "escalation": {
+      "rate": 0.0,
+      "reasons": {}
+    },
+    "cost": {
+      "total_tool_calls": 162,
+      "avg_tool_calls": 13.5,
+      "failed_tool_calls": 0,
+      "failed_tool_call_rate": 0.0,
+      "total_tokens": 0,
+      "avg_tokens": 0.0,
+      "reasoning_modes": {
+        "deterministic": 12
+      },
+      "budget_exhausted_runs": 0
+    },
+    "latency_ms": {
+      "avg": 1236.9,
+      "p50": 1193.3,
+      "p95": 1787.1,
+      "max": 2098.7,
+      "avg_workflow": 1031.7417
+    },
+    "trace_integrity": {
+      "single_root": 12,
+      "with_dangling_parents": 0,
+      "avg_spans": 126.3333,
+      "avg_depth": 5.0
+    },
+    "breakdowns": {
+      "category": {
+        "capacity": 1.0,
+        "cascading": 1.0,
+        "database": 1.0,
+        "deployment": 1.0,
+        "memory": 1.0,
+        "redis": 1.0,
+        "third_party": 1.0
+      },
+      "scenario": {
+        "checkout-cpu-saturation": {
+          "correct": true,
+          "diagnosed": "capacity",
+          "expected": "capacity",
+          "outcome": "ROOT_CAUSE_PROBABLE",
+          "tools": 18,
+          "recall": 0.3333,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 2098.7
+        },
+        "checkout-db-pool-exhaustion": {
+          "correct": true,
+          "diagnosed": "database",
+          "expected": "database",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 10,
+          "recall": 0.75,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1170.4
+        },
+        "checkout-deployment-cascade": {
+          "correct": true,
+          "diagnosed": "deployment",
+          "expected": "deployment",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 19,
+          "recall": 1.0,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1402.1
+        },
+        "checkout-memory-leak": {
+          "correct": true,
+          "diagnosed": "memory",
+          "expected": "memory",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 10,
+          "recall": 0.75,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 902.3
+        },
+        "gateway-dependency-cascade": {
+          "correct": true,
+          "diagnosed": "dependency",
+          "expected": "cascading",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 18,
+          "recall": 0.75,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1335.1
+        },
+        "inventory-cpu-saturation": {
+          "correct": true,
+          "diagnosed": "capacity",
+          "expected": "capacity",
+          "outcome": "ROOT_CAUSE_PROBABLE",
+          "tools": 14,
+          "recall": 0.3333,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1532.1
+        },
+        "payment-bad-deployment": {
+          "correct": true,
+          "diagnosed": "deployment",
+          "expected": "deployment",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 9,
+          "recall": 1.0,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 884.8
+        },
+        "payment-high-error-rate": {
+          "correct": true,
+          "diagnosed": "deployment",
+          "expected": "deployment",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 9,
+          "recall": 0.75,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 838.3
+        },
+        "payment-provider-outage": {
+          "correct": true,
+          "diagnosed": "third_party",
+          "expected": "third_party",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 10,
+          "recall": 0.5,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1037.3
+        },
+        "payment-third-party-timeout": {
+          "correct": true,
+          "diagnosed": "third_party",
+          "expected": "third_party",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 10,
+          "recall": 0.5,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1067.2
+        },
+        "postgres-slow-queries": {
+          "correct": true,
+          "diagnosed": "database",
+          "expected": "database",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 19,
+          "recall": 0.75,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1358.2
+        },
+        "redis-failure": {
+          "correct": true,
+          "diagnosed": "redis",
+          "expected": "redis",
+          "outcome": "ROOT_CAUSE_CONFIRMED",
+          "tools": 16,
+          "recall": 1.0,
+          "env_fixed": true,
+          "escalated": false,
+          "latency_ms": 1216.3
+        }
+      },
+      "difficulty": {
+        "easy": 1.0,
+        "hard": 1.0,
+        "medium": 1.0
+      },
+      "severity": {
+        "SEV1": 1.0,
+        "SEV2": 1.0,
+        "SEV3": 1.0
+      }
+    },
+    "notes": {
+      "suite": "opspilot-agent-eval",
+      "version": "2.0",
+      "scoring": {
+        "root_cause_accuracy": "diagnosed category == scenario root_cause_category (domain aliases accepted, see CATEGORY_ALIASES)",
+        "evidence_recall": "share of the scenario's expected_evidence keywords present in collected evidence",
+        "evidence_utilisation": "share of collected evidence the final diagnosis actually cites",
+        "tool_selection_accuracy": "every tool family the fault requires was actually called",
+        "recovery_success_rate": "a recovery action succeeded AND the live environment passes the scenario's own criteria",
+        "verification_accuracy": "the Agent's own verdict agrees with the environment's ground-truth evaluation",
+        "false_diagnosis_rate": "a CONFIRMED/PROBABLE diagnosis that was wrong (abstentions are not counted)",
+        "escalation_rate": "run handed over to a human instead of resolving"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+[project]
+name = "opspilot"
+version = "0.1.0"
+description = "OpsPilot - AI-Powered Incident Investigation & Recovery Platform"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+# Single gate for the whole repo. Without this block, pytest run from the repo
+# root finds no config (rootdir wins over the per-package pyproject.toml files)
+# and the async tests collapse with "async def functions are not natively
+# supported" — every suite passes alone yet the combined run fails.
+[tool.pytest.ini_options]
+testpaths = [
+    "apps/backend/tests",
+    "evals/opspilot_evals/tests",
+]
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]

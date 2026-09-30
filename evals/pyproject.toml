@@ -1,0 +1,40 @@
+[project]
+name = "opspilot-evals"
+version = "0.1.0"
+description = "OpsPilot evaluation framework"
+requires-python = ">=3.12"
+dependencies = [
+    "opspilot-backend",
+    "pydantic>=2.8.0",
+]
+
+# Backend is a local path dependency — adjust if deploying separately.
+[tool.uv.sources]
+opspilot-backend = { path = "../apps/backend", editable = true }
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+# The package lives at evals/opspilot_evals (flat layout, no src/ dir), and the
+# eval CLI is a script rather than an installed console command.
+[tool.uv.build-backend]
+module-root = ""
+
+[tool.pytest.ini_options]
+# Nested under the package so the module name (`opspilot_evals.tests`) cannot
+# collide with the backend's top-level `tests` package when both suites are
+# collected in a single pytest session (e.g. a CI gate).
+testpaths = ["opspilot_evals/tests"]
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]

@@ -1,0 +1,155 @@
+/* =============================================================================
+   Primitives — Card / Panel / Section / Divider
+   ========================================================================== */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.card-elevated {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-md);
+}
+
+.card-interactive {
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.card-interactive:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.card-interactive:focus-visible {
+  box-shadow: var(--ring);
+  border-color: var(--primary);
+}
+
+/* --- Panel: card with a structured header / body -------------------------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--foreground);
+  letter-spacing: var(--tracking-tight);
+}
+
+.panel-subtitle {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-weight: var(--weight-normal);
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+.panel-body {
+  padding: var(--space-4);
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-body-flush {
+  padding: 0;
+}
+
+.panel-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* --- Section: lighter-weight grouping without a card shell ---------------- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.section-title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.section-hint {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* --- Divider -------------------------------------------------------------- */
+.divider {
+  height: 1px;
+  background: var(--border-subtle);
+  border: 0;
+  margin: 0;
+}
+
+.divider-vertical {
+  width: 1px;
+  height: 100%;
+  background: var(--border-subtle);
+  flex: none;
+}
+
+/* --- Accent rail used on cards that carry state --------------------------- */
+.card-rail {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-rail::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--rail-color, var(--border-strong));
+}

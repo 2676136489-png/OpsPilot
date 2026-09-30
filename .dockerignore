@@ -1,0 +1,80 @@
+# ---------------------------------------------------------------------------
+# OpsPilot — Docker ignore
+# ---------------------------------------------------------------------------
+
+# Git
+.git
+.gitignore
+.github
+.gitattributes
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env
+.venv
+venv/
+env/
+.Python
+*.egg-info/
+.eggs/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+apps/frontend/dist/
+
+# Build artifacts
+build/
+dist/
+*.tar.gz
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Documentation (not needed in images)
+evals/
+README.md
+docs/
+*.md
+!apps/backend/README.md
+!apps/frontend/README.md
+
+# Cache
+.cache/
+.devcontainer/
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+docker-compose*.yaml
+
+# Lock files (copied explicitly)
+uv.lock
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Sensitive
+.env.local
+.env.*.local
+*.key
+*.pem

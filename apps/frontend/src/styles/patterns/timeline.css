@@ -1,0 +1,363 @@
+/* =============================================================================
+   Patterns — Timeline (incident events + agent events)
+   ========================================================================== */
+
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Vertical connector rail */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-marker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1px;
+}
+
+.timeline-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--surface);
+  background: var(--muted-foreground);
+  flex: none;
+}
+
+.timeline-dot-agent {
+  background: var(--agent);
+}
+.timeline-dot-success {
+  background: var(--success);
+}
+.timeline-dot-critical {
+  background: var(--critical);
+}
+.timeline-dot-warning {
+  background: var(--warning);
+}
+.timeline-dot-info {
+  background: var(--info);
+}
+.timeline-dot-neutral {
+  background: var(--border-strong);
+}
+
+.timeline-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-top: 0;
+}
+
+.timeline-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.timeline-time {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  flex: none;
+}
+
+.timeline-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--foreground);
+}
+
+.timeline-body {
+  font-size: var(--text-sm);
+  color: var(--foreground-secondary);
+  line-height: var(--leading-snug);
+  word-break: break-word;
+}
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+/* --- Compact variant for the dense agent event stream --------------------- */
+.timeline-compact .timeline-item {
+  padding-bottom: var(--space-3);
+}
+
+.timeline-compact .timeline-body {
+  font-size: var(--text-sm);
+}
+
+/* --- Event payload disclosure --------------------------------------------- */
+.event-payload-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.event-payload-toggle:hover {
+  color: var(--primary);
+}
+
+.event-payload {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--foreground-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 280px;
+  overflow: auto;
+}
+
+/* --- Highlight inline token used inside event descriptions ---------------- */
+.hl {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  padding: 0 4px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+  color: var(--foreground);
+}
+
+.hl-agent {
+  background: var(--agent-soft);
+  color: var(--agent);
+}
+
+.hl-primary {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.hl-critical {
+  background: var(--critical-soft);
+  color: var(--critical);
+}
+
+.hl-success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+/* --- Recovery step list --------------------------------------------------- */
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/*
+ * index | description | status/risk | reversibility
+ *
+ * Four columns because a recovery step carries both its own risk badge and
+ * whether it can be undone, and a decision made without either is not a
+ * decision. Previously three, which pushed the fourth child onto an implicit
+ * row.
+ */
+.step-item {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.step-item-active {
+  border-color: var(--primary-border);
+  background: var(--primary-soft);
+}
+
+.step-item-done {
+  border-color: var(--success-border);
+  background: var(--success-soft);
+}
+
+.step-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  flex: none;
+}
+
+.step-item-active .step-index {
+  background: var(--primary);
+  color: var(--text-on-accent);
+}
+
+.step-item-done .step-index {
+  background: var(--success);
+  color: var(--text-on-accent);
+}
+
+.step-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step-title {
+  font-size: var(--text-base);
+  color: var(--foreground);
+}
+
+.step-hint {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+.step-status {
+  flex: none;
+  font-size: var(--text-xs);
+}
+
+/* Target service/object an action addresses, appended to its description. */
+.step-target {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* Reversibility marker. Absence of a rollback tool is the riskier fact, so
+   both states are stated rather than only the good one. */
+.step-rollback {
+  font-size: var(--text-2xs);
+  color: var(--success);
+  white-space: nowrap;
+}
+
+/* Plan header: risk badge plus the expected effect of executing it. */
+.plan-meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.plan-status {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/*
+ * Recovery plan verification criteria. Reuses `.check-list`, which is also
+ * used for failed verification checks on the incident page.
+ */
+.check-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  padding-left: var(--space-4);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  list-style: disc;
+}
+
+.check-list li::marker {
+  color: var(--muted-foreground);
+}
+
+/* --- Root-cause citation block -------------------------------------------- */
+.rc-reasoning + .rc-evidence {
+  margin-top: var(--space-3);
+}
+
+.rc-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rc-evidence-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.ref-chip {
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: var(--text-2xs);
+}
+
+/* --- Incident business timeline row --------------------------------------- */
+.timeline-msg {
+  font-size: var(--text-sm);
+  color: var(--foreground-secondary);
+  line-height: var(--leading-snug);
+  word-break: break-word;
+}
+
+.timeline-actor {
+  margin-left: var(--space-2);
+  padding: 0 5px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+  color: var(--muted);
+  font-size: var(--text-2xs);
+  white-space: nowrap;
+}

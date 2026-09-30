@@ -1,0 +1,175 @@
+# =============================================================================
+# OpsPilot Docker Compose — Phase 16
+# Full stack: Backend + Frontend + MCP Server + Simulator
+#             + Postgres + Redis + OTel + Prometheus + Grafana + Loki
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Core application services
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: opspilot-backend
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      DATABASE_URL: postgresql+asyncpg://opspilot:opspilot_dev@postgres:5432/opspilot
+      REDIS_URL: redis://redis:6379/0
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
+      OTEL_SERVICE_NAME: opspilot-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: opspilot-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
+  mcp-server:
+    build:
+      context: ./apps/mcp-server
+      dockerfile: Dockerfile
+    container_name: opspilot-mcp-server
+    ports:
+      - "8001:8001"
+    depends_on:
+      simulator:
+        condition: service_healthy
+    restart: unless-stopped
+
+  simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: opspilot-simulator
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9000/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # Databases
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: opspilot-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-opspilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-opspilot_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-opspilot}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-opspilot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: opspilot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Observability stack
+  # ---------------------------------------------------------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: opspilot-otel
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8889:8889"   # Prometheus metrics for collector itself
+    volumes:
+      - ./infra/otel/config.yaml:/etc/otelcol/config.yaml:ro
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: opspilot-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: opspilot-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: opspilot-loki
+    ports:
+      - "3100:3100"
+    command: --config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: opspilot-network
