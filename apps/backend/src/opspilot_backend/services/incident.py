@@ -13,6 +13,7 @@ from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from opspilot_backend.domain.enums import join_values
 from opspilot_backend.domain.errors import BadRequestError, NotFoundError
 from opspilot_backend.models import Deployment, Incident, Service
 from opspilot_backend.repositories.incident import (
@@ -94,7 +95,7 @@ class IncidentService:
         if domain is None:
             raise BadRequestError(
                 f"severity 取值 '{severity}' 不合法，必须是 "
-                f"{sorted(VALID_SEVERITIES | DOMAIN_SEVERITIES)} 之一。"
+                f"{join_values(VALID_SEVERITIES | DOMAIN_SEVERITIES)} 之一。"
             )
         return domain
 
@@ -107,7 +108,7 @@ class IncidentService:
         if domain is None:
             raise BadRequestError(
                 f"status 取值 '{st}' 不合法，必须是 "
-                f"{sorted(VALID_STATUSES | DOMAIN_STATUSES)} 之一。"
+                f"{join_values(VALID_STATUSES | DOMAIN_STATUSES)} 之一。"
             )
         return domain
 
@@ -230,7 +231,7 @@ class DeploymentService:
         if payload.status not in VALID_DEPLOYMENT_STATUSES:
             raise BadRequestError(
                 f"部署状态 '{payload.status}' 不合法，"
-                f"必须是 {sorted(VALID_DEPLOYMENT_STATUSES)} 之一。"
+                f"必须是 {join_values(VALID_DEPLOYMENT_STATUSES)} 之一。"
             )
         return await self.repo.create(
             service_id=payload.service_id,

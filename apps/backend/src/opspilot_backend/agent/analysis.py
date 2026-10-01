@@ -48,6 +48,19 @@ _PROBABLE_AT = 0.55
 _REJECT_BELOW = 0.35
 
 
+def _signals(names) -> str:
+    """Rendered list of signal names for a sentence an operator will read.
+
+    The names themselves stay in their wire spelling — they are the vocabulary
+    :data:`~opspilot_backend.agent.investigation._DOMAINS` matches on, and a
+    signal that is not spelled exactly right stops matching. What must not
+    survive is the Python container: ``f"{sorted(x)}"`` used to put
+    ``['deployment_recent']`` — brackets, quotes and all — in the middle of a
+    Chinese sentence, which reads as a bug even when the diagnosis is right.
+    """
+    return "、".join(sorted(str(name) for name in names))
+
+
 # ---------------------------------------------------------------------------
 # Hypothesis generation — one hypothesis per ranked fault domain
 # ---------------------------------------------------------------------------
@@ -96,9 +109,9 @@ def generate_hypotheses(
                 confidence=round(score, 2),
                 status=HypothesisStatus.PROPOSED.value,
                 reasoning=(
-                    f"所需信号 {sorted(support)} 已经出现"
+                    f"所需信号 {_signals(support)} 已经出现"
                     + (
-                        f"；并有 {sorted(corroboration)} 佐证"
+                        f"；并有 {_signals(corroboration)} 佐证"
                         if corroboration
                         else ""
                     )
@@ -304,7 +317,8 @@ def apply_verification(
         hypothesis.confidence = round(max(0.0, hypothesis.confidence - 0.30), 2)
         hypothesis.status = HypothesisStatus.REJECTED.value
         hypothesis.reasoning += (
-            f" | 被 {sorted(contradicting)} 反驳；而所需的 {sorted(domain.required)} 并未出现"
+            f" | 被 {_signals(contradicting)} 反驳；而所需的 "
+            f"{_signals(domain.required)} 并未出现"
         )
         return hypothesis
 
@@ -317,7 +331,7 @@ def apply_verification(
             if hypothesis.confidence >= _CONFIRM_AT
             else HypothesisStatus.TESTING.value
         )
-        hypothesis.reasoning += f" | 被 {sorted(required_hits)} 证实"
+        hypothesis.reasoning += f" | 被 {_signals(required_hits)} 证实"
         return hypothesis
 
     # The probe ran but could not reproduce this domain's signals. That
@@ -333,7 +347,7 @@ def apply_verification(
         else HypothesisStatus.TESTING.value
     )
     hypothesis.reasoning += (
-        f" | 探针未能复现所需的 {sorted(domain.required)}"
+        f" | 探针未能复现所需的 {_signals(domain.required)}"
     )
     return hypothesis
 

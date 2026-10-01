@@ -161,7 +161,8 @@ def _logs_memory_leak(
         out.append(
             (
                 "ERROR",
-                f"OutOfMemoryError: 堆空间不足 — 已用 {int(m['memory_mb'])}MB / "
+                f"OutOfMemoryError: 堆内存不足 — GC 停顿 2.1s 仍无法回收，已用 "
+                f"{int(m['memory_mb'])}MB / "
                 f"{int(rt.spec.memory_limit_mb)}MB，容器即将被 OOM-killed",
             )
         )
@@ -605,7 +606,7 @@ def propagation_logs(rt: ServiceRuntime, metrics: dict[str, float]) -> list[LogL
         if health_of(dep_metrics, dep_spec) == "healthy":
             continue
         if dep_name == "redis":
-            out.append(("ERROR", "redis: 连接被拒绝 — 回退到源站"))
+            out.append(("ERROR", "redis: 缓存读取失败 — 连接被拒绝，回退到源站"))
         elif dep_name == "postgres":
             out.append(
                 (
@@ -614,7 +615,25 @@ def propagation_logs(rt: ServiceRuntime, metrics: dict[str, float]) -> list[LogL
                 )
             )
         elif dep_name == "external-payment-api":
-            out.append(("ERROR", "上游支付渠道返回 5xx"))
+            # Two different faults live behind this one dependency — a provider
+            # returning 503 and a provider that never answers — and a single
+            # "upstream returned 5xx" line describes neither. It is also the only
+            # line the investigation sees: `query_logs` reads the *alert*
+            # service, so the dependency's own logs are never collected, and
+            # evidence that cannot name what broke cannot be attributed to it.
+            # So the line names the vendor and the actual symptom, branching on
+            # the dependency's latency for the timeout case — a 504 is a wait,
+            # not a status the vendor chose to return.
+            if dep_metrics.get("latency_p95", 0.0) > 5000:
+                out.append(
+                    (
+                        "ERROR",
+                        "外部支付渠道 acme-pay 调用超时（504 Gateway Timeout）："
+                        f"上游调用已等待 {int(dep_metrics['latency_p95'])}ms",
+                    )
+                )
+            else:
+                out.append(("ERROR", "外部支付渠道 acme-pay 返回 503 — 上游链路失败"))
         else:
             out.append(
                 (

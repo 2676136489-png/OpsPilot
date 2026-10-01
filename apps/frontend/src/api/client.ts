@@ -47,20 +47,27 @@ export class ApiError extends Error {
 
   /** Human-readable detail, preferring the backend's `detail` field. */
   get detail(): string {
-    const p = this.payload as { detail?: unknown } | null
-    if (p && typeof p === 'object' && 'detail' in p) {
-      const d = p.detail
-      if (typeof d === 'string') return d
-      if (Array.isArray(d)) {
-        // FastAPI validation errors: [{loc, msg, type}, ...]
-        return d
-          .map((item) =>
-            typeof item === 'object' && item !== null && 'msg' in item
-              ? String((item as { msg: unknown }).msg)
-              : JSON.stringify(item),
-          )
-          .join('; ')
+    const p = this.payload as { detail?: unknown; message?: unknown } | null
+    if (p && typeof p === 'object') {
+      if ('detail' in p) {
+        const d = p.detail
+        if (typeof d === 'string') return d
+        if (Array.isArray(d)) {
+          // FastAPI validation errors: [{loc, msg, type}, ...]
+          return d
+            .map((item) =>
+              typeof item === 'object' && item !== null && 'msg' in item
+                ? String((item as { msg: unknown }).msg)
+                : JSON.stringify(item),
+            )
+            .join('; ')
+        }
       }
+      // AppError envelope: {code, message, details}. Without this branch a 404
+      // fell through to `this.message` — and that is `API 404 Not Found`, the
+      // HTTP status line, which is both English and less specific than what the
+      // server actually said.
+      if (typeof p.message === 'string' && p.message) return p.message
     }
     return this.message
   }

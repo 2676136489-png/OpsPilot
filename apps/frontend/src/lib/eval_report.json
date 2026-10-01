@@ -1,11 +1,11 @@
 {
-  "generated_at": "20261001T114758Z",
+  "generated_at": "20261001T120600Z",
   "report": {
     "total": 12,
     "errors": 0,
     "root_cause_accuracy": 1.0,
     "evidence_accuracy": {
-      "recall": 0.6736,
+      "recall": 0.8264,
       "utilisation": 0.2915,
       "traceability": 0.3323
     },
@@ -50,16 +50,16 @@
       "budget_exhausted_runs": 0
     },
     "latency_ms": {
-      "avg": 1802.8,
-      "p50": 1667.4,
-      "p95": 2709.5,
-      "max": 3611.0,
-      "avg_workflow": 1464.15
+      "avg": 1796.8,
+      "p50": 1667.7,
+      "p95": 2528.0,
+      "max": 3151.4,
+      "avg_workflow": 1490.15
     },
     "trace_integrity": {
       "single_root": 12,
       "with_dangling_parents": 0,
-      "avg_spans": 130.1667,
+      "avg_spans": 129.5,
       "avg_depth": 5.0
     },
     "breakdowns": {
@@ -82,7 +82,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 3611.0
+          "latency_ms": 3151.4
         },
         "checkout-db-pool-exhaustion": {
           "correct": true,
@@ -93,7 +93,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1418.2
+          "latency_ms": 1474.4
         },
         "checkout-deployment-cascade": {
           "correct": true,
@@ -104,7 +104,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1966.4
+          "latency_ms": 1914.8
         },
         "checkout-memory-leak": {
           "correct": true,
@@ -112,10 +112,10 @@
           "expected": "memory",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 10,
-          "recall": 0.5,
+          "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1398.0
+          "latency_ms": 1434.3
         },
         "gateway-dependency-cascade": {
           "correct": true,
@@ -126,7 +126,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1867.0
+          "latency_ms": 1846.2
         },
         "inventory-cpu-saturation": {
           "correct": true,
@@ -137,7 +137,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1972.0
+          "latency_ms": 2011.3
         },
         "payment-bad-deployment": {
           "correct": true,
@@ -148,7 +148,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1425.6
+          "latency_ms": 1489.1
         },
         "payment-high-error-rate": {
           "correct": true,
@@ -159,7 +159,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1437.3
+          "latency_ms": 1457.8
         },
         "payment-provider-outage": {
           "correct": true,
@@ -167,10 +167,10 @@
           "expected": "third_party",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 10,
-          "recall": 0.25,
+          "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1491.5
+          "latency_ms": 1427.0
         },
         "payment-third-party-timeout": {
           "correct": true,
@@ -178,10 +178,10 @@
           "expected": "third_party",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 10,
-          "recall": 0.75,
+          "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1324.4
+          "latency_ms": 1469.1
         },
         "postgres-slow-queries": {
           "correct": true,
@@ -192,7 +192,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1843.3
+          "latency_ms": 2018.0
         },
         "redis-failure": {
           "correct": true,
@@ -200,10 +200,10 @@
           "expected": "redis",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 16,
-          "recall": 0.6667,
+          "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1878.3
+          "latency_ms": 1868.1
         }
       },
       "difficulty": {

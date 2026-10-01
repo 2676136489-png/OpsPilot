@@ -1,16 +1,16 @@
 # OpsPilot Agent 评测报告
 
-- 运行时间：`2026-10-01T11:47:35+00:00`
+- 运行时间：`2026-10-01T12:05:38+00:00`
 - 场景数：**12**，取自模拟器目录
 - 模拟器：in-process (ASGI)，已开启评测模式（ground truth 可达）
-- 墙钟耗时：22.2s
+- 墙钟耗时：22.1s
 
 ## 记分卡
 
 | 指标 | 数值 |
 | --- | --- |
 | 根因判定准确率 | **100.0%** |
-| 证据召回率 | 67.4% （被诊断引用 29.1%，可追溯到假设 33.2%） |
+| 证据召回率 | 82.6% （被诊断引用 29.1%，可追溯到假设 33.2%） |
 | 工具选择准确率 | 100.0% |
 | 调查步数 | 平均 18.9 步，涉及 14.0 个不同阶段，12/12 次运行发生了重新规划（平均额外跑 4.9 个节点），被否假设 0.0 个 |
 | 恢复成功率 | 100.0% （环境确实被修复 100.0%） |
@@ -20,25 +20,25 @@
 | 升级率 | 0.0% |
 | 工具调用 | 共 162 次，平均 13.5/次运行，失败 0.0% |
 | Token 用量 | 共 0，平均 0.0/次运行 `{'deterministic': 12}` |
-| 延迟 | 平均 1803ms，p50 1667ms，p95 2710ms，最大 3611ms |
+| 延迟 | 平均 1797ms，p50 1668ms，p95 2528ms，最大 3151ms |
 | 追踪完整性 | 12/12 单一根节点，0 个悬空父节点，平均 130 个 span |
 
 ## 逐场景明细
 
 | 场景 | 期望分类 | 判定分类 | 结论 | 工具数 | 召回率 | 环境 | 验证 | 延迟 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| checkout-cpu-saturation | capacity | capacity OK | ROOT_CAUSE_PROBABLE | 18 | 0.33 | 已修复 | passed | 3611ms |
-| checkout-db-pool-exhaustion | database | database OK | ROOT_CAUSE_CONFIRMED | 10 | 0.75 | 已修复 | passed | 1418ms |
-| checkout-deployment-cascade | deployment | deployment OK | ROOT_CAUSE_CONFIRMED | 19 | 1.00 | 已修复 | passed | 1966ms |
-| checkout-memory-leak | memory | memory OK | ROOT_CAUSE_CONFIRMED | 10 | 0.50 | 已修复 | passed | 1398ms |
-| gateway-dependency-cascade | cascading | dependency OK | ROOT_CAUSE_CONFIRMED | 18 | 1.00 | 已修复 | passed | 1867ms |
-| inventory-cpu-saturation | capacity | capacity OK | ROOT_CAUSE_PROBABLE | 14 | 0.33 | 已修复 | passed | 1972ms |
-| payment-bad-deployment | deployment | deployment OK | ROOT_CAUSE_CONFIRMED | 9 | 1.00 | 已修复 | passed | 1426ms |
-| payment-high-error-rate | deployment | deployment OK | ROOT_CAUSE_CONFIRMED | 9 | 0.75 | 已修复 | passed | 1437ms |
-| payment-provider-outage | third_party | third_party OK | ROOT_CAUSE_CONFIRMED | 10 | 0.25 | 已修复 | passed | 1492ms |
-| payment-third-party-timeout | third_party | third_party OK | ROOT_CAUSE_CONFIRMED | 10 | 0.75 | 已修复 | passed | 1324ms |
-| postgres-slow-queries | database | database OK | ROOT_CAUSE_CONFIRMED | 19 | 0.75 | 已修复 | passed | 1843ms |
-| redis-failure | redis | redis OK | ROOT_CAUSE_CONFIRMED | 16 | 0.67 | 已修复 | passed | 1878ms |
+| checkout-cpu-saturation | capacity | capacity OK | ROOT_CAUSE_PROBABLE | 18 | 0.33 | 已修复 | passed | 3151ms |
+| checkout-db-pool-exhaustion | database | database OK | ROOT_CAUSE_CONFIRMED | 10 | 0.75 | 已修复 | passed | 1474ms |
+| checkout-deployment-cascade | deployment | deployment OK | ROOT_CAUSE_CONFIRMED | 19 | 1.00 | 已修复 | passed | 1915ms |
+| checkout-memory-leak | memory | memory OK | ROOT_CAUSE_CONFIRMED | 10 | 1.00 | 已修复 | passed | 1434ms |
+| gateway-dependency-cascade | cascading | dependency OK | ROOT_CAUSE_CONFIRMED | 18 | 1.00 | 已修复 | passed | 1846ms |
+| inventory-cpu-saturation | capacity | capacity OK | ROOT_CAUSE_PROBABLE | 14 | 0.33 | 已修复 | passed | 2011ms |
+| payment-bad-deployment | deployment | deployment OK | ROOT_CAUSE_CONFIRMED | 9 | 1.00 | 已修复 | passed | 1489ms |
+| payment-high-error-rate | deployment | deployment OK | ROOT_CAUSE_CONFIRMED | 9 | 0.75 | 已修复 | passed | 1458ms |
+| payment-provider-outage | third_party | third_party OK | ROOT_CAUSE_CONFIRMED | 10 | 1.00 | 已修复 | passed | 1427ms |
+| payment-third-party-timeout | third_party | third_party OK | ROOT_CAUSE_CONFIRMED | 10 | 1.00 | 已修复 | passed | 1469ms |
+| postgres-slow-queries | database | database OK | ROOT_CAUSE_CONFIRMED | 19 | 0.75 | 已修复 | passed | 2018ms |
+| redis-failure | redis | redis OK | ROOT_CAUSE_CONFIRMED | 16 | 1.00 | 已修复 | passed | 1868ms |
 
 ## 实际走过的节点路径
 
@@ -122,7 +122,7 @@
 
 | 引用 | 领域 | 分类 | 置信度 | 状态 |
 | --- | --- | --- | --- | --- |
-| H001 | third_party | third_party | 0.92 | confirmed |
+| H001 | third_party | third_party | 0.97 | confirmed |
 
 ### postgres-slow-queries
 

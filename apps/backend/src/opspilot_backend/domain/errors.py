@@ -81,6 +81,21 @@ class ForbiddenError(AppError):
     http_status = 403
 
 
+#: Resource name → the label it carries in a message an operator reads.
+#: The English name stays in ``details["resource"]``: it is the machine-readable
+#: identifier a client matches on, and translating *that* would break callers to
+#: fix a cosmetic problem in the sentence next to it.
+_RESOURCE_ZH: dict[str, str] = {
+    "Incident": "故障",
+    "AgentRun": "调查运行",
+    "Service": "服务",
+    "Deployment": "发布",
+    "RecoveryPlan": "恢复方案",
+    "Approval": "审批请求",
+    "Evidence": "证据",
+}
+
+
 class NotFoundError(AppError):
     code = ErrorCode.NOT_FOUND
     http_status = 404
@@ -89,7 +104,11 @@ class NotFoundError(AppError):
         details = {"resource": resource}
         if resource_id is not None:
             details["id"] = str(resource_id)
-        super().__init__(f"{resource} not found", details=details, **kwargs)
+        label = _RESOURCE_ZH.get(resource, resource)
+        message = (
+            f"{label} {resource_id} 不存在" if resource_id is not None else f"{label}不存在"
+        )
+        super().__init__(message, details=details, **kwargs)
 
 
 class ConflictError(AppError):

@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import sqlite3
 import time
+from typing import Any
 
 # --- Bootstrap: give the whole process one config source ---
 # Two different mechanisms read configuration at two different times, and they
@@ -177,19 +178,48 @@ async def _seed_demo_incidents() -> None:
 
     Only runs when ``OPSPILOT_DEMO_SEED`` is set and the incidents table is
     empty, so it never overwrites real records and never fires in tests.
+
+    The database outlives the process and the simulator does not: it is plain
+    in-memory state. So a restart arrives with incidents on the dashboard and no
+    fault anywhere in the world, and every open incident becomes one that cannot
+    be investigated — the agent's tool calls all report a healthy service and
+    the run has nothing to find. That is why the non-empty case is handled here
+    too rather than being an early return: the newest open incident names the
+    scenario, and re-injecting it restores the pairing this process just lost.
     """
     from sqlalchemy import func, select
 
     from opspilot_backend.db.session import async_session_factory
+    from opspilot_backend.domain.enums import IncidentStatus
     from opspilot_backend.models import Incident, Service
     from opspilot_backend.repositories.incident import IncidentRepository
     from opspilot_simulator.engine import get_simulator
     from opspilot_simulator.scenarios import get_scenario
 
     scenario_name = "payment-bad-deployment"
+    closed = [IncidentStatus.RESOLVED.value, IncidentStatus.CLOSED.value]
     try:
         async with async_session_factory() as session:
             if await session.scalar(select(func.count()).select_from(Incident)):
+                # Already seeded — restore the simulator to whatever the most
+                # recent open incident is about, and stop.
+                newest = (
+                    await session.execute(
+                        select(Incident)
+                        .where(
+                            Incident.status.notin_(closed),
+                            Incident.scenario.isnot(None),
+                        )
+                        .order_by(Incident.detected_at.desc())
+                    )
+                ).scalars().first()
+                if newest is not None and get_scenario(newest.scenario) is not None:
+                    get_simulator().inject(newest.scenario)
+                    log_event(
+                        "demo.resume",
+                        scenario=newest.scenario,
+                        incident_id=str(newest.id),
+                    )
                 return
             scenario = get_scenario(scenario_name)
             if scenario is None:
@@ -400,6 +430,26 @@ async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
 # Only the prose is replaced. The structured errors stay under `errors`, because
 # they are diagnostics for whoever is reading the logs, and translating them
 # would destroy the field paths they identify.
+#: pydantic error types raised by a validator *we* wrote (``raise ValueError``),
+#: as opposed to one of its own constraints (``string_too_short``,
+#: ``uuid_parsing``, ``literal_error``, ``missing`` …). The distinction is what
+#: lets this handler keep our Chinese messages and drop only the framework's
+#: English ones — a blanket rewrite threw away the reason along with the
+#: language, so "severity 取值 'x' 不合法" collapsed into "body.severity".
+_AUTHORED_ERROR_TYPES = frozenset({"value_error", "assertion_error"})
+
+
+def _authored_message(err: dict[str, Any]) -> str | None:
+    """Our own validator message, without pydantic's "Value error, " prefix."""
+    if str(err.get("type")) not in _AUTHORED_ERROR_TYPES:
+        return None
+    msg = str(err.get("msg") or "").strip()
+    for prefix in ("Value error, ", "Assertion failed, "):
+        if msg.startswith(prefix):
+            return msg[len(prefix):].strip()
+    return msg or None
+
+
 @app.exception_handler(RequestValidationError)
 async def _validation_error_handler(
     request: Request, exc: RequestValidationError
@@ -414,10 +464,17 @@ async def _validation_error_handler(
     where = "、".join(
         ".".join(str(part) for part in err.get("loc", ())) for err in errors[:3]
     )
+    authored = [m for m in (_authored_message(err) for err in errors) if m]
+    if authored:
+        detail = "；".join(authored[:3])
+    elif where:
+        detail = f"请求参数不合法：{where}"
+    else:
+        detail = "请求参数不合法"
     return JSONResponse(
         status_code=422,
         content={
-            "detail": f"请求参数不合法：{where}" if where else "请求参数不合法",
+            "detail": detail,
             "errors": [
                 {"location": str(err.get("loc")), "type": str(err.get("type"))}
                 for err in errors

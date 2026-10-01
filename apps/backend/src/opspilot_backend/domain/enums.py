@@ -441,6 +441,18 @@ DIAGNOSIS_OUTCOME_ZH: dict[str, str] = {
 }
 
 
+def join_values(values: Any) -> str:
+    """A set of wire values as a sentence fragment, not a Python repr.
+
+    ``f"{sorted(v)}"`` was the shortest way to say "these are the allowed
+    values" and it put ``['critical', 'high', 'low']`` — brackets, quotes and
+    all — in the middle of a Chinese sentence. The values themselves are wire
+    tokens and keep their own spelling, because a caller that has to send one
+    needs to see it exactly; only the container has to go.
+    """
+    return "、".join(sorted(str(value) for value in values))
+
+
 def _zh(table: dict[str, str], value: Any) -> str:
     """Chinese label for a wire value, tolerant of how the caller cased it.
 
