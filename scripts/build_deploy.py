@@ -262,10 +262,77 @@ def copy_tree(src: Path, dest: Path) -> int:
     return count
 
 
+#: Everything `vite build` reads to produce `dist/`. Listed rather than
+#: globbed from the frontend root so that `dist` and `node_modules` cannot
+#: sneak in and make the bundle look stale against itself.
+FRONTEND_SOURCES = (
+    "src",
+    "index.html",
+    "package.json",
+    "package-lock.json",
+    "vite.config.ts",
+    "vite.config.js",
+    "tsconfig.json",
+    "tsconfig.app.json",
+    "tsconfig.node.json",
+)
+
+
+def frontend_staleness(dist: Path) -> str | None:
+    """Is ``dist/`` older than the sources it was built from?
+
+    The check above only proves a bundle *exists*, and that is the weaker half
+    of the question. A page was edited and the bundle was not rebuilt: the
+    release went out, the server it talked to was correct, and the browser
+    still rendered the old string. Nothing failed, because a stale bundle is a
+    perfectly valid bundle — it just does not contain the change.
+
+    That is not hypothetical. `api/client.ts` gained a branch so a 404 would
+    show the backend's Chinese `message` instead of the HTTP status line; the
+    deploy was built from a `dist/` an hour older than the edit, and the fix
+    was in the repository, in the server, and nowhere on the screen. Only the
+    end-to-end dump caught it, which is a fine way to find it once and a bad
+    way to find it every time.
+
+    Timestamps are the whole signal here — there is no build manifest to ask.
+    They are enough: `vite build` reads `src/` and only then writes `dist/`, so
+    a source file newer than `dist/index.html` means the bundle predates it.
+    """
+    marker = dist / "index.html"
+    built_at = marker.stat().st_mtime
+    newest: tuple[float, Path] | None = None
+    for name in FRONTEND_SOURCES:
+        target = FRONTEND / name
+        if not target.exists():
+            continue
+        for item in (target.rglob("*") if target.is_dir() else [target]):
+            if not item.is_file() or "node_modules" in item.parts:
+                continue
+            mtime = item.stat().st_mtime
+            if newest is None or mtime > newest[0]:
+                newest = (mtime, item)
+    if newest is None:
+        return None
+    if newest[0] > built_at:
+        changed = newest[1].relative_to(FRONTEND).as_posix()
+        return (
+            f"frontend bundle is stale — {changed} is newer than "
+            f"{marker.relative_to(FRONTEND).as_posix()} "
+            f"({int(newest[0] - built_at)}s). "
+            "Run `npm run build` in apps/frontend, then rebuild the deploy unit."
+        )
+    return None
+
+
 def main() -> int:
     dist = FRONTEND / "dist"
     if not (dist / "index.html").is_file():
         print("error: frontend not built — run `npm run build` first", file=sys.stderr)
+        return 1
+
+    staleness = frontend_staleness(dist)
+    if staleness:
+        print(f"error: {staleness}", file=sys.stderr)
         return 1
 
     previous_env = read_previous_env()

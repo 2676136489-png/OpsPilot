@@ -255,8 +255,9 @@ npm run dev                                           # http://localhost:5173
 ```
 
 开发模式下前后端分离（Vite 5173，后端 8000，CORS 已配）。
-单端口模式由 `scripts/build_deploy.py` 负责——它跑完前端 build 之后把 `dist/` 拷成后端认的 `webroot/`，
-输出一个可以直接 `python serve.py` 的目录：
+单端口模式由 `scripts/build_deploy.py` 负责——它**不**替你跑前端 build，而是要求你已经跑过：
+先校验 `dist/` 比所有前端源文件都新（否则直接拒绝，见踩坑 #15），
+再把 `dist/` 拷成后端认的 `webroot/`，输出一个可以直接 `python serve.py` 的目录：
 
 ```bash
 cd apps/frontend && npm run build
@@ -286,7 +287,7 @@ cp .env.example .env
 
 ```bash
 cd apps/backend
-PYTHONPATH=src python -m pytest tests -q          # 120 passed
+PYTHONPATH=src python -m pytest tests -q          # 128 passed
 cd apps/frontend && npx tsc -b && npx oxlint      # 类型 + lint
 cd evals && python cli.py                         # 12 个场景的端到端评估
 ```
@@ -510,6 +511,31 @@ lint 和类型检查都不会响。端到端那次 dump 里 `reasoning_summary` 
 用 AST 而不是正则，是因为 `f"{sorted(x)[0]}"`（插值单个元素）完全合法，
 正则分不出来。扫描器自己也有一条自检，会先用一份人造的泄漏代码确认它真能报错——
 否则这条测试可能只是永远为真。
+
+**15. 源码改了，`dist/` 没重建，部署包照样打出来了。**
+
+这个比 #13 更安静。`build_deploy.py` 只检查 `dist/index.html` **是否存在**，
+而一份陈旧的产物是一份**完全合法**的产物：服务端跑得对、仓库里代码是对的，
+只有浏览器里还是旧字符串。没有任何一步会报错。
+
+实际发生的是：`api/client.ts` 加了一个分支，让 404 显示后端的 `message`
+（原来会显示 `fetch` 的 HTTP 状态行「API 404 Not Found」，比服务端说的还差）。
+部署包却是从一个比这次修改**早一小时**的 `dist/` 打出来的。修复在仓库里、
+在服务端里、就是不在屏幕上。靠端到端 dump 才发现——那种事找到一次是本事，
+每次都靠它不是。
+
+所以构建时加了一道新鲜度闸门：比较 `dist/index.html` 与 `src/`、`index.html`、
+`package.json`、vite / tsconfig 的时间戳，任何源文件更新就直接拒绝构建。
+
+```
+error: frontend bundle is stale — src/api/client.ts is newer than dist/index.html (56s).
+Run `npm run build` in apps/frontend, then rebuild the deploy unit.
+```
+
+时间戳是这里唯一可用的判据（没有 build manifest），但够用：
+`vite build` 先读 `src/` 再写 `dist/`，所以源文件比产物新就意味着产物早于这次改动。
+`tests/test_build_gates.py` 覆盖了通过、拦下、点名到具体文件、以及不该误报的几种
+（前端的 README/Dockerfile、`src/` 下万一出现的 `node_modules`）。
 
 ---
 
