@@ -21,6 +21,29 @@ import type {
 export const API_BASE = import.meta.env.VITE_API_BASE ?? '/api/v1'
 
 /**
+ * Chinese reasons for the statuses this API actually produces.
+ *
+ * `Response.statusText` is English and not something a browser guarantees
+ * anyway (HTTP/2 has no reason phrase at all), so it is not a fallback worth
+ * propagating. Only statuses we can be seen to return are listed; anything else
+ * falls back to a bare "请求失败" plus the code, which is honest about being
+ * unclassified rather than inventing a reason.
+ */
+const HTTP_STATUS_ZH: Record<number, string> = {
+  400: '请求不合法',
+  401: '未认证',
+  403: '没有权限',
+  404: '资源不存在',
+  409: '状态冲突',
+  422: '参数校验未通过',
+  429: '请求过于频繁',
+  500: '服务端内部错误',
+  502: '网关错误',
+  503: '服务暂时不可用',
+  504: '网关超时',
+}
+
+/**
  * Error carrying the HTTP status and parsed response body.
  *
  * Callers can branch on `status` (404 vs 500 vs network failure) instead of
@@ -69,7 +92,29 @@ export class ApiError extends Error {
       // server actually said.
       if (typeof p.message === 'string' && p.message) return p.message
     }
-    return this.message
+    return this.fallbackDetail(p)
+  }
+
+  /**
+   * Last resort, for a body with neither `detail` nor `message`.
+   *
+   * That means the response did not come from our exception handlers at all —
+   * a reverse proxy's error page, a plain-text 500, a truncated stream. The only
+   * thing left is `this.message`, which `apiFetch` built as
+   * `API ${status} ${statusText}` out of the HTTP status line: English, and the
+   * last English on this path. So restate it in Chinese and keep the numeric
+   * status, which is the part someone can actually act on. A short, non-HTML
+   * body is appended because a proxy that says *why* is worth more than a code.
+   */
+  private fallbackDetail(p: unknown): string {
+    // Status 0 is `apiFetch`'s own "could not reach the backend", and that
+    // message is already Chinese — do not wrap it in a second sentence.
+    if (this.status === 0) return this.message
+    const reason = HTTP_STATUS_ZH[this.status]
+    const head = `请求失败（HTTP ${this.status}${reason ? ` ${reason}` : ''}）`
+    const body = typeof p === 'string' ? p.trim() : ''
+    const usable = body && body.length <= 200 && !body.includes('<')
+    return usable ? `${head}：${body}` : head
   }
 }
 
