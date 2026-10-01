@@ -1,92 +1,92 @@
-# Bad Deployment Rollback
+# 坏部署回滚
 
-**Service**: any  
-**Category**: deployment  
-**Severity**: critical  
-**Source**: SRE Runbook — v3.0  
+**服务**: 任意  
+**分类**: deployment  
+**严重级别**: critical  
+**来源**: SRE 运维手册 — v3.0  
 
 ---
 
-## Symptoms of a Bad Deployment
+## 坏部署的现象
 
-How to detect that a recent deployment is the cause of an incident:
+如何判断是最近一次部署导致了事故：
 
-- **Immediate health degradation** right after a deployment timestamp in ArgoCD / GitHub Actions
-- Error rate spikes from baseline (<1%) to >10% within 5 minutes of rollout start
-- Logs contain import errors, startup failures, or runtime panics referencing new code
-- Pod readiness probes fail: 0/N replicas ready after rolling update
-- `service_replicas_ready` metric drops to 0 from normal count
-- A breaking change in the commit message: "BREAKING CHANGE" or "bump version to 3.0"
-- Circuit breaker trips on dependent services (e.g., api-gateway marks checkout as DOWN)
+- **健康状态立即恶化** —— 时间点恰好对应 ArgoCD / GitHub Actions 中的部署时间戳
+- 错误率在发布开始后 5 分钟内从基线（<1%）飙升至 >10%
+- 日志中出现导入错误、启动失败或运行时崩溃（panic），且指向新代码
+- Pod 就绪探针失败：滚动更新后 0/N 个副本就绪
+- `service_replicas_ready` 指标从正常值掉到 0
+- commit message 里存在破坏性变更："BREAKING CHANGE" 或 "bump version to 3.0"
+- 依赖服务的熔断器被触发（例如 api-gateway 把 checkout 标记为 DOWN）
 
-## Root Cause Pattern
+## 根因模式
 
-Bad deployments fall into these categories:
+坏部署通常归为以下几类：
 
-1. **Breaking API change** — Internal import renamed or removed (e.g., `PriceCalculator` → `PricingEngine`)
-2. **Database migration mismatch** — Code expects a new column that migration hasn't applied yet
-3. **Config drift** — New config value (feature flag, env var) causes unexpected behavior
-4. **Dependency bump** — Upstream library (HTTP client, ORM) has a behavior change in minor version
-5. **Incomplete testing** — Happy-path tests pass but edge cases fail in production traffic
+1. **破坏性 API 变更** —— 内部导入被重命名或删除（例如 `PriceCalculator` → `PricingEngine`）
+2. **数据库迁移不一致** —— 代码依赖一个新列，但迁移还没执行
+3. **配置漂移** —— 新增的配置项（特性开关、环境变量）引发了非预期行为
+4. **依赖升级** —— 上游库（HTTP 客户端、ORM）在小版本里改动了行为
+5. **测试不充分** —— 正常路径测试通过，但边界情况在生产流量下失败
 
-## Resolution Steps
+## 处置步骤
 
-### Phase 1 — Detection (automated preferred)
+### 阶段 1 —— 检测（优先自动化）
 
 ```bash
-# Check recent deployments
+# 检查最近的部署
 argo list apps --status degraded
 
-# Check which version is currently failing
+# 查看当前失败的是哪个版本
 kubectl rollout history deployment/<service-name>
 
-# Compare error rate before vs after deployment timestamp
-# Using Prometheus range query
+# 对比部署时间戳前后的错误率
+# 使用 Prometheus 范围查询
 ```
 
-### Phase 2 — Rollback procedure
+### 阶段 2 —— 回滚流程
 
 ```bash
-# Option A: Roll back via kubectl to previous revision
+# 方案 A：通过 kubectl 回滚到上一个版本
 kubectl rollout undo deployment/<service-name> --to-revision=N
 
-# Option B: Roll back via ArgoCD
+# 方案 B：通过 ArgoCD 回滚
 argo rollback <app-name> --to-sync-wave=0
 
-# Option C: Traffic split — route 100% to old version (if using Istio/Linkerd)
+# 方案 C：流量切分 —— 把 100% 流量导回旧版本（如果使用 Istio/Linkerd）
 kubectl apply -f traffic-split-old-v100.yaml
 ```
 
-Rollback should complete in 30-90 seconds. Verify new pods are running old image.
+回滚应在 30–90 秒内完成。确认新 Pod 运行的是旧镜像。
 
-### Phase 3 — Freeze and investigate
+### 阶段 3 —— 冻结并排查
 
-- Pause the CI/CD pipeline for this service: `argo pause <app-name>`
-- Notify on-call dev of the broken commit SHA
-- Collect the broken deployment logs before cleanup
-- Tag the bad version: `git tag bad-vX.Y.Z <sha>`
+- 暂停该服务的 CI/CD 流水线：`argo pause <app-name>`
+- 把出问题的 commit SHA 通知给值班开发
+- 在清理前先收集坏部署的日志
+- 给坏版本打标签：`git tag bad-vX.Y.Z <sha>`
 
-### Phase 4 — Fix forward (not rollback)
+### 阶段 4 —— 前向修复（而非回滚）
 
-Sometimes rollback is not possible (schema migration already applied, data already written). In that case:
-- Deploy a fix commit on top of the broken one
-- Canary deploy the fix to 10% of traffic first
-- Monitor for 15 minutes before full rollout
+有时无法回滚（库表迁移已执行、数据已写入）。这种情况下：
+- 在坏版本基础上部署一个修复 commit
+- 先把修复金丝雀发布到 10% 流量
+- 观察 15 分钟后再全量发布
 
-## Verification After Rollback
+## 回滚后的验证
 
-- All replicas ready: `kubectl get pods -l app=<service> | grep Running | wc -l` matches expected count
-- `service_replicas_ready` metric returns to baseline count
-- Error rate drops from incident level to pre-deployment baseline (<1%)
-- P95 latency returns to normal range
-- Health endpoint `/health` returns 200 OK from all instances
-- Smoke test: run synthetic transaction (e.g., create order → pay → confirm)
-- Dependent services' circuit breakers close automatically
-- ArgoCD app syncs to "Synced" and "Healthy"
+- 所有副本就绪：`kubectl get pods -l app=<service> | grep Running | wc -l` 的结果与预期数量一致
+- `service_replicas_ready` 指标回到基线值
+- 错误率从事故水平回落到部署前的基线（<1%）
+- P95 延迟回到正常范围
+- 健康检查端点 `/health` 在所有实例上都返回 200 OK
+- 冒烟测试：跑一笔合成交易（例如 下单 → 支付 → 确认）
+- 依赖服务的熔断器自动闭合
+- ArgoCD 应用同步到 "Synced" 和 "Healthy"
 
-## Post-Incident
+## 事后复盘
 
-- Create hotfix branch off last-good revision
-- Add integration test that would have caught this regression
-- Review deployment checklist — was breaking change communicated?
-- Consider progressive delivery (canary → blue/green) for this service
+- 从最后一个正常版本拉出 hotfix 分支
+- 补一个能捕获该回归的集成测试
+- 复盘部署检查清单 —— 破坏性变更有没有提前沟通？
+- 考虑为该服务引入渐进式发布（金丝雀 → 蓝绿）

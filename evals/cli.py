@@ -42,21 +42,21 @@ from opspilot_evals.runners.eval_runner import (  # noqa: E402
 #: than derived: ``hypothesis_verification`` and ``verification`` are different
 #: nodes, and any suffix-stripping rule would collapse them into one label.
 _NODE_LABELS = {
-    "load_context": "ctx",
-    "triage": "triage",
-    "investigation_planner": "plan",
-    "parallel_investigation": "collect",
-    "evidence_aggregation": "assess",
-    "hypothesis_generation": "hypotheses",
-    "hypothesis_verification": "test",
-    "root_cause_diagnosis": "diagnose",
-    "recovery_planner": "recovery-plan",
-    "risk_assessment": "risk",
-    "human_approval": "approval",
-    "recovery_executor": "execute",
-    "rollback": "rollback",
-    "verification": "verify",
-    "postmortem": "postmortem",
+    "load_context": "载入上下文",
+    "triage": "分诊",
+    "investigation_planner": "制定计划",
+    "parallel_investigation": "并行取证",
+    "evidence_aggregation": "汇总证据",
+    "hypothesis_generation": "生成假设",
+    "hypothesis_verification": "验证假设",
+    "root_cause_diagnosis": "根因诊断",
+    "recovery_planner": "制定方案",
+    "risk_assessment": "风险评估",
+    "human_approval": "人工审批",
+    "recovery_executor": "执行恢复",
+    "rollback": "回滚",
+    "verification": "复查恢复",
+    "postmortem": "生成复盘",
 }
 
 
@@ -69,79 +69,77 @@ def _markdown(suite: SuiteResult, report) -> str:
     lines: list[str] = []
     add = lines.append
 
-    add("# OpsPilot agent evaluation")
+    add("# OpsPilot Agent 评测报告")
     add("")
-    add(f"- run at: `{suite.started_at}`")
-    add(f"- scenarios: **{report.total}** across the simulator catalogue")
-    add(f"- simulator: {suite.simulator_mode}, eval mode on (ground truth reachable)")
-    add(f"- wall clock: {suite.duration_ms / 1000:.1f}s")
+    add(f"- 运行时间：`{suite.started_at}`")
+    add(f"- 场景数：**{report.total}**，取自模拟器目录")
+    add(f"- 模拟器：{suite.simulator_mode}，已开启评测模式（ground truth 可达）")
+    add(f"- 墙钟耗时：{suite.duration_ms / 1000:.1f}s")
     add("")
-    add("## Scorecard")
+    add("## 记分卡")
     add("")
-    add("| metric | value |")
+    add("| 指标 | 数值 |")
     add("| --- | --- |")
-    add(f"| Root cause accuracy | **{report.root_cause_accuracy:.1%}** |")
+    add(f"| 根因判定准确率 | **{report.root_cause_accuracy:.1%}** |")
     add(
-        f"| Evidence accuracy (recall) | {report.evidence_recall:.1%} "
-        f"(utilised {report.evidence_utilisation:.1%}, "
-        f"traceable {report.evidence_traceability:.1%}) |"
+        f"| 证据召回率 | {report.evidence_recall:.1%} "
+        f"（被诊断引用 {report.evidence_utilisation:.1%}，"
+        f"可追溯到假设 {report.evidence_traceability:.1%}） |"
     )
-    add(f"| Tool selection accuracy | {report.tool_selection_accuracy:.1%} |")
+    add(f"| 工具选择准确率 | {report.tool_selection_accuracy:.1%} |")
     add(
-        f"| Investigation steps | avg {report.avg_investigation_steps:.1f} steps, "
-        f"{report.avg_distinct_stages:.1f} distinct stages, "
-        f"replanned in {report.runs_that_replanned}/{report.total} runs "
-        f"({report.avg_replan_rounds:.1f} extra node runs on average), "
-        f"{report.avg_rejected_hypotheses:.1f} hypotheses rejected |"
-    )
-    add(
-        f"| Recovery success rate | {report.recovery_success_rate:.1%} "
-        f"(environment actually fixed {report.environment_fixed_rate:.1%}) |"
+        f"| 调查步数 | 平均 {report.avg_investigation_steps:.1f} 步，"
+        f"涉及 {report.avg_distinct_stages:.1f} 个不同阶段，"
+        f"{report.runs_that_replanned}/{report.total} 次运行发生了重新规划"
+        f"（平均额外跑 {report.avg_replan_rounds:.1f} 个节点），"
+        f"被否假设 {report.avg_rejected_hypotheses:.1f} 个 |"
     )
     add(
-        f"| Verification accuracy | {report.verification_accuracy:.1%} "
-        f"over {report.verification_scored} scored runs |"
-    )
-    add(f"| Reported fixed while broken | {report.reported_success_env_broken} |")
-    add(
-        f"| False diagnosis rate | {report.false_diagnosis_rate:.1%} "
-        f"({report.answered_runs} answers, {report.abstained_runs} abstentions) |"
+        f"| 恢复成功率 | {report.recovery_success_rate:.1%} "
+        f"（环境确实被修复 {report.environment_fixed_rate:.1%}） |"
     )
     add(
-        f"| Escalation rate | {report.escalation_rate:.1%} "
-        + (f"`{report.escalation_reasons}`" if report.escalation_reasons else "")
-        + " |"
+        f"| 验证准确率 | {report.verification_accuracy:.1%} "
+        f"覆盖 {report.verification_scored} 次运行 |"
+    )
+    add(f"| 声称已修复但环境仍是坏的 | {report.reported_success_env_broken} |")
+    add(
+        f"| 误诊率 | {report.false_diagnosis_rate:.1%} "
+        f"（{report.answered_runs} 次给出结论，{report.abstained_runs} 次弃权） |"
+    )
+    reasons = f" `{report.escalation_reasons}`" if report.escalation_reasons else ""
+    add(f"| 升级率 | {report.escalation_rate:.1%}{reasons} |")
+    add(
+        f"| 工具调用 | 共 {report.total_tool_calls} 次，"
+        f"平均 {report.avg_tool_calls:.1f}/次运行，失败 {report.failed_tool_call_rate:.1%} |"
+    )
+    modes = f" `{report.reasoning_modes}`" if report.reasoning_modes else ""
+    add(
+        f"| Token 用量 | 共 {report.total_tokens}，"
+        f"平均 {report.avg_tokens:.1f}/次运行{modes} |"
     )
     add(
-        f"| Tool calls | {report.total_tool_calls} total, "
-        f"avg {report.avg_tool_calls:.1f}/run, {report.failed_tool_call_rate:.1%} failed |"
+        f"| 延迟 | 平均 {report.avg_latency_ms:.0f}ms，"
+        f"p50 {report.p50_latency_ms:.0f}ms，p95 {report.p95_latency_ms:.0f}ms，"
+        f"最大 {report.max_latency_ms:.0f}ms |"
     )
     add(
-        f"| Token usage | {report.total_tokens} total, avg {report.avg_tokens:.1f}/run "
-        + (f"`{report.reasoning_modes}`" if report.reasoning_modes else "")
-        + " |"
-    )
-    add(
-        f"| Latency | avg {report.avg_latency_ms:.0f}ms, "
-        f"p50 {report.p50_latency_ms:.0f}ms, p95 {report.p95_latency_ms:.0f}ms, "
-        f"max {report.max_latency_ms:.0f}ms |"
-    )
-    add(
-        f"| Trace integrity | {report.traces_single_root}/{report.total} single-root, "
-        f"{report.traces_with_dangling_parents} dangling, avg {report.avg_spans_per_run:.0f} spans |"
+        f"| 追踪完整性 | {report.traces_single_root}/{report.total} 单一根节点，"
+        f"{report.traces_with_dangling_parents} 个悬空父节点，"
+        f"平均 {report.avg_spans_per_run:.0f} 个 span |"
     )
     add("")
 
-    add("## Per scenario")
+    add("## 逐场景明细")
     add("")
     add(
-        "| scenario | expected | diagnosed | outcome | tools | recall | env | "
-        "verify | latency |"
+        "| 场景 | 期望分类 | 判定分类 | 结论 | 工具数 | 召回率 | 环境 | "
+        "验证 | 延迟 |"
     )
     add("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for case in suite.cases:
         mark = "OK" if case.root_cause_correct else ("err" if case.error else "**MISS**")
-        env = "n/a" if case.env_passed is None else ("fixed" if case.env_passed else "broken")
+        env = "不适用" if case.env_passed is None else ("已修复" if case.env_passed else "仍是坏的")
         add(
             f"| {case.scenario} | {case.expected_category} | "
             f"{case.diagnosed_category or '-'} {mark} | "
@@ -151,12 +149,11 @@ def _markdown(suite: SuiteResult, report) -> str:
         )
     add("")
 
-    add("## Node path actually taken")
+    add("## 实际走过的节点路径")
     add("")
     add(
-        "Repeats are the point: a re-planned investigation runs "
-        "`investigation_planner` → `parallel_investigation` again, which a fixed "
-        "pipeline never does."
+        "重复本身就是结论：一次被重新规划的调查会把 `investigation_planner` → "
+        "`parallel_investigation` 再跑一遍，而固定流程永远不会。"
     )
     add("")
     for case in suite.cases:
@@ -164,20 +161,17 @@ def _markdown(suite: SuiteResult, report) -> str:
             continue
         path = " → ".join(_short(stage) for stage in case.stage_sequence)
         n = case.replan_rounds
-        add(
-            f"- **{case.scenario}** "
-            f"({n} extra node {'run' if n == 1 else 'runs'}): {path}"
-        )
+        add(f"- **{case.scenario}**（额外跑 {n} 个节点）：{path}")
     add("")
 
-    add("## Hypotheses raised")
+    add("## 提出过的假设")
     add("")
     for case in suite.cases:
         if not case.hypotheses:
             continue
         add(f"### {case.scenario}")
         add("")
-        add("| ref | domain | category | confidence | status |")
+        add("| 引用 | 领域 | 分类 | 置信度 | 状态 |")
         add("| --- | --- | --- | --- | --- |")
         for hyp in case.hypotheses:
             add(
@@ -187,13 +181,13 @@ def _markdown(suite: SuiteResult, report) -> str:
         add("")
 
     if report.category_breakdown:
-        add("## By root-cause category")
+        add("## 按根因分类")
         add("")
         for name, value in report.category_breakdown.items():
             add(f"- {name}: {value:.1%}")
         add("")
     if report.difficulty_breakdown:
-        add("## By difficulty")
+        add("## 按难度")
         add("")
         for name, value in report.difficulty_breakdown.items():
             add(f"- {name}: {value:.1%}")
@@ -203,22 +197,22 @@ def _markdown(suite: SuiteResult, report) -> str:
         c for c in suite.cases if not c.root_cause_correct and not c.error
     ]
     if misses:
-        add("## Misses")
+        add("## 判定错误")
         add("")
         for case in misses:
             add(f"### {case.scenario}")
             add("")
-            add(f"- expected `{case.expected_category}` ({case.expected_root_cause})")
-            add(f"- diagnosed `{case.diagnosed_category}` ({case.diagnosis_outcome})")
+            add(f"- 期望 `{case.expected_category}`（{case.expected_root_cause}）")
+            add(f"- 实际判定 `{case.diagnosed_category}`（{case.diagnosis_outcome}）")
             if case.missing_evidence:
-                add(f"- evidence never seen: {', '.join(case.missing_evidence)}")
+                add(f"- 始终没采集到的证据：{', '.join(case.missing_evidence)}")
             if case.missing_tools:
-                add(f"- tools never called: {', '.join(case.missing_tools)}")
+                add(f"- 始终没调用的工具：{', '.join(case.missing_tools)}")
             if case.escalation_reason:
-                add(f"- escalated: {case.escalation_reason}")
+                add(f"- 升级原因：{case.escalation_reason}")
             add("")
 
-    add("## How the numbers are defined")
+    add("## 这些数字是怎么定义的")
     add("")
     for key, value in report.notes.get("scoring", {}).items():
         add(f"- **{key}** — {value}")
@@ -234,11 +228,11 @@ async def _run(args: argparse.Namespace) -> int:
 
         scenarios = [c.scenario for c in load_eval_cases() if args.only in c.scenario]
         if not scenarios:
-            print(f"no scenario matches {args.only!r}")
+            print(f"没有匹配 {args.only!r} 的场景")
             return 2
 
     print("=" * 100)
-    print("OpsPilot agent evaluation — scored end to end against the simulator's answer key")
+    print("OpsPilot Agent 评测 —— 端到端跑完整流程，对照模拟器的答案评分")
     print("=" * 100)
 
     suite = await run_suite(
@@ -296,12 +290,12 @@ async def _run(args: argparse.Namespace) -> int:
         )
 
     print()
-    print(f"report: {md_path}")
-    print(f"json:   {json_path}")
+    print(f"报告：{md_path}")
+    print(f"JSON：{json_path}")
     if web_path is not None:
-        print(f"web:    {web_path}")
+        print(f"前端：{web_path}")
     if args.keep_db:
-        print(f"db:     {suite.database}")
+        print(f"数据库：{suite.database}")
 
     return 0 if report.failures() == 0 else 1
 

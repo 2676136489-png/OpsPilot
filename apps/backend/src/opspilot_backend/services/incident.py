@@ -53,7 +53,7 @@ class ServiceService:
         existing = await self.repo.get_by_name(payload.name)
         if existing is not None:
             raise BadRequestError(
-                f"Service with name '{payload.name}' already exists."
+                f"名为 '{payload.name}' 的服务已经存在。"
             )
         return await self.repo.create(name=payload.name, description=payload.description)
 
@@ -93,8 +93,8 @@ class IncidentService:
         domain = SEVERITY_TO_DOMAIN.get(severity)
         if domain is None:
             raise BadRequestError(
-                f"Invalid severity '{severity}'. Must be one of "
-                f"{sorted(VALID_SEVERITIES | DOMAIN_SEVERITIES)}."
+                f"severity 取值 '{severity}' 不合法，必须是 "
+                f"{sorted(VALID_SEVERITIES | DOMAIN_SEVERITIES)} 之一。"
             )
         return domain
 
@@ -106,8 +106,8 @@ class IncidentService:
         domain = STATUS_TO_DOMAIN.get(st)
         if domain is None:
             raise BadRequestError(
-                f"Invalid status '{st}'. Must be one of "
-                f"{sorted(VALID_STATUSES | DOMAIN_STATUSES)}."
+                f"status 取值 '{st}' 不合法，必须是 "
+                f"{sorted(VALID_STATUSES | DOMAIN_STATUSES)} 之一。"
             )
         return domain
 
@@ -128,7 +128,7 @@ class IncidentService:
         # Validate service exists
         svc = await self.service_repo.get_by_id(payload.service_id)
         if svc is None:
-            raise BadRequestError(f"Service {payload.service_id} does not exist.")
+            raise BadRequestError(f"服务 {payload.service_id} 不存在。")
         severity = self._to_domain_severity(payload.severity)
         status = self._to_domain_status(payload.status or "CREATED")
 
@@ -226,11 +226,11 @@ class DeploymentService:
     async def create_deployment(self, payload: DeploymentCreate) -> Deployment:
         svc = await self.service_repo.get_by_id(payload.service_id)
         if svc is None:
-            raise BadRequestError(f"Service {payload.service_id} does not exist.")
+            raise BadRequestError(f"服务 {payload.service_id} 不存在。")
         if payload.status not in VALID_DEPLOYMENT_STATUSES:
             raise BadRequestError(
-                f"Invalid deployment status '{payload.status}'. "
-                f"Must be one of {sorted(VALID_DEPLOYMENT_STATUSES)}."
+                f"部署状态 '{payload.status}' 不合法，"
+                f"必须是 {sorted(VALID_DEPLOYMENT_STATUSES)} 之一。"
             )
         return await self.repo.create(
             service_id=payload.service_id,
@@ -246,5 +246,5 @@ class DeploymentService:
     async def list_by_service(self, service_id: uuid.UUID) -> list[Deployment]:
         svc = await self.service_repo.get_by_id(service_id)
         if svc is None:
-            raise BadRequestError(f"Service {service_id} does not exist.")
+            raise BadRequestError(f"服务 {service_id} 不存在。")
         return list(await self.repo.get_by_service(service_id))

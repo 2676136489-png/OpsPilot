@@ -100,9 +100,14 @@ export function serviceLabel(incident: { service_name?: string | null; service_i
 
 const OUTCOME_ZH: Record<string, string> = {
   ROOT_CAUSE_CONFIRMED: '根因已确认',
-  ROOT_CAUSE_PROBABLE: '根因很可能',
+  ROOT_CAUSE_PROBABLE: '根因很可能成立',
   INSUFFICIENT_EVIDENCE: '证据不足',
   INVESTIGATION_FAILED: '调查失败',
+  // Not a member of the backend's `DiagnosisOutcome`: a run that never got far
+  // enough to produce a verdict stores no outcome, and some read paths
+  // denormalise that as `UNKNOWN`. It has to read as an honest Chinese
+  // sentence rather than as the bare token.
+  UNKNOWN: '未得出结论',
 }
 
 const OUTCOME_TONE: Record<string, string> = {
@@ -118,7 +123,9 @@ const ESCALATION_ZH: Record<string, string> = {
   NO_HYPOTHESIS_CONFIRMED: '没有假设能被证实',
   RECOVERY_FAILED: '恢复动作均未生效',
   VERIFICATION_FAILED: '恢复后验证未通过',
-  MANUAL_ONLY: '需人工处理',
+  CRITICAL_RISK_UNACTIONABLE: '风险过高，无法自动处置',
+  APPROVAL_REJECTED: '人工审批被拒绝',
+  NODE_ERROR: '工作流节点内部报错',
 }
 
 /** An unknown value falls through verbatim rather than becoming "unknown". */

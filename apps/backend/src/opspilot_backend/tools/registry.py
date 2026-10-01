@@ -27,7 +27,7 @@ from opspilot_backend.tools.spec import ToolContext, ToolSpec
 
 
 class ServiceTarget(BaseModel):
-    service: str = Field(..., description="Service name, e.g. payment-service")
+    service: str = Field(..., description="服务名，例如 payment-service")
 
 
 class GetServiceStatusInput(ServiceTarget):
@@ -156,7 +156,7 @@ class GetRunbookOutput(BaseModel):
 
 class RecoveryTarget(BaseModel):
     service: str
-    reason: str = Field(default="", description="Why this action is being taken")
+    reason: str = Field(default="", description="为什么要执行这个动作")
 
 
 class RestartServiceInput(RecoveryTarget):
@@ -204,7 +204,7 @@ class SwitchPaymentProviderInput(RecoveryTarget):
 
 
 class NotifyOncallInput(RecoveryTarget):
-    summary: str = Field(default="", description="What the on-call engineer should know")
+    summary: str = Field(default="", description="值班工程师需要知道的信息")
 
 
 class MutationOutput(BaseModel):
@@ -346,7 +346,7 @@ async def _get_runbook(args: dict[str, Any], ctx: ToolContext) -> dict[str, Any]
     providers = get_providers()
     rb = await providers.runbooks.get(args["runbook_id"])
     if rb is None:
-        raise KeyError(f"runbook not found: {args['runbook_id']}")
+        raise KeyError(f"找不到 runbook：{args['runbook_id']}")
     return {
         "id": rb["id"],
         "title": rb["title"],
@@ -482,7 +482,7 @@ def _spec(**kwargs: Any) -> ToolSpec:
 TOOL_REGISTRY: dict[str, ToolSpec] = {
     "get_service_status": _spec(
         name="get_service_status",
-        description="Fetch current health, error rate, latency and resource usage for a service.",
+        description="获取某个服务的当前健康状态、错误率、延迟与资源占用。",
         category="service_health",
         input_model=GetServiceStatusInput,
         output_model=ServiceStatusOutput,
@@ -495,7 +495,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "query_logs": _spec(
         name="query_logs",
-        description="Search structured logs for a service within a time window.",
+        description="在指定时间窗内检索某个服务的结构化日志。",
         category="logs",
         input_model=QueryLogsInput,
         output_model=QueryLogsOutput,
@@ -508,7 +508,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "query_metrics": _spec(
         name="query_metrics",
-        description="Query time-series metrics (error rate, latency, cpu, memory, db connections).",
+        description="查询时间序列指标（错误率、延迟、CPU、内存、数据库连接数）。",
         category="metrics",
         input_model=QueryMetricsInput,
         output_model=QueryMetricsOutput,
@@ -521,7 +521,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "get_deployments": _spec(
         name="get_deployments",
-        description="Fetch recent deployment history for a service.",
+        description="获取某个服务最近的发布历史。",
         category="deployments",
         input_model=GetDeploymentsInput,
         output_model=GetDeploymentsOutput,
@@ -534,7 +534,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "get_recent_commits": _spec(
         name="get_recent_commits",
-        description="Fetch recent commits for a service repository.",
+        description="获取某个服务代码仓库的最近提交。",
         category="deployments",
         input_model=GetRecentCommitsInput,
         output_model=GetRecentCommitsOutput,
@@ -547,7 +547,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "get_dependencies": _spec(
         name="get_dependencies",
-        description="Fetch the service dependency graph (blast-radius analysis).",
+        description="获取服务依赖关系图（用于爆炸半径分析）。",
         category="service_health",
         input_model=GetDependenciesInput,
         output_model=GetDependenciesOutput,
@@ -560,7 +560,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "search_runbooks": _spec(
         name="search_runbooks",
-        description="Search operational runbooks for remediation guidance.",
+        description="检索运维 runbook，获取处置建议。",
         category="runbooks",
         input_model=SearchRunbooksInput,
         output_model=SearchRunbooksOutput,
@@ -573,7 +573,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "get_runbook": _spec(
         name="get_runbook",
-        description="Fetch the full content of a runbook by id.",
+        description="按 id 获取一份 runbook 的完整内容。",
         category="runbooks",
         input_model=GetRunbookInput,
         output_model=GetRunbookOutput,
@@ -586,7 +586,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "restart_service": _spec(
         name="restart_service",
-        description="Restart a service to clear in-process state (connection pools, caches).",
+        description="重启服务，清掉进程内状态（连接池、缓存）。",
         category="recovery",
         input_model=RestartServiceInput,
         output_model=MutationOutput,
@@ -602,7 +602,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "rollback_deployment": _spec(
         name="rollback_deployment",
-        description="Roll a service back to its previous deployment version.",
+        description="把服务回滚到上一个部署版本。",
         category="recovery",
         input_model=RollbackDeploymentInput,
         output_model=MutationOutput,
@@ -618,7 +618,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "scale_service": _spec(
         name="scale_service",
-        description="Scale a service horizontally to shed load.",
+        description="横向扩容服务，把负载摊开。",
         category="recovery",
         input_model=ScaleServiceInput,
         output_model=MutationOutput,
@@ -634,7 +634,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "restart_redis": _spec(
         name="restart_redis",
-        description="Fail over or restart the Redis cluster so clients can reconnect.",
+        description="对 Redis 集群做故障转移或重启，让客户端能重新连上。",
         category="recovery",
         input_model=RestartRedisInput,
         output_model=MutationOutput,
@@ -650,7 +650,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "flush_cache": _spec(
         name="flush_cache",
-        description="Discard cache entries that are being served to clients.",
+        description="丢弃正在被返回给客户端的缓存条目。",
         category="recovery",
         input_model=FlushCacheInput,
         output_model=MutationOutput,
@@ -666,7 +666,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "restart_postgres": _spec(
         name="restart_postgres",
-        description="Recycle the database, dropping stuck sessions and locks.",
+        description="重启数据库，清掉卡住的会话与锁。",
         category="recovery",
         input_model=RestartPostgresInput,
         output_model=MutationOutput,
@@ -682,7 +682,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "increase_pool_size": _spec(
         name="increase_pool_size",
-        description="Raise the database connection pool ceiling for a service.",
+        description="调高某个服务的数据库连接池上限。",
         category="recovery",
         input_model=IncreasePoolSizeInput,
         output_model=MutationOutput,
@@ -698,7 +698,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "clear_deadlock": _spec(
         name="clear_deadlock",
-        description="Kill the blocking transactions that hold row locks on the datastore.",
+        description="杀掉持有行锁的阻塞事务。",
         category="recovery",
         input_model=ClearDeadlockInput,
         output_model=MutationOutput,
@@ -714,7 +714,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "enable_circuit_breaker": _spec(
         name="enable_circuit_breaker",
-        description="Open the circuit breaker for a failing upstream so callers fail fast.",
+        description="为失败的上游打开熔断器，让调用方快速失败。",
         category="recovery",
         input_model=EnableCircuitBreakerInput,
         output_model=MutationOutput,
@@ -730,7 +730,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "switch_payment_provider": _spec(
         name="switch_payment_provider",
-        description="Fail authorisations over to the standby payment provider.",
+        description="把授权请求切到备用支付渠道。",
         category="recovery",
         input_model=SwitchPaymentProviderInput,
         output_model=MutationOutput,
@@ -746,7 +746,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "notify_oncall": _spec(
         name="notify_oncall",
-        description="Page the on-call engineer with the current diagnosis.",
+        description="带着当前诊断结果呼叫值班工程师。",
         category="recovery",
         input_model=NotifyOncallInput,
         output_model=MutationOutput,
@@ -762,7 +762,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "verify_service_health": _spec(
         name="verify_service_health",
-        description="Probe a service against explicit health thresholds after recovery.",
+        description="在恢复之后，按明确的健康阈值探测服务。",
         category="service_health",
         input_model=VerifyServiceHealthInput,
         output_model=VerifyServiceHealthOutput,
@@ -775,7 +775,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "create_github_issue": _spec(
         name="create_github_issue",
-        description="File a follow-up issue in the service repository.",
+        description="在服务仓库里建一个跟进 issue。",
         category="github",
         input_model=CreateGithubIssueInput,
         output_model=CreateGithubIssueOutput,
@@ -825,7 +825,7 @@ def get_tool(name: str) -> ToolSpec:
     try:
         return TOOL_REGISTRY[name]
     except KeyError as exc:
-        raise KeyError(f"unknown tool: {name!r}") from exc
+        raise KeyError(f"未知工具：{name!r}") from exc
 
 
 def list_tools() -> list[dict[str, Any]]:

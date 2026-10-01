@@ -1,11 +1,11 @@
 {
-  "generated_at": "20260930T102252Z",
+  "generated_at": "20261001T111746Z",
   "report": {
     "total": 12,
     "errors": 0,
     "root_cause_accuracy": 1.0,
     "evidence_accuracy": {
-      "recall": 0.7014,
+      "recall": 0.6528,
       "utilisation": 0.2915,
       "traceability": 0.3323
     },
@@ -50,16 +50,16 @@
       "budget_exhausted_runs": 0
     },
     "latency_ms": {
-      "avg": 1236.9,
-      "p50": 1193.3,
-      "p95": 1787.1,
-      "max": 2098.7,
-      "avg_workflow": 1031.7417
+      "avg": 1362.7,
+      "p50": 1239.7,
+      "p95": 2216.9,
+      "max": 2876.8,
+      "avg_workflow": 1110.375
     },
     "trace_integrity": {
       "single_root": 12,
       "with_dangling_parents": 0,
-      "avg_spans": 126.3333,
+      "avg_spans": 126.0833,
       "avg_depth": 5.0
     },
     "breakdowns": {
@@ -82,7 +82,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 2098.7
+          "latency_ms": 2876.8
         },
         "checkout-db-pool-exhaustion": {
           "correct": true,
@@ -93,7 +93,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1170.4
+          "latency_ms": 1066.2
         },
         "checkout-deployment-cascade": {
           "correct": true,
@@ -104,7 +104,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1402.1
+          "latency_ms": 1388.9
         },
         "checkout-memory-leak": {
           "correct": true,
@@ -112,10 +112,10 @@
           "expected": "memory",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 10,
-          "recall": 0.75,
+          "recall": 0.5,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 902.3
+          "latency_ms": 982.2
         },
         "gateway-dependency-cascade": {
           "correct": true,
@@ -123,10 +123,10 @@
           "expected": "cascading",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 18,
-          "recall": 0.75,
+          "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1335.1
+          "latency_ms": 1325.5
         },
         "inventory-cpu-saturation": {
           "correct": true,
@@ -137,7 +137,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1532.1
+          "latency_ms": 1677.0
         },
         "payment-bad-deployment": {
           "correct": true,
@@ -148,7 +148,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 884.8
+          "latency_ms": 1035.4
         },
         "payment-high-error-rate": {
           "correct": true,
@@ -159,7 +159,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 838.3
+          "latency_ms": 1007.8
         },
         "payment-provider-outage": {
           "correct": true,
@@ -167,10 +167,10 @@
           "expected": "third_party",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 10,
-          "recall": 0.5,
+          "recall": 0.25,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1037.3
+          "latency_ms": 1153.9
         },
         "payment-third-party-timeout": {
           "correct": true,
@@ -181,7 +181,7 @@
           "recall": 0.5,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1067.2
+          "latency_ms": 999.8
         },
         "postgres-slow-queries": {
           "correct": true,
@@ -192,7 +192,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1358.2
+          "latency_ms": 1511.9
         },
         "redis-failure": {
           "correct": true,
@@ -200,10 +200,10 @@
           "expected": "redis",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 16,
-          "recall": 1.0,
+          "recall": 0.6667,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1216.3
+          "latency_ms": 1326.8
         }
       },
       "difficulty": {
@@ -221,14 +221,14 @@
       "suite": "opspilot-agent-eval",
       "version": "2.0",
       "scoring": {
-        "root_cause_accuracy": "diagnosed category == scenario root_cause_category (domain aliases accepted, see CATEGORY_ALIASES)",
-        "evidence_recall": "share of the scenario's expected_evidence keywords present in collected evidence",
-        "evidence_utilisation": "share of collected evidence the final diagnosis actually cites",
-        "tool_selection_accuracy": "every tool family the fault requires was actually called",
-        "recovery_success_rate": "a recovery action succeeded AND the live environment passes the scenario's own criteria",
-        "verification_accuracy": "the Agent's own verdict agrees with the environment's ground-truth evaluation",
-        "false_diagnosis_rate": "a CONFIRMED/PROBABLE diagnosis that was wrong (abstentions are not counted)",
-        "escalation_rate": "run handed over to a human instead of resolving"
+        "root_cause_accuracy": "\u5224\u5b9a\u51fa\u7684\u5206\u7c7b\u662f\u5426\u7b49\u4e8e\u573a\u666f\u7684 root_cause_category\uff08\u63a5\u53d7\u9886\u57df\u522b\u540d\uff0c\u89c1 CATEGORY_ALIASES\uff09",
+        "evidence_recall": "\u573a\u666f expected_evidence \u5173\u952e\u8bcd\u4e2d\uff0c\u6709\u591a\u5c11\u5728\u5df2\u6536\u96c6\u8bc1\u636e\u91cc\u51fa\u73b0\u8fc7",
+        "evidence_utilisation": "\u5df2\u6536\u96c6\u7684\u8bc1\u636e\u91cc\uff0c\u6700\u7ec8\u8bca\u65ad\u5b9e\u9645\u5f15\u7528\u4e86\u591a\u5c11",
+        "tool_selection_accuracy": "\u6545\u969c\u6240\u8981\u6c42\u7684\u6bcf\u4e00\u7c7b\u5de5\u5177\u662f\u5426\u90fd\u88ab\u771f\u6b63\u8c03\u7528\u8fc7",
+        "recovery_success_rate": "\u67d0\u4e2a\u6062\u590d\u52a8\u4f5c\u6210\u529f\uff0c\u4e14\u771f\u5b9e\u73af\u5883\u901a\u8fc7\u4e86\u8be5\u573a\u666f\u81ea\u5df1\u7684\u5224\u5b9a\u6761\u4ef6",
+        "verification_accuracy": "Agent \u81ea\u5df1\u7ed9\u51fa\u7684\u9a8c\u8bc1\u7ed3\u8bba\u4e0e\u73af\u5883 ground truth \u7684\u5224\u5b9a\u662f\u5426\u4e00\u81f4",
+        "false_diagnosis_rate": "\u7ed9\u51fa\u4e86 CONFIRMED/PROBABLE \u7ed3\u8bba\u4f46\u7ed3\u8bba\u662f\u9519\u7684\uff08\u5f03\u6743\u4e0d\u8ba1\u5165\uff09",
+        "escalation_rate": "\u6ca1\u6709\u81ea\u884c\u6536\u655b\u3001\u800c\u662f\u79fb\u4ea4\u4eba\u5de5\u7684\u6bd4\u4f8b"
       }
     }
   }

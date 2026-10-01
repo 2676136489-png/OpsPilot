@@ -123,7 +123,7 @@ class Simulator:
                 "deployed_at": _iso(_now() - timedelta(hours=240)),
                 "status": "success",
                 "author": "ci-bot",
-                "notes": "previous release",
+                "notes": "上一个版本",
             },
             {
                 "service": spec.name,
@@ -131,7 +131,7 @@ class Simulator:
                 "deployed_at": _iso(_now() - timedelta(hours=72)),
                 "status": "success",
                 "author": "ci-bot",
-                "notes": "scheduled release",
+                "notes": "例行发布",
             },
         ]
 
@@ -140,10 +140,10 @@ class Simulator:
         spec = rt.spec
         now = _now()
         messages = (
-            "chore: bump dependencies",
-            "test: cover the retry path",
-            "refactor: extract the client factory",
-            "docs: update the runbook link",
+            "chore: 升级依赖版本",
+            "test: 补上重试路径的用例",
+            "refactor: 抽出客户端工厂",
+            "docs: 更新 runbook 链接",
         )
         return [
             {
@@ -164,7 +164,7 @@ class Simulator:
         """Inject a scenario: attach faults, plant the deployment history."""
         scenario = get_scenario(name)
         if scenario is None:
-            raise KeyError(f"Unknown scenario: {name}")
+            raise KeyError(f"未知场景：{name}")
 
         with self._lock:
             self.reset()
@@ -371,7 +371,7 @@ class Simulator:
     def get_service(self, name: str) -> dict[str, Any]:
         with self._lock:
             if name not in self.runtimes:
-                raise KeyError(f"Unknown service: {name}")
+                raise KeyError(f"未知服务：{name}")
             return self._snapshots()[name]
 
     def get_metrics(
@@ -380,12 +380,12 @@ class Simulator:
         field = METRIC_ALIASES.get(metric)
         if field is None:
             raise ValueError(
-                f"Unknown metric '{metric}'. Supported: {sorted(METRIC_ALIASES)}"
+                f"未知指标 '{metric}'。支持的有：{sorted(METRIC_ALIASES)}"
             )
         with self._lock:
             rt = self.runtimes.get(service)
             if rt is None:
-                raise KeyError(f"Unknown service: {service}")
+                raise KeyError(f"未知服务：{service}")
             cutoff = _now() - timedelta(minutes=minutes_back)
             return [
                 {"timestamp": _iso(ts), "value": round(m[field], 4)}
@@ -403,7 +403,7 @@ class Simulator:
         with self._lock:
             rt = self.runtimes.get(service)
             if rt is None:
-                raise KeyError(f"Unknown service: {service}")
+                raise KeyError(f"未知服务：{service}")
             cutoff = _now() - timedelta(minutes=minutes_back)
             entries = [
                 e
@@ -419,7 +419,7 @@ class Simulator:
         with self._lock:
             rt = self.runtimes.get(service)
             if rt is None:
-                raise KeyError(f"Unknown service: {service}")
+                raise KeyError(f"未知服务：{service}")
             return list(reversed(rt.deployments))[:limit]
 
     def get_commits(self, repository: str, limit: int = 10) -> list[dict[str, Any]]:
@@ -442,11 +442,11 @@ class Simulator:
         """Apply a recovery action. Reports honestly whether it did anything."""
         model = ACTION_MODELS.get(action)
         if model is None:
-            raise KeyError(f"Unknown action: {action}")
+            raise KeyError(f"未知动作：{action}")
         with self._lock:
             rt = self.runtimes.get(service)
             if rt is None:
-                raise KeyError(f"Unknown service: {service}")
+                raise KeyError(f"未知服务：{service}")
 
             before = self._snapshots()[service]
 
@@ -458,7 +458,7 @@ class Simulator:
                         "action": action,
                         "ok": True,
                         "effective": False,
-                        "reason": "no deployment history to roll back",
+                        "reason": "没有可回滚的发布历史",
                         "before": before,
                         "after": before,
                     }
@@ -579,7 +579,7 @@ class Simulator:
                 "deployed_at": _iso(_now()),
                 "status": "rolled_back",
                 "author": "opspilot-agent",
-                "notes": f"rolled back from {current['version']}",
+                "notes": f"从 {current['version']} 回滚",
                 "rolled_back_from": current["version"],
             }
         )
@@ -603,7 +603,7 @@ class Simulator:
                             "passed": False,
                             "actual": None,
                             "threshold": criterion.threshold,
-                            "error": "unknown service",
+                            "error": "未知服务",
                         }
                     )
                     continue

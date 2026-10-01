@@ -53,7 +53,7 @@ export function RunbooksPage() {
   return (
     <>
       <PageHeader
-        title="Runbooks"
+        title="运维手册"
         description="按故障场景组织的处置手册。每一步都对应 Agent 恢复方案中的一次受控操作。"
         actions={
           <Button
@@ -76,8 +76,8 @@ export function RunbooksPage() {
         <Panel>
           <EmptyState
             icon={<Icon name="book" size={20} />}
-            title="暂无 Runbook"
-            hint="Runbook 目录来自模拟器的场景定义。启动 Simulator 后这里会出现条目。"
+            title="暂无运维手册"
+            hint="运维手册来自模拟器的场景定义。启动模拟环境后这里会出现条目。"
           />
         </Panel>
       ) : (

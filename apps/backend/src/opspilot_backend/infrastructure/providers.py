@@ -218,7 +218,7 @@ class SimulatorInfraProvider:
             )
         if not series:
             raise HttpError(
-                f"simulator returned no metric series for {service!r}", retryable=True
+                f"模拟器没有为 {service!r} 返回任何指标序列", retryable=True
             )
         return {"service": service, "series": series}
 
@@ -434,7 +434,7 @@ class GitHubAdapter:
     ) -> dict[str, Any]:
         if not self.configured:
             raise HttpError(
-                "GitHub adapter is not configured (set GITHUB_TOKEN and GITHUB_REPO)",
+                "GitHub 适配器尚未配置（请设置 GITHUB_TOKEN 与 GITHUB_REPO）",
                 retryable=False,
             )
         return await self._post(title, body, labels)
@@ -455,7 +455,7 @@ class GitHubAdapter:
             )
         if response.status_code >= 400:
             raise HttpError(
-                f"GitHub returned {response.status_code}",
+                f"GitHub 返回 {response.status_code}",
                 status_code=response.status_code,
             )
         payload: dict[str, Any] = response.json()

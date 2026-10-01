@@ -7,6 +7,7 @@ longer drift between the two sides of the wire.
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 
 
 class StrEnum(str, Enum):
@@ -388,3 +389,81 @@ STAGE_TO_INCIDENT_STATUS: dict[AgentStage, IncidentStatus] = {
     AgentStage.VERIFICATION: IncidentStatus.VERIFYING,
     AgentStage.POSTMORTEM: IncidentStatus.RESOLVED,
 }
+
+
+# ---------------------------------------------------------------------------
+# Display labels
+# ---------------------------------------------------------------------------
+#
+# The **wire** vocabulary is the enum value above and it stays English: every
+# comparison, every transition table and every persisted row keys off it.
+#
+# These tables exist for the strings an operator actually reads. Incident
+# summaries are free prose and are rendered verbatim in the timeline, so a
+# summary reading "WAITING_APPROVAL → RECOVERING" is a leak rather than a
+# status update — and one that hides an escalation the operator was meant to
+# notice. The frontend keeps its own table in `i18n.ts` for badges: two
+# consumers, two copies, deliberately, so rewording a badge does not require a
+# backend deploy.
+
+INCIDENT_STATUS_ZH: dict[str, str] = {
+    IncidentStatus.CREATED.value: "已创建",
+    IncidentStatus.TRIAGING.value: "分诊中",
+    IncidentStatus.INVESTIGATING.value: "调查中",
+    IncidentStatus.DIAGNOSING.value: "诊断中",
+    IncidentStatus.WAITING_APPROVAL.value: "等待审批",
+    IncidentStatus.RECOVERING.value: "恢复中",
+    IncidentStatus.ROLLING_BACK.value: "回滚中",
+    IncidentStatus.VERIFYING.value: "验证中",
+    IncidentStatus.RESOLVED.value: "已解决",
+    IncidentStatus.FAILED.value: "失败",
+    IncidentStatus.ESCALATED.value: "已升级",
+    IncidentStatus.CLOSED.value: "已关闭",
+}
+
+RISK_LEVEL_ZH: dict[str, str] = {
+    RiskLevel.LOW.value: "低",
+    RiskLevel.MEDIUM.value: "中",
+    RiskLevel.HIGH.value: "高",
+    RiskLevel.CRITICAL.value: "极高",
+}
+
+DIAGNOSIS_OUTCOME_ZH: dict[str, str] = {
+    DiagnosisOutcome.ROOT_CAUSE_CONFIRMED.value: "根因已确认",
+    DiagnosisOutcome.ROOT_CAUSE_PROBABLE.value: "根因很可能成立",
+    DiagnosisOutcome.INSUFFICIENT_EVIDENCE.value: "证据不足",
+    DiagnosisOutcome.INVESTIGATION_FAILED.value: "调查失败",
+    # Not a member of `DiagnosisOutcome`. A run that stopped before it could
+    # reach a verdict stores no outcome, and the read paths denormalise that as
+    # `UNKNOWN`. It has to render as an honest Chinese sentence rather than as
+    # the bare token — the frontend carries the same key for the same reason.
+    "UNKNOWN": "未得出结论",
+}
+
+
+def _zh(table: dict[str, str], value: Any) -> str:
+    """Chinese label for a wire value, tolerant of how the caller cased it.
+
+    The argument arrives three different ways in practice: as the enum member,
+    as its `.value`, or title-cased for display ("Escalated" rather than
+    "ESCALATED"). A plain dict lookup misses the third form and returns the bare
+    English token, which then lands inside an otherwise Chinese sentence —
+    a leak that reads like a translation bug rather than a missing case.
+    Normalising costs one `.upper()` because every wire value in these tables is
+    upper-case by construction.
+    """
+    token = str(value)
+    return table.get(token, table.get(token.upper(), token))
+
+
+def zh_incident_status(value: Any) -> str:
+    """Chinese label for an incident status; unknown values pass through."""
+    return _zh(INCIDENT_STATUS_ZH, value)
+
+
+def zh_risk(value: Any) -> str:
+    return _zh(RISK_LEVEL_ZH, value)
+
+
+def zh_outcome(value: Any) -> str:
+    return _zh(DIAGNOSIS_OUTCOME_ZH, value)

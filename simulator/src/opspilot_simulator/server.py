@@ -56,17 +56,16 @@ def _require_eval_mode() -> None:
     cannot infer that the answer key exists at all.
     """
     if not eval_mode_enabled():
-        raise HTTPException(status_code=404, detail="Not Found")
+        raise HTTPException(status_code=404, detail="未找到")
 
 logger = logging.getLogger("opspilot.simulator")
 
 app = FastAPI(
-    title="OpsPilot Incident Simulator",
+    title="OpsPilot 故障模拟器",
     version="1.0.0",
     description=(
-        "A stateful model of a small production environment. Injecting a fault "
-        "changes metrics, logs and deployment history together; a recovery "
-        "action only works if it addresses the fault that is actually present."
+        "一个小型生产环境的有状态模型。注入故障会同时改变指标、日志与发布历史；"
+        "恢复动作只有在真的处理掉了当前存在的那个故障时才有效。"
     ),
 )
 
@@ -106,7 +105,7 @@ async def chaos_middleware(request: Request, call_next):
     if sim.chaos == "unavailable":
         response: Any = JSONResponse(
             status_code=503,
-            content={"detail": "simulator unavailable (chaos=unavailable)"},
+            content={"detail": "模拟器不可用（chaos=unavailable）"},
         )
     else:
         if sim.chaos == "slow":
@@ -250,7 +249,7 @@ def inject(name: str) -> dict[str, Any]:
 @app.post("/simulator/incidents/{name}/reset")
 def reset(name: str) -> dict[str, Any]:
     if get_scenario(name) is None:
-        raise HTTPException(status_code=404, detail=f"Unknown scenario: {name}")
+        raise HTTPException(status_code=404, detail=f"未知场景：{name}")
     return get_simulator().reset()
 
 
@@ -342,7 +341,7 @@ def verify(criteria: list[dict[str, Any]]) -> dict[str, Any]:
         for c in criteria
     ]
     if not parsed:
-        raise HTTPException(status_code=400, detail="no criteria supplied")
+        raise HTTPException(status_code=400, detail="没有提供任何判定条件")
     return get_simulator().evaluate(parsed)
 
 
@@ -355,7 +354,7 @@ def verify(criteria: list[dict[str, Any]]) -> dict[str, Any]:
 def set_chaos(mode: str) -> dict[str, Any]:
     if mode not in {"off", "slow", "unavailable"}:
         raise HTTPException(
-            status_code=400, detail="mode must be one of off | slow | unavailable"
+            status_code=400, detail="mode 只能是 off | slow | unavailable 之一"
         )
     sim = get_simulator()
     sim.chaos = mode
@@ -383,7 +382,7 @@ def ground_truth(name: str) -> dict[str, Any]:
     _require_eval_mode()
     scenario = get_scenario(name)
     if scenario is None:
-        raise HTTPException(status_code=404, detail=f"Unknown scenario: {name}")
+        raise HTTPException(status_code=404, detail=f"未知场景：{name}")
     return scenario.ground_truth()
 
 

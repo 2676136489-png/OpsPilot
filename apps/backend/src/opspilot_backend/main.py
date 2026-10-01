@@ -7,6 +7,7 @@ Start with:
 from contextlib import asynccontextmanager
 import os
 from pathlib import Path
+import sqlite3
 import time
 
 # --- Bootstrap: give the whole process one config source ---
@@ -104,6 +105,7 @@ if EMBED_SIMULATOR:
     )
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -142,9 +144,20 @@ HAS_WEB = (WEB_ROOT / "index.html").is_file()
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: D401 — FastAPI lifespan signature
     """Create tables on SQLite dev database at startup."""
+    # Before the engine opens a single connection: an unrecoverable file has to
+    # be dealt with here, because every later step reads from it and would fail
+    # with an error that says nothing about the actual cause.
+    database_state = _verify_shipped_database()
+    log_event("database.checked", detail=database_state)
+    print(f"[opspilot] database: {database_state}", flush=True)
+
     # Import all models so Base.metadata is populated before create_all
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Only now is the file unambiguously this release's, so this is the moment
+    # its stamp can be written without the next boot mistaking it for a stray.
+    _stamp_database_file()
 
     if settings.demo_seed:
         await _seed_demo_incidents()
@@ -211,9 +224,147 @@ async def _seed_demo_incidents() -> None:
         pass
 
 
+# --- The shipped database is checked, and rebuilt if it cannot be trusted ---
+# Hosting platforms upload *over* the previous release, so the SQLite file the
+# unit ships lands next to whatever the release before it left behind. Every
+# connection here sets `journal_mode=WAL` (`db/session.py`), so that predecessor
+# left a `-wal` and a `-shm` beside the database. The new main file arrives, the
+# old WAL stays, and a main file paired with a foreign write-ahead log is not a
+# stale copy — it is a corrupt database wearing a valid-looking header.
+#
+# What it reports is not stable, which is the whole problem. Measured on this
+# exact combination: `PRAGMA integrity_check` answered `ok` for a database whose
+# tables had vanished, and the failure only surfaced later as a plain
+# `sqlite3.DatabaseError`. A check that sometimes says `ok` cannot be the only
+# gate in front of a deploy, so this runs *before* the engine opens a connection
+# and refuses to trust the file on anything but a clean read.
+#
+# Deleting it is safe by construction: `create_all` below rebuilds the schema,
+# and the first incident is seeded from the scenario definitions. There is no
+# state in the shipped file worth keeping — it carries schema and nothing else.
+def _sqlite_path(database_url: str) -> Path | None:
+    """Local file behind a sqlite URL, or ``None`` for anything else.
+
+    ``sqlite+aiosqlite:///./opspilot.db`` → ``./opspilot.db``;
+    ``sqlite:////var/x.db`` → ``/var/x.db``; ``sqlite:///:memory:`` → ``None``,
+    because an in-memory database has no file to repair.
+    """
+    if not database_url.startswith("sqlite"):
+        return None
+    _, _, tail = database_url.partition(":///")
+    if not tail or tail.startswith(":memory:"):
+        return None
+    return Path(tail)
+
+
+def _verify_shipped_database() -> str:
+    """Check the shipped SQLite file, rebuilding it if it is not this release's.
+
+    Returns a short line for the startup log. It always says what happened,
+    including "left alone" — a silent success here is indistinguishable from a
+    check that never ran, and that ambiguity is what turned the last two
+    database faults into multi-hour hunts.
+
+    The stamp comparison is the load-bearing part. A foreign ``-wal`` makes
+    SQLite serve the *previous* release's database — same tables, previous rows,
+    ``integrity_check`` answering ``ok`` — so no test on the file's contents can
+    tell it apart from a healthy one. Only a value that the previous release
+    could not have written can, and that is what the build stamp is.
+    """
+    path = _sqlite_path(settings.database_url)
+    if path is None:
+        return f"skipped ({settings.database_url})"
+
+    sidecars = [path.with_name(path.name + suffix) for suffix in ("-wal", "-shm")]
+    reason = ""
+
+    if not path.exists():
+        # A WAL with no database beside it is the same hazard one step later,
+        # and clearing it costs nothing.
+        for sidecar in sidecars:
+            sidecar.unlink(missing_ok=True)
+        return f"{path} absent, schema will be created"
+    try:
+        conn = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+        try:
+            integrity = str(conn.execute("PRAGMA integrity_check").fetchone()[0])
+            if integrity != "ok":
+                reason = f"integrity_check reported {integrity!r}"
+            else:
+                tables = int(
+                    conn.execute(
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' "
+                        "AND name NOT LIKE 'sqlite_%'"
+                    ).fetchone()[0]
+                )
+                if tables == 0:
+                    # The unit ships a full schema, so an empty file is not a
+                    # fresh start — it is the schema having disappeared.
+                    reason = "the schema is missing (0 tables)"
+                else:
+                    expected_stamp = os.environ.get("OPSPILOT_BUILD_STAMP", "").strip()
+                    if expected_stamp:
+                        found = conn.execute("PRAGMA user_version").fetchone()[0]
+                        if str(found) != expected_stamp:
+                            reason = (
+                                "build stamp mismatch (file says "
+                                f"{found}, this release ships {expected_stamp})"
+                                " — a previous release's database is still in place"
+                            )
+        finally:
+            conn.close()
+    except Exception as exc:  # noqa: BLE001 — any read failure means unusable
+        reason = f"{type(exc).__name__}: {exc}"
+
+    if not reason:
+        return f"{path} verified"
+
+    # Deleting is the repair, but a failed delete must not be fatal. Refusing to
+    # start is strictly worse than starting on a database we have already said
+    # we do not trust: `create_all` below still runs, and if the file is
+    # genuinely unusable the health endpoint says so. A read-only mount, a
+    # permission bit, or another process holding the file all land here, and
+    # none of them is a reason to take the service down.
+    failures: list[str] = []
+    for candidate in (path, *sidecars):
+        try:
+            candidate.unlink(missing_ok=True)
+        except OSError as exc:
+            failures.append(f"{candidate.name}: {exc}")
+    if failures:
+        return (
+            f"{path} was unusable ({reason}) but could not be replaced "
+            f"({' ; '.join(failures)}) — continuing, schema will be created if possible"
+        )
+    return f"{path} was unusable ({reason}) — deleted, schema will be rebuilt"
+
+
+def _stamp_database_file() -> None:
+    """Mark the database as belonging to this release.
+
+    Runs after ``create_all`` so that a file this process just rebuilt is not
+    thrown away on the next boot: without it, every restart would see a stamp of
+    0, decide the database came from somewhere else, and wipe it — turning a
+    one-time repair into permanent data loss.
+    """
+    expected = os.environ.get("OPSPILOT_BUILD_STAMP", "").strip()
+    path = _sqlite_path(settings.database_url)
+    if not expected or path is None or not path.exists():
+        return
+    try:
+        conn = sqlite3.connect(path)
+        try:
+            conn.execute(f"PRAGMA user_version = {int(expected) & 0x7FFFFFFF}")
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:  # noqa: BLE001 — a missing stamp is not fatal
+        log_event("database.stamp_failed", detail=f"{type(exc).__name__}: {exc}")
+
+
 app = FastAPI(
     title=settings.app_name,
-    description="OpsPilot — AI-Powered Incident Investigation & Recovery Platform",
+    description="OpsPilot —— 由 Agent 驱动的故障调查与恢复平台",
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -237,6 +388,42 @@ async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         path=request.url.path,
     )
     return JSONResponse(status_code=exc.http_status, content=exc.to_dict())
+
+
+# FastAPI answers a rejected request with ``{"detail": [{"msg": "Input should be
+# a valid UUID, ..."}]}`` — English, from pydantic, and shaped as a list. It
+# reaches the browser: `api/client.ts` has a branch that joins those `msg`
+# fields and renders them, and it exists because someone needed it. Nothing in
+# the SPA sends a malformed path parameter, so this is not a common screen, but
+# "not common" is how a single English sentence survives in a Chinese UI.
+#
+# Only the prose is replaced. The structured errors stay under `errors`, because
+# they are diagnostics for whoever is reading the logs, and translating them
+# would destroy the field paths they identify.
+@app.exception_handler(RequestValidationError)
+async def _validation_error_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    errors = exc.errors()
+    log_event(
+        "api.validation_error",
+        path=request.url.path,
+        count=len(errors),
+        locations=[str(err.get("loc")) for err in errors][:5],
+    )
+    where = "、".join(
+        ".".join(str(part) for part in err.get("loc", ())) for err in errors[:3]
+    )
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": f"请求参数不合法：{where}" if where else "请求参数不合法",
+            "errors": [
+                {"location": str(err.get("loc")), "type": str(err.get("type"))}
+                for err in errors
+            ],
+        },
+    )
 
 
 # --- Embedded simulator (single-port hosting) ---

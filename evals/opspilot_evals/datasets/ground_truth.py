@@ -195,14 +195,14 @@ EVALUATION_NOTES = {
     "suite": "opspilot-agent-eval",
     "version": "2.0",
     "scoring": {
-        "root_cause_accuracy": "diagnosed category == scenario root_cause_category (domain aliases accepted, see CATEGORY_ALIASES)",
-        "evidence_recall": "share of the scenario's expected_evidence keywords present in collected evidence",
-        "evidence_utilisation": "share of collected evidence the final diagnosis actually cites",
-        "tool_selection_accuracy": "every tool family the fault requires was actually called",
-        "recovery_success_rate": "a recovery action succeeded AND the live environment passes the scenario's own criteria",
-        "verification_accuracy": "the Agent's own verdict agrees with the environment's ground-truth evaluation",
-        "false_diagnosis_rate": "a CONFIRMED/PROBABLE diagnosis that was wrong (abstentions are not counted)",
-        "escalation_rate": "run handed over to a human instead of resolving",
+        "root_cause_accuracy": "判定出的分类是否等于场景的 root_cause_category（接受领域别名，见 CATEGORY_ALIASES）",
+        "evidence_recall": "场景 expected_evidence 关键词中，有多少在已收集证据里出现过",
+        "evidence_utilisation": "已收集的证据里，最终诊断实际引用了多少",
+        "tool_selection_accuracy": "故障所要求的每一类工具是否都被真正调用过",
+        "recovery_success_rate": "某个恢复动作成功，且真实环境通过了该场景自己的判定条件",
+        "verification_accuracy": "Agent 自己给出的验证结论与环境 ground truth 的判定是否一致",
+        "false_diagnosis_rate": "给出了 CONFIRMED/PROBABLE 结论但结论是错的（弃权不计入）",
+        "escalation_rate": "没有自行收敛、而是移交人工的比例",
     },
 }
 

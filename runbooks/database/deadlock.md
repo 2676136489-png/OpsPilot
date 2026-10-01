@@ -1,45 +1,45 @@
-# Database Deadlock
+# 数据库死锁
 
-**Service**: payment-service, order-service  
-**Category**: database  
-**Severity**: medium  
-**Source**: SRE Runbook — v2.1  
+**服务**: payment-service, order-service  
+**分类**: database  
+**严重级别**: medium  
+**来源**: SRE 运维手册 — v2.1  
 
 ---
 
-## Symptoms
+## 现象
 
-Deadlocks manifest differently from pool exhaustion:
+死锁的表现和连接池耗尽不一样：
 
-- Application logs contain PostgreSQL deadlock detection messages: `ERROR: deadlock detected`
-- Specific transaction IDs show rollback: `DETAIL: Process X waits for ShareLock on transaction Y`
-- Error rate spikes but latency does NOT spike (unlike pool exhaustion)
-- Retry storms — clients retry after deadlock rollback, creating pressure
-- `pg_stat_activity` shows multiple sessions waiting on `Lock` state simultaneously
+- 应用日志出现 PostgreSQL 的死锁检测消息：`ERROR: deadlock detected`
+- 特定事务 ID 显示回滚：`DETAIL: Process X waits for ShareLock on transaction Y`
+- 错误率飙升但延迟**不**飙升（这点和连接池耗尽不同）
+- 重试风暴 —— 客户端在死锁回滚后重试，进一步加剧压力
+- `pg_stat_activity` 显示多个会话同时卡在 `Lock` 状态
 
-## Root Cause Pattern
+## 根因模式
 
-A deadlock forms when two or more transactions acquire locks in contradictory order:
+当两个或多个事务以互相矛盾的顺序获取锁时，就会形成死锁：
 
 ```
-Transaction A: UPDATE orders SET ... WHERE id=1;   -- holds lock on order 1
-Transaction B: UPDATE orders SET ... WHERE id=2;   -- holds lock on order 2
-Transaction A: UPDATE orders SET ... WHERE id=2;   -- waits for B
-Transaction B: UPDATE orders SET ... WHERE id=1;   -- waits for A → deadlock
+Transaction A: UPDATE orders SET ... WHERE id=1;   -- 持有 order 1 的锁
+Transaction B: UPDATE orders SET ... WHERE id=2;   -- 持有 order 2 的锁
+Transaction A: UPDATE orders SET ... WHERE id=2;   -- 等待 B
+Transaction B: UPDATE orders SET ... WHERE id=1;   -- 等待 A → 死锁
 ```
 
-Common causes:
+常见原因：
 
-1. **Inconsistent lock ordering** across code paths (e.g., API route 1 updates orders→payments, API route 2 updates payments→orders)
-2. **Range locks with Gaps** — concurrent INSERTs into indexed ranges
-3. **Foreign key checks** — locking parent rows while child rows are being locked elsewhere
-4. **Long-running transactions** — held locks increase deadlock window
+1. **锁顺序不一致** —— 不同代码路径的加锁顺序不同（例如接口 1 先更新 orders 再更新 payments，接口 2 先更新 payments 再更新 orders）
+2. **间隙锁（Gap Lock）** —— 并发的 INSERT 落入索引区间
+3. **外键检查** —— 一处锁父行，另一处同时在锁子行
+4. **长事务** —— 持锁时间长会扩大死锁窗口
 
-## Resolution Steps
+## 处置步骤
 
-### Detection
+### 检测
 
-1. Query active locks:
+1. 查询当前活跃的锁：
    ```sql
    SELECT blocked.pid AS blocked_pid,
           blocked.query AS blocked_query,
@@ -50,30 +50,30 @@ Common causes:
    WHERE NOT blocked.granted AND blocker.granted;
    ```
 
-2. Enable deadlock logging: `ALTER SYSTEM SET log_lock_waits = on; ALTER SYSTEM SET deadlock_timeout = '1s';`
+2. 开启死锁日志：`ALTER SYSTEM SET log_lock_waits = on; ALTER SYSTEM SET deadlock_timeout = '1s';`
 
-### Immediate fix
+### 紧急处置
 
-3. **PostgreSQL victim selection** — PostgreSQL automatically kills the youngest transaction in a deadlock cycle. If this is insufficient due to cascading retries:
-   - Kill the blocker manually: `SELECT pg_terminate_backend(<pid>);`
-   - Scale up read replicas to offload read traffic
+3. **PostgreSQL 的牺牲者选择机制** —— PostgreSQL 会自动杀掉死锁环中最年轻的事务。如果因级联重试而不够用：
+   - 手动杀掉阻塞方：`SELECT pg_terminate_backend(<pid>);`
+   - 扩容只读副本，把读流量分担出去
 
-### Long-term prevention
+### 长期预防
 
-4. **Standardize lock ordering** — Review all UPDATE/DELETE paths and ensure they always touch tables in the same order (e.g., always orders → payments, never payments → orders).
+4. **统一加锁顺序** —— 检查所有 UPDATE/DELETE 路径，确保它们访问表的顺序始终一致（例如始终先 orders 后 payments，绝不反过来）。
 
-5. **Keep transactions short** — Move non-critical work (email sending, analytics) outside the transaction boundary.
+5. **保持事务简短** —— 把非关键操作（发邮件、统计分析）移出事务边界。
 
-6. **Use SELECT ... FOR UPDATE SKIP LOCKED** for queue-style processing to avoid waiting on locked rows.
+6. **对队列式处理使用 SELECT ... FOR UPDATE SKIP LOCKED**，避免等待被锁的行。
 
-7. **Add retry with exponential backoff** on the client side:
+7. **在客户端加上带指数退避的重试**：
    ```
-   retry 3 times, delays: 100ms → 200ms → 400ms
+   重试 3 次，延迟：100ms → 200ms → 400ms
    ```
 
-## Verification
+## 验证
 
-- Deadlock rate drops to zero in the next 24 hours
-- `pg_stat_statements` shows no `deadlock` errors
-- Update latency percentiles stable after fix
-- All retry paths validated in staging
+- 未来 24 小时内死锁率降到零
+- `pg_stat_statements` 中不再出现 `deadlock` 错误
+- 修复后更新操作的延迟分位数保持稳定
+- 所有重试路径都在预发环境验证通过

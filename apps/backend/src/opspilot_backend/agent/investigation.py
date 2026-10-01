@@ -61,24 +61,73 @@ _MAX_REQUIRED_BONUS = 0.15
 #: even though the simulator emits it under a bad deployment — a breaker
 #: tripping is a symptom of almost any failure, and treating it as evidence of
 #: an upstream timeout made every bad deploy look like a provider problem.
+#:
+#: **Why every entry is bilingual.** The simulator emits Chinese log bodies
+#: (the console shows them verbatim as evidence titles), while real stacks and
+#: the tool layer keep English identifiers — ``QueuePool``,
+#: ``OutOfMemoryError``, ``sqlalchemy``, ``acme-pay``. A pattern list in one
+#: language only would silently stop matching half the corpus and the Agent
+#: would report "insufficient evidence" for faults it used to solve. Keeping
+#: both costs nothing: a substring that never appears is a no-op.
+#:
+#: The Chinese patterns are chosen as **phrases**, never as bare nouns. "缓存"
+#: or "内存" alone would be lit by a healthy component's own chatter
+#: ("缓存命中率 0.91"), which is exactly how a cache outage gets diagnosed on a
+#: service whose cache is fine.
 _LOG_PATTERNS: dict[str, tuple[str, ...]] = {
     "db_pool_saturation": (
         "connection pool", "pool limit", "queuepool", "connection timed out",
         "too many connections", "failed to acquire database connection",
         "database connection pool",
+        # zh — 连接池耗尽
+        "连接池", "获取数据库连接失败", "连接数达上限", "连接池饱和度",
     ),
-    "db_latency": ("database call timed out", "query timeout", "sqlalchemy", "deadlock"),
-    "slow_queries": ("slow query", "query took", "lock wait", "blocking"),
-    "oom": ("outofmemoryerror", "out-of-memory", "oom", "heap", "gc pause"),
-    "cache_failure": ("redis", "cache miss", "connection refused", "sentinel", "cache read failed"),
-    "upstream_timeout": ("504", "gateway timeout", "upstream call", "upstream dependency"),
+    "db_latency": (
+        "database call timed out", "query timeout", "sqlalchemy", "deadlock",
+        # zh
+        "数据库调用超时", "查询超时", "死锁",
+    ),
+    "slow_queries": (
+        "slow query", "query took", "lock wait", "blocking",
+        # zh
+        "慢查询", "锁等待", "阻塞",
+    ),
+    "oom": (
+        "outofmemoryerror", "out-of-memory", "oom", "heap", "gc pause",
+        # zh
+        "堆空间", "堆内存", "gc 停顿", "内存溢出",
+    ),
+    "cache_failure": (
+        "redis", "cache miss", "connection refused", "sentinel", "cache read failed",
+        # zh
+        "连接被拒绝", "缓存读取失败", "缓存不可用",
+    ),
+    "upstream_timeout": (
+        "504", "gateway timeout", "upstream call", "upstream dependency",
+        # zh
+        "上游调用", "上游依赖", "网关超时",
+    ),
     "external_provider": (
         "acme-pay", "partner payment", "payment provider", "provider outage",
         "third-party", "external-payment-api",
+        # zh
+        "合作方支付", "支付渠道", "渠道整体故障", "服务商故障",
     ),
-    "http_5xx": ("500", "internal server error", "unhandled exception", "unhandled application"),
-    "deployment_recent": ("deployed", "rollout", "released", "new version"),
-    "cpu_saturation": ("cpu saturation", "queue depth", "deadline exceeded"),
+    "http_5xx": (
+        "500", "internal server error", "unhandled exception", "unhandled application",
+        # zh
+        "未捕获异常", "未处理异常", "服务内部错误",
+    ),
+    "deployment_recent": (
+        "deployed", "rollout", "released", "new version",
+        # zh
+        "已发布", "灰度发布", "新版本上线",
+    ),
+    "cpu_saturation": (
+        "cpu saturation", "queue depth", "deadline exceeded",
+        # zh
+        "cpu 饱和", "队列深度", "超过截止时间",
+    ),
 }
 
 #: Metric name → (signal, threshold). "latest" above threshold lights it up.
@@ -367,7 +416,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="database",
         category="database",
-        label="Database connection pool exhaustion",
+        label="数据库连接池耗尽",
         required=("db_pool_saturation",),
         supporting=("db_pool_pressure", "db_latency", "high_latency", "service_unhealthy"),
         base_confidence=0.58,
@@ -375,7 +424,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="slow_database",
         category="database",
-        label="Slow or blocked database queries",
+        label="数据库查询缓慢或被阻塞",
         required=("slow_queries",),
         supporting=("db_latency", "high_latency", "high_error_rate", "db_pool_pressure"),
         contradicts=("db_pool_saturation",),
@@ -384,7 +433,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="deployment",
         category="deployment",
-        label="A recent change introduced the regression",
+        label="最近的一次变更引入了回归",
         required=("deployment_recent",),
         supporting=("high_error_rate", "http_5xx", "service_unhealthy"),
         # A deploy is a *temporal correlation*; a saturated pool or an
@@ -401,7 +450,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="memory",
         category="memory",
-        label="Memory leak leading to OOM pressure",
+        label="内存泄漏导致 OOM 压力",
         required=("oom",),
         supporting=("service_unhealthy", "high_latency"),
         base_confidence=0.55,
@@ -409,7 +458,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="redis",
         category="redis",
-        label="Cache layer unavailable",
+        label="缓存层不可用",
         required=("cache_failure",),
         supporting=("high_latency", "service_unhealthy", "high_error_rate"),
         base_confidence=0.60,
@@ -417,7 +466,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="third_party",
         category="third_party",
-        label="Third-party provider failing or timing out",
+        label="第三方渠道报错或超时",
         required=("external_provider",),
         supporting=("upstream_timeout", "high_latency", "high_error_rate"),
         base_confidence=0.60,
@@ -425,7 +474,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="capacity",
         category="capacity",
-        label="Capacity saturation on the affected service",
+        label="受影响服务的容量被打满",
         required=("cpu_saturation",),
         supporting=("high_latency", "high_error_rate", "service_unhealthy"),
         contradicts=("oom",),
@@ -434,7 +483,7 @@ FAULT_DOMAINS: tuple[FaultDomain, ...] = (
     FaultDomain(
         key="cascading",
         category="dependency",
-        label="A dependency is failing and the alerting service reports it",
+        label="某个依赖正在失败，告警服务把它报了出来",
         required=("dependency_unhealthy",),
         supporting=("upstream_timeout", "high_error_rate", "http_5xx", "service_unhealthy"),
         # This is the explanation of *last* resort: it only survives when no
@@ -551,19 +600,19 @@ def _args(service: str, **extra: Any) -> dict[str, Any]:
 DIMENSIONS: tuple[Dimension, ...] = (
     Dimension(
         key="error_signature",
-        label="Read the error signature the service is emitting",
+        label="读取服务当前输出的错误特征",
         tool="query_logs",
         discriminates=("database", "slow_database", "redis", "third_party", "memory", "deployment"),
-        rationale="The error text names the failure class directly.",
+        rationale="错误文本会直接点出故障类别。",
         build=lambda s, **kw: _args(s, level="ERROR", minutes=30),
         priority=3.0,
     ),
     Dimension(
         key="resource_metrics",
-        label="Measure which resource actually moved",
+        label="测量究竟是哪个资源动了",
         tool="query_metrics",
         discriminates=("capacity", "memory", "database", "slow_database"),
-        rationale="Separates a saturated resource from a broken dependency.",
+        rationale="把「资源被打满」和「依赖坏了」区分开。",
         build=lambda s, **kw: _args(
             s,
             metric_names=["error_rate", "latency_p95", "cpu", "memory", "db_connections"],
@@ -573,21 +622,20 @@ DIMENSIONS: tuple[Dimension, ...] = (
     ),
     Dimension(
         key="change_correlation",
-        label="Check whether a change landed before the incident",
+        label="确认故障前是否刚落地过一次变更",
         tool="get_deployments",
         discriminates=("deployment", "memory", "database"),
-        rationale="A deploy minutes before onset is the strongest prior.",
+        rationale="故障前几分钟的发布是最强的先验。",
         build=lambda s, **kw: _args(s, limit=5),
         priority=2.6,
     ),
     Dimension(
         key="dependency_health",
-        label="Probe the services this one depends on",
+        label="探测该服务依赖的下游服务",
         tool="get_service_status",
         discriminates=("cascading", "redis", "slow_database", "third_party"),
         rationale=(
-            "The alerting service looks locally healthy, so the failure may be "
-            "in something it calls."
+            "告警服务自身看起来很健康，那么故障可能出在它调用的某个组件上。"
         ),
         build=lambda s, **kw: _args(kw.get("target", s)),
         priority=2.4,
@@ -595,10 +643,10 @@ DIMENSIONS: tuple[Dimension, ...] = (
     ),
     Dimension(
         key="dependency_logs",
-        label="Read the dependency's own error signature",
+        label="读取依赖自身的错误特征",
         tool="query_logs",
         discriminates=("cascading", "redis", "slow_database", "third_party", "deployment"),
-        rationale="Confirms the dependency's failure mode, not just its health.",
+        rationale="确认依赖的失败方式，而不只是它健不健康。",
         build=lambda s, **kw: _args(kw.get("target", s), level="ERROR", minutes=30),
         priority=2.0,
         on_dependencies=True,
@@ -606,10 +654,10 @@ DIMENSIONS: tuple[Dimension, ...] = (
     ),
     Dimension(
         key="dependency_changes",
-        label="Check whether the dependency also changed",
+        label="确认依赖自己是否也变更过",
         tool="get_deployments",
         discriminates=("cascading", "deployment"),
-        rationale="Distinguishes 'they broke' from 'we changed how we call them'.",
+        rationale="区分「他们坏了」和「我们改了调用方式」。",
         build=lambda s, **kw: _args(kw.get("target", s), limit=5),
         priority=1.6,
         on_dependencies=True,
@@ -617,19 +665,19 @@ DIMENSIONS: tuple[Dimension, ...] = (
     ),
     Dimension(
         key="commit_diff",
-        label="Diff what actually shipped",
+        label="比对这次究竟发布了什么",
         tool="get_recent_commits",
         discriminates=("deployment", "memory", "database"),
-        rationale="Only worth reading once a deploy has been correlated.",
+        rationale="只有先把故障和发布关联起来，这一步才值得读。",
         build=lambda s, **kw: {"repository": s, "limit": 5},
         priority=1.2,
     ),
     Dimension(
         key="remediation_guidance",
-        label="Pull the runbook for this signature",
+        label="按当前错误特征查找对应 runbook",
         tool="search_runbooks",
         discriminates=(),
-        rationale="Known guidance for the observed signature.",
+        rationale="针对已观测到的特征，取已知的处理办法。",
         build=lambda s, **kw: {"query": kw.get("query") or f"{s} error latency", "limit": 3},
         priority=0.6,
     ),
@@ -657,13 +705,13 @@ def relevance_for(
     saying so is the difference between a diagnosis and a data dump.
     """
     if not domains:
-        return ("MEDIUM", "collected before any explanation was ranked")
+        return ("MEDIUM", "在任何解释被排序之前就已经收集到了")
 
     item_signals = {
         name for name, signal in signals.items() if item.ref in signal.evidence_refs
     }
     if not item_signals:
-        return ("LOW", "no signal extracted from this item")
+        return ("LOW", "这一条没有抽出任何信号")
 
     top_keys = [key for key, _ in domains[:2]]
     for key in top_keys:
@@ -675,16 +723,16 @@ def relevance_for(
         if hit and item_signals & set(domain.required):
             return (
                 "HIGH",
-                f"required by the leading explanation ({domain.key}): "
-                + ", ".join(sorted(hit)),
+                f"首要解释（{domain.key}）需要它："
+                + "、".join(sorted(hit)),
             )
         if hit:
             return (
                 "MEDIUM",
-                f"supports the leading explanation ({domain.key}): "
-                + ", ".join(sorted(hit)),
+                f"支持首要解释（{domain.key}）："
+                + "、".join(sorted(hit)),
             )
-    return ("LOW", "signals present but not used by any leading explanation")
+    return ("LOW", "有信号，但没有任何首要解释用得上")
 
 
 # ---------------------------------------------------------------------------
@@ -850,8 +898,7 @@ def assess(
             probes=[],
             saturated=True,
             reason=(
-                "every dimension that could change the ranking has been "
-                "explored; further queries would repeat themselves"
+                "所有可能改变排序的维度都已经探查过，再查下去只是重复自己"
             ),
             dependency_targets=deps,
         )
@@ -864,9 +911,9 @@ def assess(
         explored=explored,
         probes=probes,
         saturated=False,
-        reason=f"top candidate '{top_domain}' at {confidence:.2f}"
+        reason=f"最可能的候选是「{top_domain}」，置信度 {confidence:.2f}"
         if top_domain
-        else "no candidate explanation yet",
+        else "目前还没有候选解释",
         dependency_targets=deps,
     )
 

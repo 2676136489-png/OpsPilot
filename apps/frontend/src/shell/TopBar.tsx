@@ -39,7 +39,7 @@ export function TopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
             <span>K</span>
           </kbd>
         </button>
-        <span className="env-badge">Simulator</span>
+        <span className="env-badge">模拟环境</span>
         <Clock />
       </div>
     </header>

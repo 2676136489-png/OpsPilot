@@ -600,7 +600,7 @@ class AgentRunQueryService:
         return {
             "id": str(row.id),
             "status": str(row.status),
-            "description": f"{row.passed_checks}/{row.total_checks} checks passed",
+            "description": f"{row.passed_checks}/{row.total_checks} 项检查通过",
             # Flat, not wrapped in a fake ``metrics_checked`` object: the
             # frontend renders each check, and a needless nesting level was
             # only ever an obstacle.

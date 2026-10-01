@@ -127,7 +127,7 @@ class McpStdioClient:
         self, method: str, params: dict[str, Any], timeout_s: float = 20.0
     ) -> dict[str, Any]:
         if self._proc is None:
-            raise McpError("MCP client is not started")
+            raise McpError("MCP 客户端尚未启动")
         self._next_id += 1
         msg_id = self._next_id
         future: asyncio.Future[dict[str, Any]] = asyncio.get_event_loop().create_future()
@@ -141,11 +141,11 @@ class McpStdioClient:
                 response = await asyncio.wait_for(future, timeout=timeout_s)
             except asyncio.TimeoutError as exc:
                 self._pending.pop(msg_id, None)
-                sp.fail(f"timeout after {timeout_s}s")
-                raise McpError(f"MCP {method} timed out after {timeout_s}s") from exc
+                sp.fail(f"超过 {timeout_s}s 未返回")
+                raise McpError(f"MCP {method} 超过 {timeout_s}s 未返回") from exc
             if "error" in response:
                 sp.fail(str(response["error"]))
-                raise McpError(f"MCP {method} error: {response['error']}")
+                raise McpError(f"MCP {method} 返回错误：{response['error']}")
             result: dict[str, Any] = response.get("result", {})
             sp.attribute("ok", True)
             return result
@@ -193,7 +193,7 @@ class McpStdioClient:
         )
         content = result.get("content", [])
         if result.get("isError"):
-            raise McpError(f"tool {name} reported an error: {content}")
+            raise McpError(f"工具 {name} 返回了一个错误：{content}")
         if content and isinstance(content, list):
             first = content[0]
             if isinstance(first, dict) and first.get("type") == "text":

@@ -1,74 +1,74 @@
-# Third-Party Payment Timeout
+# 第三方支付超时
 
-**Service**: checkout, payment-service  
-**Category**: third_party  
-**Severity**: high  
-**Source**: SRE Runbook — v1.8  
+**服务**: checkout, payment-service  
+**分类**: third_party  
+**严重级别**: high  
+**来源**: SRE 运维手册 — v1.8  
 
 ---
 
-## Symptoms
+## 现象
 
-How to recognize a payment provider outage:
+如何识别支付服务商故障：
 
-- Logs show `httpx.ReadTimeout: connect timeout (30s) calling POST https://api.acme-pay.com/v2/charge`
-- HTTP 504 Gateway Timeout from payment provider visible in service logs
-- `payment_timeout_rate` metric climbs above 20% (normal <2%)
-- Payment success rate drops from baseline (~97%) to below 50%
-- P99 latency spikes above 7000ms (requests wait for timeout + retries)
-- Circuit breaker transitions to OPEN state after consecutive failures
-- Webhook delivery delays increase (upstream queue backed up)
+- 日志出现 `httpx.ReadTimeout: connect timeout (30s) calling POST https://api.acme-pay.com/v2/charge`
+- 服务日志中可见支付服务商返回的 HTTP 504 Gateway Timeout
+- `payment_timeout_rate` 指标升到 20% 以上（正常 <2%）
+- 支付成功率从基线（约 97%）掉到 50% 以下
+- P99 延迟飙升到 7000ms 以上（请求要等超时加多次重试）
+- 连续失败后熔断器切到 OPEN 状态
+- Webhook 投递延迟增加（上游队列积压）
 
-## Root Cause Pattern
+## 根因模式
 
-External payment provider incidents:
+外部支付服务商故障：
 
-1. **Provider regional outage** — AWS region failure, CDN issue, or provider datacenter downtime
-2. **Provider rate limiting** — Our request volume exceeds provider's per-second quota; returns 429
-3. **Network connectivity** — BGP route leak or DDoS targeting the provider's edge network
-4. **Provider API version deprecation** — Old SDK calls deprecated endpoint that's being rate-limited
-5. **TLS/certificate issues** — Provider rotates certificates; client handshake fails
+1. **服务商区域性故障** —— AWS 可用区故障、CDN 问题，或服务商机房宕机
+2. **服务商限流** —— 我们的请求量超过服务商每秒配额，返回 429
+3. **网络连通性** —— BGP 路由泄漏，或针对服务商边缘网络的 DDoS
+4. **服务商 API 版本弃用** —— 旧 SDK 调用了正在被限流的已弃用端点
+5. **TLS/证书问题** —— 服务商轮换证书，客户端握手失败
 
-## Resolution Steps
+## 处置步骤
 
-### Step 1 — Confirm it's not our code
+### 第 1 步 —— 确认不是我们自己的代码问题
 
 ```bash
-# Check deployment history — if no recent deploys, almost certainly upstream
+# 查看部署历史 —— 如果近期没有部署，几乎可以确定是上游问题
 kubectl rollout history deployment/payment-service
 
-# Check for 429 vs 504 vs connection errors in logs
+# 在日志中区分 429 / 504 / 连接错误
 kubectl logs -l app=payment-service --since=10m | grep -E "504|429|timeout" | head -20
 ```
 
-### Step 2 — Retry with exponential backoff (client-side)
+### 第 2 步 —— 客户端带指数退避地重试
 
-If retry storm is amplifying the issue:
+如果重试风暴正在放大问题：
 ```python
-# Current retry policy — may be too aggressive
-retry 5 times, no backoff → retry 2 times with 1s, 2s backoff
+# 当前重试策略 —— 可能过于激进
+重试 5 次、无退避 → 改为重试 2 次，退避 1s、2s
 
-# Add jitter to prevent thundering herd
+# 加抖动，避免惊群
 import random
 delay = min(2**attempt, 10) + random.uniform(0, 0.5)
 ```
 
-### Step 3 — Circuit breaker
+### 第 3 步 —— 熔断器
 
-Ensure CB is configured correctly:
+确认熔断器配置正确：
 ```yaml
-# Resilience4j or similar
-failureRateThreshold: 50  # open at 50% failure
-waitDurationInOpenState: 30s  # try again after 30s
-slidingWindowSize: 20  # last 20 calls
+# Resilience4j 或类似组件
+failureRateThreshold: 50  # 失败率达 50% 时打开
+waitDurationInOpenState: 30s  # 30s 后重试
+slidingWindowSize: 20  # 最近 20 次调用
 ```
 
-Circuit breaker should transition: CLOSED → OPEN → HALF_OPEN → CLOSED when provider recovers.
+熔断器状态流转应为：CLOSED → OPEN → HALF_OPEN → CLOSED（服务商恢复后）。
 
-### Step 4 — Switch to backup provider
+### 第 4 步 —— 切换到备用服务商
 
 ```python
-# Fallback to secondary provider
+# 回退到备用服务商
 primary = AcmePayClient()
 secondary = StripeClient()
 
@@ -78,26 +78,26 @@ except TimeoutError:
     result = secondary.charge(request)
 ```
 
-Verify secondary provider credentials are pre-configured and tested.
+确认备用服务商的凭据已预先配置并验证可用。
 
-### Step 5 — Notify provider
+### 第 5 步 —— 通知服务商
 
-- Check provider status page (status.acme-pay.com)
-- Open priority support ticket with incident ID
-- Share error rate and latency metrics as evidence
+- 查看服务商状态页（status.acme-pay.com）
+- 提交带事故 ID 的优先支持工单
+- 附上错误率和延迟指标作为证据
 
-## Verification
+## 验证
 
-- `payment_timeout_rate` drops below 5% within 10 minutes of intervention
-- Payment success rate returns to >95%
-- Circuit breaker returns to CLOSED state
-- P99 latency decreases below 2000ms
-- Both primary and secondary provider dashboards accessible and healthy
-- No new 504 errors in the last 5 minutes
+- 介入后 10 分钟内 `payment_timeout_rate` 降到 5% 以下
+- 支付成功率回到 >95%
+- 熔断器回到 CLOSED 状态
+- P99 延迟降到 2000ms 以下
+- 主备服务商面板均可访问且状态健康
+- 最近 5 分钟没有新的 504 错误
 
-## Preventive Actions
+## 预防措施
 
-- Set up provider health check (poll `/health` endpoint every 30s)
-- Configure alert on `payment_timeout_rate > 10%`
-- Pre-provision at least one backup payment provider
-- Add bulkhead pattern — isolate payment service thread pool from rest of application
+- 配置服务商健康检查（每 30s 轮询 `/health` 端点）
+- 针对 `payment_timeout_rate > 10%` 配置告警
+- 预先接入至少一家备用支付服务商
+- 加入隔板模式 —— 把支付服务的线程池与应用的其余部分隔离

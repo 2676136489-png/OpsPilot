@@ -41,6 +41,7 @@ from opspilot_backend.domain.enums import (
     IncidentStatus,
     RiskLevel,
     StepStatus,
+    zh_incident_status,
     ToolCallStatus,
 )
 from opspilot_backend.domain.errors import InvalidStateTransitionError
@@ -698,7 +699,7 @@ class AgentRunRepository:
         await repo.append_event(
             incident.id,
             "diagnosis.completed",
-            str(diagnosis.get("root_cause") or "no root cause"),
+            str(diagnosis.get("root_cause") or "未判定根因"),
             actor="agent",
             actor_type=ActorType.AGENT,
             data={
@@ -887,7 +888,7 @@ class AgentRunRepository:
         await repo.append_event(
             approval.incident_id,
             "approval.required",
-            f"Approval required for {action_type} (risk {approval.risk_level})",
+            f"{action_type} 需要审批（风险等级 {approval.risk_level}）",
             actor=str(requested_by or "agent"),
             actor_type=ActorType.AGENT,
             data={"approval_id": str(approval.id), "risk_level": approval.risk_level},
@@ -922,7 +923,7 @@ class AgentRunRepository:
         await repo.append_event(
             approval.incident_id,
             "approval.decided",
-            f"Approval {approval.status} by {decided_by}",
+            f"审批结果：{approval.status}，由 {decided_by} 决定",
             actor=decided_by,
             actor_type=ActorType.HUMAN,
             data={"approval_id": str(approval.id), "note": note},
@@ -1095,7 +1096,8 @@ class AgentRunRepository:
             await repo.append_event(
                 incident.id,
                 "incident.transition_rejected",
-                f"{incident.status} → {target.value} rejected by state machine",
+                f"{zh_incident_status(incident.status)} → "
+                f"{zh_incident_status(target.value)} 被状态机拒绝",
                 actor=actor,
                 actor_type=ActorType.SYSTEM,
                 data={"status": incident.status, "target": target.value},

@@ -101,7 +101,7 @@ def workflow_node(spec: NodeSpec) -> Callable[..., Any]:
                         await ctx.persistence.commit()
                         raise
                     except asyncio.TimeoutError:
-                        last_error = f"timeout after {spec.timeout_s}s"
+                        last_error = f"节点执行超过 {spec.timeout_s}s 仍未返回"
                         sp.fail(last_error)
                         await ctx.finish_step(
                             step_id,
@@ -163,7 +163,7 @@ def workflow_node(spec: NodeSpec) -> Callable[..., Any]:
                     return payload
 
                 # Retry budget exhausted (defensive; the loop returns above).
-                sp.fail(last_error or "retries exhausted")
+                sp.fail(last_error or "重试次数已用尽")
                 await ctx.finish_step(
                     step_id, status=StepStatus.FAILED, output={}, error=last_error
                 )

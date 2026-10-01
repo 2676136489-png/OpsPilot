@@ -95,15 +95,13 @@ PROFILES: dict[str, ActionProfile] = {
             tool="rollback_deployment",
             risk=RiskLevel.CRITICAL.value,
             permission=PermissionLevel.DESTRUCTIVE.value,
-            reason="Revert the release that introduced the regression.",
+            reason="回退那个引入回归的版本。",
             impact=(
-                "Traffic returns to the previous version; features added in the "
-                "reverted release are unavailable until it is re-landed."
+                "流量回到上一个版本；被回退版本新增的功能在重新发布之前不可用。"
             ),
-            verify="error_rate and latency_p95 return to their pre-release baseline",
+            verify="error_rate 与 latency_p95 回到发布前的基线",
             rollback_strategy=(
-                "Not reversible: a rolled-back release can only be re-landed by "
-                "shipping it again. Requires the release owner."
+                "不可逆：被回退的版本只能重新发布一次才能恢复。需要发布负责人配合。"
             ),
             # The service that alerted is not always the service that shipped.
             # When the bad release is behind an edge component, rolling back the
@@ -114,11 +112,11 @@ PROFILES: dict[str, ActionProfile] = {
             tool="restart_service",
             risk=RiskLevel.HIGH.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="Restart the component to clear its in-process state.",
-            impact="Brief unavailability while replicas cycle; in-flight requests fail.",
-            verify="health returns to healthy and the error rate stops climbing",
+            reason="重启该组件，清掉它进程内的状态。",
+            impact="实例轮转期间短暂不可用；正在处理的请求会失败。",
+            verify="health 恢复为 healthy，且错误率停止上升",
             rollback_strategy=(
-                "Restart is its own inverse — no compensating action is needed."
+                "重启本身就是自己的逆操作，不需要额外的补偿动作。"
             ),
             targets_dependency=True,
         ),
@@ -126,24 +124,23 @@ PROFILES: dict[str, ActionProfile] = {
             tool="scale_service",
             risk=RiskLevel.MEDIUM.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="Add capacity so the work can be spread across more replicas.",
-            impact="Higher infrastructure cost for the duration of the incident.",
-            verify="cpu and latency_p95 fall back under their thresholds",
+            reason="扩容，让负载分散到更多实例上。",
+            impact="故障期间基础设施成本上升。",
+            verify="cpu 与 latency_p95 回落到各自阈值以下",
             rollback_tool="scale_service",
             # The count is filled in from the measured fleet size, not fixed
             # here — see build_recovery_actions.
-            rollback_strategy="Scale back down to the original replica count.",
+            rollback_strategy="缩容回原来的实例数。",
         ),
         ActionProfile(
             tool="increase_pool_size",
             risk=RiskLevel.MEDIUM.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="Raise the connection pool ceiling so queued requests can be served.",
-            impact="Higher concurrent load on the database; buys time, does not stop a leak.",
-            verify="pool utilisation drops below 80% and connection timeouts stop",
+            reason="调高连接池上限，让排队的请求先能被服务。",
+            impact="数据库并发压力上升；只是争取时间，并不能止住泄漏。",
+            verify="连接池利用率降到 80% 以下，连接超时不再出现",
             rollback_strategy=(
-                "Not reversible in place: the raised ceiling is inert once the "
-                "underlying leak is fixed, so it is left as-is."
+                "无法就地回退：底层的泄漏修好之后，抬高的上限自然失效，因此保留原样。"
             ),
             targets_dependency=True,
         ),
@@ -151,33 +148,31 @@ PROFILES: dict[str, ActionProfile] = {
             tool="restart_redis",
             risk=RiskLevel.HIGH.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="Fail over the cache cluster so clients can reconnect.",
-            impact="Cache is cold until it warms; read latency is elevated meanwhile.",
-            verify="the cache reports healthy and dependent services stop logging "
-                   "connection failures",
-            rollback_strategy="Restart is its own inverse.",
+            reason="对缓存集群做故障转移，让客户端能重新连上。",
+            impact="缓存冷启动，回暖之前读延迟偏高。",
+            verify="缓存恢复健康，且依赖它的服务不再打连接失败日志",
+            rollback_strategy="重启本身就是自己的逆操作。",
             targets_dependency=True,
         ),
         ActionProfile(
             tool="flush_cache",
             risk=RiskLevel.MEDIUM.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="Discard poisoned cache entries that are being served to clients.",
-            impact="All cached values are lost; origin load spikes until it refills.",
-            verify="cache reads succeed and the origin error rate does not rise",
-            rollback_strategy="Not reversible: a flushed cache refills from origin.",
+            reason="丢弃正在被返回给客户端的脏缓存条目。",
+            impact="所有缓存值丢失；回源压力上升，直到缓存重新填满。",
+            verify="缓存读取成功，且源站错误率没有上升",
+            rollback_strategy="不可逆：被清空的缓存只能从源站重新填充。",
             targets_dependency=True,
         ),
         ActionProfile(
             tool="restart_postgres",
             risk=RiskLevel.CRITICAL.value,
             permission=PermissionLevel.DESTRUCTIVE.value,
-            reason="Recycle the datastore to clear stuck sessions and locks.",
-            impact="Every connection drops; all dependent services fail for the duration.",
-            verify="postgres reports healthy and callers stop timing out",
+            reason="重启数据库，清掉卡住的会话与锁。",
+            impact="所有连接断开；期间依赖它的服务全部不可用。",
+            verify="postgres 恢复健康，调用方不再超时",
             rollback_strategy=(
-                "Not reversible: sessions and in-flight transactions are lost. "
-                "Requires the database owner."
+                "不可逆：会话与未提交事务都会丢失。需要数据库负责人配合。"
             ),
             targets_dependency=True,
         ),
@@ -185,12 +180,11 @@ PROFILES: dict[str, ActionProfile] = {
             tool="clear_deadlock",
             risk=RiskLevel.HIGH.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="Kill the blocking transactions that are holding row locks.",
-            impact="In-flight statements on the blocked rows are rolled back.",
-            verify="query latency returns to baseline and lock waits stop",
+            reason="杀掉那些一直持有行锁的阻塞事务。",
+            impact="被阻塞行上正在执行的语句会被回滚。",
+            verify="查询延迟回到基线，锁等待消失",
             rollback_strategy=(
-                "Not reversible: the killed transactions must be retried by the "
-                "application."
+                "不可逆：被强杀的事务需要由应用侧重试。"
             ),
             targets_dependency=True,
         ),
@@ -198,13 +192,12 @@ PROFILES: dict[str, ActionProfile] = {
             tool="enable_circuit_breaker",
             risk=RiskLevel.MEDIUM.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="Stop calling a failing upstream so callers fail fast instead of hanging.",
-            impact="Requests to that dependency fail immediately; dependent features are degraded.",
-            verify="timeouts stop accumulating and the caller's latency falls",
+            reason="停止调用正在失败的上游，让调用方快速失败而不是挂起。",
+            impact="发往该依赖的请求立刻失败；相关功能降级。",
+            verify="超时不再累积，调用方延迟回落",
             rollback_tool=None,
             rollback_strategy=(
-                "Reversible by closing the breaker once the upstream is healthy; "
-                "the Agent does not reopen it automatically."
+                "上游恢复健康后关闭熔断器即可回退；Agent 不会自动重新打开。"
             ),
             # Applied to the *caller*, not the provider. Circuit breaking is a
             # decision made by the client — it cannot be installed on a third
@@ -216,12 +209,11 @@ PROFILES: dict[str, ActionProfile] = {
             tool="switch_payment_provider",
             risk=RiskLevel.CRITICAL.value,
             permission=PermissionLevel.WRITE_EXTERNAL.value,
-            reason="Route authorisations to the standby provider.",
-            impact="Traffic moves to the backup processor; reconciliations are needed.",
-            verify="authorisation success rate recovers at the caller",
+            reason="把授权请求切到备用渠道。",
+            impact="流量转移到备用通道；后续需要做对账。",
+            verify="调用方的授权成功率恢复",
             rollback_strategy=(
-                "Not reversible without reconciliation: charges may exist on both "
-                "processors. Requires finance sign-off."
+                "不做对账就无法回退：两个通道上可能都存在扣款。需要财务确认。"
             ),
             targets_dependency=False,
         ),
@@ -229,10 +221,10 @@ PROFILES: dict[str, ActionProfile] = {
             tool="notify_oncall",
             risk=RiskLevel.LOW.value,
             permission=PermissionLevel.READ_ONLY.value,
-            reason="Page the on-call engineer with the current diagnosis.",
-            impact="A human joins the incident. No infrastructure change.",
-            verify="the page was accepted",
-            rollback_strategy="Nothing to undo.",
+            reason="把当前诊断结果呼叫给值班工程师。",
+            impact="有人类加入这次故障处理。不改变任何基础设施。",
+            verify="呼叫已被接收",
+            rollback_strategy="无需回退。",
         ),
     )
 }

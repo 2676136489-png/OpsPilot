@@ -11,6 +11,18 @@ Every fault declares:
 restart. A connection-pool leak lives in the deployed code, so bouncing the
 pods drains the pool for a few seconds and then it fills again: the simulated
 environment says so, and verification fails until the real fix is applied.
+
+**Language.** Log bodies and the ``label`` fields are Chinese, because the
+console renders log lines verbatim as evidence titles and lists action labels
+in the recovery plan. The tokens the code switches on — fault ``kind``, action
+``name``, ``risk``, metric keys, and real exception/class names such as
+``QueuePool`` or ``OutOfMemoryError`` — stay as they are: they are identifiers
+that appear in genuine stacks and metric series, not copy.
+
+The Chinese phrasings here are deliberately specific ("连接池饱和度", "堆内存",
+"锁等待") rather than generic words like "缓存" or "内存". The Agent's signal
+extractor matches substrings against these lines, and a log line that merely
+mentions a healthy cache must not light up the cache-failure signal.
 """
 
 from __future__ import annotations
@@ -92,29 +104,29 @@ def _logs_db_connection_exhaustion(
         out.append(
             (
                 "ERROR",
-                f"sqlalchemy.exc.TimeoutError: QueuePool limit of size "
-                f"{rt.spec.pool_max} overflow {int(rt.spec.pool_max * 0.1)} reached, "
-                f"connection timed out, timeout 30.00",
+                f"sqlalchemy.exc.TimeoutError: QueuePool 连接数达上限 "
+                f"size={rt.spec.pool_max} overflow={int(rt.spec.pool_max * 0.1)}，"
+                f"获取连接超时，timeout 30.00",
             )
         )
         out.append(
             (
                 "ERROR",
-                f"failed to acquire database connection after 30000ms "
-                f"(active={int(rt.pool_open)}/{rt.spec.pool_max})",
+                f"获取数据库连接失败：等待 30000ms 后仍未拿到 "
+                f"（active={int(rt.pool_open)}/{rt.spec.pool_max}）",
             )
         )
     if util >= 0.7:
         out.append(
             (
                 "WARN",
-                f"Database connection pool saturation at {_pct(util)} — queuing requests",
+                f"数据库连接池饱和度已达 {_pct(util)}，请求开始排队",
             )
         )
     out.append(
         (
             "ERROR",
-            f"checkout request failed: upstream dependency timeout after "
+            f"结算请求失败：上游依赖超时 "
             f"{int(m['latency_p95'])}ms",
         )
     )
@@ -149,19 +161,19 @@ def _logs_memory_leak(
         out.append(
             (
                 "ERROR",
-                f"OutOfMemoryError: heap space — {int(m['memory_mb'])}MB of "
-                f"{int(rt.spec.memory_limit_mb)}MB used, container will be OOM-killed",
+                f"OutOfMemoryError: 堆空间不足 — 已用 {int(m['memory_mb'])}MB / "
+                f"{int(rt.spec.memory_limit_mb)}MB，容器即将被 OOM-killed",
             )
         )
     if ratio >= 0.85:
         out.append(
             (
                 "WARN",
-                f"GC pause 480ms — heap at {_pct(ratio)}, suspected unbounded retention",
+                f"GC 停顿 480ms — 堆内存占用已达 {_pct(ratio)}，疑似存在无界持有",
             )
         )
     out.append(
-        ("WARN", f"heap usage {int(m['memory_mb'])}MB (limit {int(rt.spec.memory_limit_mb)}MB)")
+        ("WARN", f"堆内存占用 {int(m['memory_mb'])}MB（上限 {int(rt.spec.memory_limit_mb)}MB）")
     )
     return out
 
@@ -183,8 +195,8 @@ def _logs_cpu_spike(
     fault: ActiveFault, rt: ServiceRuntime, m: dict[str, float]
 ) -> list[LogLine]:
     return [
-        ("WARN", f"CPU saturation {m['cpu']:.0f}% — request queue depth rising"),
-        ("ERROR", f"request deadline exceeded after {int(m['latency_p95'])}ms"),
+        ("WARN", f"CPU 饱和 {m['cpu']:.0f}% — 请求队列深度上升"),
+        ("ERROR", f"请求超过截止时间：等待 {int(m['latency_p95'])}ms 仍未完成"),
     ]
 
 
@@ -202,8 +214,8 @@ def _logs_redis_failure(
     fault: ActiveFault, rt: ServiceRuntime, m: dict[str, float]
 ) -> list[LogLine]:
     return [
-        ("ERROR", "redis: connection refused — no reachable node in the cluster"),
-        ("ERROR", "cache read failed: all 3 sentinel endpoints unreachable"),
+        ("ERROR", "redis: 连接被拒绝 — 集群内没有可达节点"),
+        ("ERROR", "缓存读取失败：3 个 sentinel 端点全部不可达"),
     ]
 
 
@@ -220,15 +232,15 @@ def _apply_bad_deployment(
 def _logs_bad_deployment(
     fault: ActiveFault, rt: ServiceRuntime, m: dict[str, float]
 ) -> list[LogLine]:
-    detail = str(fault.params.get("error", "unhandled application error"))
+    detail = str(fault.params.get("error", "未捕获的应用异常"))
     return [
-        ("ERROR", f"{detail} — request terminated with HTTP 500"),
+        ("ERROR", f"{detail} — 请求以 HTTP 500 结束"),
         (
             "ERROR",
-            f"error rate for {rt.name} version {rt.version} is {_pct(m['error_rate'])} "
-            f"(baseline 0.3%)",
+            f"{rt.name} 版本 {rt.version} 错误率为 {_pct(m['error_rate'])} "
+            f"（基线 0.3%）",
         ),
-        ("WARN", f"circuit breaker for {rt.name} reporting elevated failures"),
+        ("WARN", f"{rt.name} 的熔断器报告失败率升高"),
     ]
 
 
@@ -249,11 +261,11 @@ def _logs_slow_database(
     return [
         (
             "WARN",
-            f"slow query detected: SELECT * FROM orders WHERE status = 'open' "
-            f"took {int(m['latency_p95'])}ms",
+            f"检测到慢查询：SELECT * FROM orders WHERE status = 'open' "
+            f"耗时 {int(m['latency_p95'])}ms",
         ),
-        ("ERROR", f"lock wait timeout exceeded; try restarting transaction ({int(m['latency_p50'])}ms)"),
-        ("WARN", f"postgres: {int(m['db_connections'])} active connections, queue depth rising"),
+        ("ERROR", f"锁等待超时，请重试事务（已等待 {int(m['latency_p50'])}ms）"),
+        ("WARN", f"postgres: 活跃连接 {int(m['db_connections'])}，队列深度上升"),
     ]
 
 
@@ -276,9 +288,9 @@ def _logs_api_timeout(
     fault: ActiveFault, rt: ServiceRuntime, m: dict[str, float]
 ) -> list[LogLine]:
     return [
-        ("ERROR", "partner payment API returned 504 Gateway Timeout"),
-        ("ERROR", f"upstream call to acme-pay exceeded 30000ms (p95={int(m['latency_p95'])}ms)"),
-        ("WARN", "retry budget exhausted for payment authorisation"),
+        ("ERROR", "合作方支付 API 返回 504 Gateway Timeout"),
+        ("ERROR", f"上游调用 acme-pay 已超过 30000ms（p95={int(m['latency_p95'])}ms）"),
+        ("WARN", "支付授权的重试预算已耗尽"),
     ]
 
 
@@ -294,8 +306,8 @@ def _logs_third_party_failure(
     fault: ActiveFault, rt: ServiceRuntime, m: dict[str, float]
 ) -> list[LogLine]:
     return [
-        ("ERROR", "acme-pay returned 503 Service Unavailable"),
-        ("ERROR", "payment authorisation rejected: provider outage"),
+        ("ERROR", "acme-pay 返回 503 Service Unavailable"),
+        ("ERROR", "支付授权被拒绝：渠道整体故障"),
     ]
 
 
@@ -311,8 +323,8 @@ def _logs_dependency_failure(
     fault: ActiveFault, rt: ServiceRuntime, m: dict[str, float]
 ) -> list[LogLine]:
     return [
-        ("ERROR", "all upstream replicas unhealthy — failing fast"),
-        ("ERROR", f"readiness probe failed for {rt.name}; removed from load balancer"),
+        ("ERROR", "上游副本全部不健康 — 正在快速失败"),
+        ("ERROR", f"{rt.name} 就绪探针失败，已从负载均衡摘除"),
     ]
 
 
@@ -328,8 +340,8 @@ def _logs_high_error_rate(
     fault: ActiveFault, rt: ServiceRuntime, m: dict[str, float]
 ) -> list[LogLine]:
     return [
-        ("ERROR", f"HTTP 500 on {int(m['request_rate'])} rpm — error budget exhausted"),
-        ("ERROR", "unhandled exception in request handler (see stack trace)"),
+        ("ERROR", f"{int(m['request_rate'])} rpm 的请求出现 HTTP 500 — 错误预算耗尽"),
+        ("ERROR", "请求处理中出现未捕获异常（见堆栈）"),
     ]
 
 
@@ -338,7 +350,7 @@ FAULT_MODELS: dict[str, FaultModel] = {
     for model in (
         FaultModel(
             kind="db_connection_exhaustion",
-            label="Database connection pool exhaustion",
+            label="数据库连接池耗尽",
             resistant_to=frozenset({"restart_service", "scale_service"}),
             progressive=True,
             apply=_apply_db_connection_exhaustion,
@@ -347,7 +359,7 @@ FAULT_MODELS: dict[str, FaultModel] = {
         ),
         FaultModel(
             kind="memory_leak",
-            label="Memory leak leading to OOM pressure",
+            label="内存泄漏导致 OOM 压力",
             resistant_to=frozenset({"scale_service"}),
             progressive=True,
             apply=_apply_memory_leak,
@@ -356,13 +368,13 @@ FAULT_MODELS: dict[str, FaultModel] = {
         ),
         FaultModel(
             kind="cpu_spike",
-            label="CPU saturation",
+            label="CPU 打满",
             apply=_apply_cpu_spike,
             logs=_logs_cpu_spike,
         ),
         FaultModel(
             kind="redis_failure",
-            label="Cache layer unavailable",
+            label="缓存层不可用",
             applies_to=("cache",),
             resistant_to=frozenset({"restart_service", "scale_service"}),
             apply=_apply_redis_failure,
@@ -370,21 +382,21 @@ FAULT_MODELS: dict[str, FaultModel] = {
         ),
         FaultModel(
             kind="bad_deployment",
-            label="Defective deployment",
+            label="有缺陷的版本发布",
             resistant_to=frozenset({"restart_service", "scale_service", "flush_cache"}),
             apply=_apply_bad_deployment,
             logs=_logs_bad_deployment,
         ),
         FaultModel(
             kind="api_timeout",
-            label="Upstream API timeout",
+            label="上游 API 超时",
             resistant_to=frozenset({"restart_service", "scale_service"}),
             apply=_apply_api_timeout,
             logs=_logs_api_timeout,
         ),
         FaultModel(
             kind="third_party_api_failure",
-            label="Third-party provider outage",
+            label="第三方渠道故障",
             applies_to=("external",),
             resistant_to=frozenset({"restart_service", "scale_service"}),
             apply=_apply_third_party_failure,
@@ -392,7 +404,7 @@ FAULT_MODELS: dict[str, FaultModel] = {
         ),
         FaultModel(
             kind="slow_database",
-            label="Slow or blocked database queries",
+            label="数据库查询缓慢或阻塞",
             applies_to=("datastore",),
             resistant_to=frozenset({"restart_service", "scale_service"}),
             apply=_apply_slow_database,
@@ -400,13 +412,13 @@ FAULT_MODELS: dict[str, FaultModel] = {
         ),
         FaultModel(
             kind="dependency_failure",
-            label="Dependency unavailable",
+            label="依赖不可用",
             apply=_apply_dependency_failure,
             logs=_logs_dependency_failure,
         ),
         FaultModel(
             kind="high_error_rate",
-            label="Elevated error rate",
+            label="错误率异常升高",
             apply=_apply_high_error_rate,
             logs=_logs_high_error_rate,
         ),
@@ -438,7 +450,7 @@ ACTION_MODELS: dict[str, ActionModel] = {
     for model in (
         ActionModel(
             name="restart_service",
-            label="Restart the service pods",
+            label="重启服务实例",
             risk="HIGH",
             # A restart clears in-process state and re-registers a component
             # that fell out of the load balancer — but it cannot un-ship code.
@@ -448,13 +460,13 @@ ACTION_MODELS: dict[str, ActionModel] = {
         ),
         ActionModel(
             name="rollback_deployment",
-            label="Roll back to the previous release",
+            label="回滚到上一个版本",
             risk="CRITICAL",
             removes=frozenset({"bad_deployment", "memory_leak", "db_connection_exhaustion", "high_error_rate"}),
         ),
         ActionModel(
             name="scale_service",
-            label="Scale the service out",
+            label="扩容服务实例",
             risk="MEDIUM",
             # Capacity problems are genuinely solved by capacity; everything
             # else only gets diluted.
@@ -463,28 +475,28 @@ ACTION_MODELS: dict[str, ActionModel] = {
         ),
         ActionModel(
             name="increase_pool_size",
-            label="Raise the database connection pool limit",
+            label="调高数据库连接池上限",
             risk="MEDIUM",
             removes=frozenset({"db_connection_exhaustion"}),
             mitigates={"slow_database": 0.7},
         ),
         ActionModel(
             name="restart_redis",
-            label="Fail over / restart the Redis cluster",
+            label="故障转移 / 重启 Redis 集群",
             risk="HIGH",
             applies_to=("cache",),
             removes=frozenset({"redis_failure", "dependency_failure"}),
         ),
         ActionModel(
             name="flush_cache",
-            label="Flush the cache",
+            label="清空缓存",
             risk="MEDIUM",
             applies_to=("cache",),
             mitigates={"redis_failure": 0.6},
         ),
         ActionModel(
             name="restart_postgres",
-            label="Restart the database and clear stuck sessions",
+            label="重启数据库，清掉卡住的会话",
             risk="CRITICAL",
             applies_to=("datastore",),
             removes=frozenset({"slow_database", "dependency_failure"}),
@@ -492,21 +504,21 @@ ACTION_MODELS: dict[str, ActionModel] = {
         ),
         ActionModel(
             name="enable_circuit_breaker",
-            label="Open the circuit breaker for the failing upstream",
+            label="为失败的上游打开熔断器",
             risk="MEDIUM",
             removes=frozenset({"api_timeout", "third_party_api_failure"}),
             mitigates={"dependency_failure": 0.5},
         ),
         ActionModel(
             name="switch_payment_provider",
-            label="Fail over to the backup payment provider",
+            label="切换到备用支付渠道",
             risk="CRITICAL",
             applies_to=("external",),
             removes=frozenset({"api_timeout", "third_party_api_failure"}),
         ),
         ActionModel(
             name="clear_deadlock",
-            label="Kill blocking database transactions",
+            label="杀掉持有行锁的阻塞事务",
             risk="HIGH",
             applies_to=("datastore",),
             removes=frozenset({"slow_database"}),
@@ -514,7 +526,7 @@ ACTION_MODELS: dict[str, ActionModel] = {
         ),
         ActionModel(
             name="notify_oncall",
-            label="Page the on-call engineer",
+            label="呼叫值班工程师",
             risk="LOW",
         ),
     )
@@ -560,16 +572,16 @@ def healthy_logs(rt: ServiceRuntime, metrics: dict[str, float]) -> list[LogLine]
     spec = rt.spec
     if spec.kind == "datastore":
         return [
-            ("INFO", f"checkpoint complete; {int(metrics['db_connections'])} active connections"),
-            ("DEBUG", f"query p95 {int(metrics['latency_p95'])}ms"),
+            ("INFO", f"检查点完成；活跃连接 {int(metrics['db_connections'])}"),
+            ("DEBUG", f"查询 p95 {int(metrics['latency_p95'])}ms"),
         ]
     if spec.kind == "cache":
-        return [("DEBUG", f"hit ratio 0.94, {int(metrics['request_rate'])} ops/s")]
+        return [("DEBUG", f"命中率 0.94，{int(metrics['request_rate'])} ops/s")]
     if spec.kind == "external":
-        return [("INFO", "authorisation settled in 118ms")]
+        return [("INFO", "授权在 118ms 内完成")]
     return [
-        ("INFO", f"handled {int(metrics['request_rate'])} rpm, p95 {int(metrics['latency_p95'])}ms"),
-        ("DEBUG", "cache hit ratio 0.91"),
+        ("INFO", f"已处理 {int(metrics['request_rate'])} rpm，p95 {int(metrics['latency_p95'])}ms"),
+        ("DEBUG", "缓存命中率 0.91"),
     ]
 
 
@@ -593,22 +605,22 @@ def propagation_logs(rt: ServiceRuntime, metrics: dict[str, float]) -> list[LogL
         if health_of(dep_metrics, dep_spec) == "healthy":
             continue
         if dep_name == "redis":
-            out.append(("ERROR", "redis: connection refused — falling back to origin"))
+            out.append(("ERROR", "redis: 连接被拒绝 — 回退到源站"))
         elif dep_name == "postgres":
             out.append(
                 (
                     "ERROR",
-                    f"database call timed out after {int(dep_metrics['latency_p95'])}ms",
+                    f"数据库调用超时：等待 {int(dep_metrics['latency_p95'])}ms 仍未返回",
                 )
             )
         elif dep_name == "external-payment-api":
-            out.append(("ERROR", "upstream payment provider returned 5xx"))
+            out.append(("ERROR", "上游支付渠道返回 5xx"))
         else:
             out.append(
                 (
                     "ERROR",
-                    f"upstream {dep_name} returned 503 — request failed after "
-                    f"{int(metrics['latency_p95'])}ms",
+                    f"上游 {dep_name} 返回 503 — 请求在 "
+                    f"{int(metrics['latency_p95'])}ms 后失败",
                 )
             )
     return out

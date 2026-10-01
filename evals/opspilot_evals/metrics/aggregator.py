@@ -15,12 +15,26 @@ behaviour available to the Agent would be to quit early.
 from __future__ import annotations
 
 import statistics
+import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
 from opspilot_evals.datasets.ground_truth import EVALUATION_NOTES
 from opspilot_evals.runners.eval_runner import CaseResult
+
+
+def _pad(text: str, width: int) -> str:
+    """Left-align `text` inside `width` terminal columns.
+
+    ``str.ljust`` counts code points, but a CJK glyph occupies two columns on
+    every terminal that will print this. Padding a Chinese label with ASCII
+    spaces therefore produces a visibly ragged table — the columns drift by one
+    space per double-width character. Measure the display width instead of the
+    length.
+    """
+    used = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
+    return text + " " * max(0, width - used)
 
 
 def _mean(values: list[float]) -> float:
@@ -187,38 +201,69 @@ class EvaluationReport:
 
     # ------------------------------------------------------------------
     def headline(self) -> list[str]:
-        return [
-            f"Scenarios scored:            {self.total}  (errors: {self.errors})",
-            f"Root cause accuracy:         {self.root_cause_accuracy:.1%}",
-            f"Evidence accuracy (recall):  {self.evidence_recall:.1%}"
-            f"   (utilised {self.evidence_utilisation:.1%},"
-            f" traceable to a hypothesis {self.evidence_traceability:.1%})",
-            f"Tool selection accuracy:     {self.tool_selection_accuracy:.1%}",
-            f"Investigation steps:         avg {self.avg_investigation_steps:.1f}"
-            f"   (stages {self.avg_distinct_stages:.1f},"
-            f" replanned in {self.runs_that_replanned}/{self.total} runs,"
-            f" avg {self.avg_replan_rounds:.1f} extra node runs,"
-            f" hypotheses rejected {self.avg_rejected_hypotheses:.1f})",
-            f"Recovery success rate:       {self.recovery_success_rate:.1%}"
-            f"   (environment fixed {self.environment_fixed_rate:.1%})",
-            f"Verification accuracy:       {self.verification_accuracy:.1%}"
-            f"   over {self.verification_scored} runs"
-            f"; {self.reported_success_env_broken} claimed fixed while broken",
-            f"False diagnosis rate:        {self.false_diagnosis_rate:.1%}"
-            f"   ({self.answered_runs} answered, {self.abstained_runs} abstained)",
-            f"Escalation rate:             {self.escalation_rate:.1%}"
-            + (f"   {self.escalation_reasons}" if self.escalation_reasons else ""),
-            f"Tool calls:                  {self.total_tool_calls} total,"
-            f" avg {self.avg_tool_calls:.1f}/run,"
-            f" {self.failed_tool_call_rate:.1%} failed",
-            f"Token usage:                 {self.total_tokens} total,"
-            f" avg {self.avg_tokens:.1f}/run   {self.reasoning_modes}",
-            f"Latency:                     avg {self.avg_latency_ms:.0f}ms,"
-            f" p50 {self.p50_latency_ms:.0f}ms, p95 {self.p95_latency_ms:.0f}ms",
-            f"Trace integrity:             {self.traces_single_root}/{self.total} single-root,"
-            f" {self.traces_with_dangling_parents} with dangling parents,"
-            f" avg {self.avg_spans_per_run:.0f} spans, depth {self.avg_trace_depth:.1f}",
+        rows: list[tuple[str, str]] = [
+            ("已评分场景", f"{self.total}   (出错 {self.errors})"),
+            ("根因判定准确率", f"{self.root_cause_accuracy:.1%}"),
+            (
+                "证据召回率",
+                f"{self.evidence_recall:.1%}"
+                f"   (被诊断引用 {self.evidence_utilisation:.1%},"
+                f" 可追溯到假设 {self.evidence_traceability:.1%})",
+            ),
+            ("工具选择准确率", f"{self.tool_selection_accuracy:.1%}"),
+            (
+                "调查步数",
+                f"平均 {self.avg_investigation_steps:.1f}"
+                f"   (涉及 {self.avg_distinct_stages:.1f} 个阶段,"
+                f" {self.runs_that_replanned}/{self.total} 次运行发生了重新规划,"
+                f" 平均额外跑 {self.avg_replan_rounds:.1f} 个节点,"
+                f" 被否假设 {self.avg_rejected_hypotheses:.1f})",
+            ),
+            (
+                "恢复成功率",
+                f"{self.recovery_success_rate:.1%}"
+                f"   (环境确实被修复 {self.environment_fixed_rate:.1%})",
+            ),
+            (
+                "验证准确率",
+                f"{self.verification_accuracy:.1%}"
+                f"   覆盖 {self.verification_scored} 次运行"
+                f"; 有 {self.reported_success_env_broken} 次声称已修复但环境仍是坏的",
+            ),
+            (
+                "误诊率",
+                f"{self.false_diagnosis_rate:.1%}"
+                f"   ({self.answered_runs} 次给出结论, {self.abstained_runs} 次弃权)",
+            ),
+            (
+                "升级率",
+                f"{self.escalation_rate:.1%}"
+                + (f"   {self.escalation_reasons}" if self.escalation_reasons else ""),
+            ),
+            (
+                "工具调用",
+                f"共 {self.total_tool_calls} 次,"
+                f" 平均 {self.avg_tool_calls:.1f}/次运行,"
+                f" 失败 {self.failed_tool_call_rate:.1%}",
+            ),
+            (
+                "Token 用量",
+                f"共 {self.total_tokens},"
+                f" 平均 {self.avg_tokens:.1f}/次运行   {self.reasoning_modes}",
+            ),
+            (
+                "延迟",
+                f"平均 {self.avg_latency_ms:.0f}ms,"
+                f" p50 {self.p50_latency_ms:.0f}ms, p95 {self.p95_latency_ms:.0f}ms",
+            ),
+            (
+                "追踪完整性",
+                f"{self.traces_single_root}/{self.total} 单一根节点,"
+                f" {self.traces_with_dangling_parents} 个悬空父节点,"
+                f" 平均 {self.avg_spans_per_run:.0f} 个 span, 深度 {self.avg_trace_depth:.1f}",
+            ),
         ]
+        return [f"{_pad(name, 20)}{value}" for name, value in rows]
 
     def failures(self) -> int:
         """Runs that neither diagnosed correctly nor honestly abstained.

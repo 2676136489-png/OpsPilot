@@ -53,7 +53,7 @@ async def _call(method: str, *args: Any, **kwargs: Any) -> Any:
     except HttpError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"simulator unavailable: {exc}",
+            detail=f"模拟器不可用：{exc}",
         ) from exc
 
 
@@ -132,7 +132,7 @@ async def inject_scenario(
     except StopIteration:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Unknown scenario: {name!r}",
+            detail=f"未知场景：{name!r}",
         ) from None
 
     result = await _call("inject", name)
@@ -205,7 +205,7 @@ async def reset_scenario(
     except HttpError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"scenario {name!r} is not active: {exc}",
+            detail=f"场景 {name!r} 当前不处于激活状态：{exc}",
         ) from exc
     await session.commit()
     return result

@@ -175,9 +175,9 @@ class ResilientHttpClient:
                             request_id=request_id,
                             attempt=attempt,
                         )
-                        sp.fail(f"{type(exc).__name__} after {attempt} attempts")
+                        sp.fail(f"重试 {attempt} 次后仍然失败：{type(exc).__name__}")
                         raise HttpError(
-                            f"{self.service_name} unreachable: {type(exc).__name__}",
+                            f"{self.service_name} 不可达：{type(exc).__name__}",
                             request_id=request_id,
                             retryable=True,
                         ) from exc

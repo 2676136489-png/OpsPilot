@@ -10,6 +10,14 @@ hidden root cause and the correct recovery are served from
 ``/simulator/ground-truth/{name}``, which is only mounted when the simulator
 runs with ``OPSPILOT_SIM_EVAL_MODE=1`` — the Agent has no path to them during
 a normal run and has to earn the answer with tool calls.
+
+**Language.** Everything an operator can read — ``title``, ``description``,
+``trigger``, ``symptoms``, deployment notes, the hidden root cause — is written
+in Chinese, because all of it is rendered verbatim by the console. The
+identifiers the code switches on (``name``, ``alert_service``, ``severity``,
+``root_cause_category``, ``correct_recovery``, ``runbook_hint``) stay in
+English or as slugs: they are wire vocabulary, not copy. ``expected_evidence``
+is Chinese because it is matched against Chinese log text at scoring time.
 """
 
 from __future__ import annotations
@@ -140,18 +148,18 @@ def _register(scenario: Scenario) -> Scenario:
 _register(
     Scenario(
         name="checkout-db-pool-exhaustion",
-        title="Checkout failing on database connection timeouts",
+        title="结算服务数据库连接超时，下单大面积失败",
         description=(
-            "Checkout requests are timing out and the error budget is burning. "
-            "A new release went out shortly before the first errors."
+            "结算请求成片超时，错误预算正在被烧穿。"
+            "第一波报错出现前不久刚发布过一个新版本。"
         ),
         severity="SEV1",
         alert_service="checkout-service",
-        trigger="deploy checkout-service v1.8.3 (8 minutes before first error)",
+        trigger="发布 checkout-service v1.8.3（首次报错前 8 分钟）",
         symptoms=(
-            "5xx rate above 20%",
-            "p95 latency above 2s",
-            "database connection pool saturated",
+            "5xx 比例超过 20%",
+            "p95 延迟超过 2s",
+            "数据库连接池被打满",
         ),
         faults=(
             FaultSpec("db_connection_exhaustion", "checkout-service"),
@@ -161,22 +169,21 @@ _register(
                 service="checkout-service",
                 version="v1.8.3",
                 minutes_ago=8.0,
-                notes="checkout: reuse session for cart lookups",
-                commit_message="perf(checkout): reuse db session across cart lookups",
+                notes="checkout：购物车查询复用数据库会话",
+                commit_message="perf(checkout): 购物车查询复用数据库会话",
             ),
         ),
         hidden_root_cause=(
-            "v1.8.3 acquires a database session per cart lookup but only releases it "
-            "on the success path, so every failed lookup leaks a connection and the "
-            "pool is exhausted within minutes."
+            "v1.8.3 把数据库会话的获取挪进了每次购物车查询里，却只在成功路径上释放，"
+            "于是每一次失败的查询都会泄漏一个连接，几分钟内就把连接池耗尽。"
         ),
         root_cause_category="database",
         correct_recovery=("rollback_deployment",),
         mitigations=("increase_pool_size",),
         verification_criteria=_healthy("checkout-service", db_connections=28),
         expected_evidence=(
-            "connection pool",
-            "queuepool",
+            "连接池",
+            "QueuePool",
             "db_connections",
             "v1.8.3",
         ),
@@ -187,23 +194,23 @@ _register(
 _register(
     Scenario(
         name="redis-failure",
-        title="Cache cluster unreachable",
+        title="缓存集群整体不可达",
         description=(
-            "Cache reads are failing cluster-wide. Services that depend on the "
-            "cache are falling back to the database and slowing down."
+            "缓存读取在全集群范围内失败。依赖缓存的服务回退到数据库，"
+            "延迟随之上升。"
         ),
         severity="SEV2",
         alert_service="checkout-service",
-        trigger="redis primary node lost",
+        trigger="redis 主节点丢失",
         symptoms=(
-            "cache connection refused",
-            "p95 latency rising on cached endpoints",
-            "database load increasing",
+            "缓存连接被拒绝",
+            "走缓存的接口 p95 延迟上升",
+            "数据库负载上升",
         ),
         faults=(FaultSpec("redis_failure", "redis"),),
         hidden_root_cause=(
-            "The Redis primary node failed and sentinel has not completed failover, "
-            "so every cache client is failing fast."
+            "Redis 主节点故障，sentinel 尚未完成故障转移，"
+            "所有缓存客户端都在快速失败。"
         ),
         root_cause_category="redis",
         correct_recovery=("restart_redis",),
@@ -212,7 +219,7 @@ _register(
             Criterion("redis", "health", "==", "healthy"),
             *_healthy("checkout-service"),
         ),
-        expected_evidence=("redis", "connection refused", "cache"),
+        expected_evidence=("redis", "连接被拒绝", "缓存"),
         runbook_hint="redis/unavailable",
     )
 )
@@ -220,18 +227,18 @@ _register(
 _register(
     Scenario(
         name="checkout-memory-leak",
-        title="Checkout pods approaching OOM",
+        title="结算服务实例内存逼近上限",
         description=(
-            "Checkout memory is climbing steadily since the last release and pods "
-            "are being killed once they hit the limit."
+            "自上一个版本发布后结算服务内存持续攀升，"
+            "实例一旦触到上限就会被杀掉。"
         ),
         severity="SEV2",
         alert_service="checkout-service",
-        trigger="deploy checkout-service v1.9.0",
+        trigger="发布 checkout-service v1.9.0",
         symptoms=(
-            "heap usage above 85% of limit",
-            "garbage collection pauses growing",
-            "occasional pod restarts",
+            "堆内存占用超过上限的 85%",
+            "GC 停顿越来越长",
+            "偶发实例重启",
         ),
         faults=(
             FaultSpec(
@@ -245,19 +252,19 @@ _register(
                 service="checkout-service",
                 version="v1.9.0",
                 minutes_ago=22.0,
-                notes="checkout: add in-memory price cache",
-                commit_message="feat(checkout): cache price lookups in memory",
+                notes="checkout：加入内存价格缓存",
+                commit_message="feat(checkout): 把价格查询缓存在内存里",
             ),
         ),
         hidden_root_cause=(
-            "v1.9.0 added an unbounded in-memory price cache with no TTL or "
-            "eviction, so the heap grows until the container is OOM-killed."
+            "v1.9.0 加了一个没有 TTL、也没有淘汰策略的内存价格缓存，"
+            "堆内存一路涨到容器被 OOM 杀掉。"
         ),
         root_cause_category="memory",
         correct_recovery=("rollback_deployment",),
         mitigations=("restart_service",),
         verification_criteria=_healthy("checkout-service", memory_mb=1024.0),
-        expected_evidence=("memory", "heap", "v1.9.0", "gc pause"),
+        expected_evidence=("内存", "堆", "v1.9.0", "GC 停顿"),
         runbook_hint="memory/leak",
     )
 )
@@ -265,24 +272,23 @@ _register(
 _register(
     Scenario(
         name="payment-bad-deployment",
-        title="Payment errors after release",
+        title="版本发布后支付授权开始报错",
         description=(
-            "Payment authorisation is failing for a subset of requests immediately "
-            "after a release."
+            "发布之后，一部分支付授权请求立刻开始失败。"
         ),
         severity="SEV1",
         alert_service="payment-service",
-        trigger="deploy payment-service v2.5.0",
+        trigger="发布 payment-service v2.5.0",
         symptoms=(
-            "error rate jumped from 0.2% to over 30%",
-            "no latency regression",
-            "failures correlate with the new release",
+            "错误率从 0.2% 跳到 30% 以上",
+            "延迟没有劣化",
+            "失败与新版本的发布时间吻合",
         ),
         faults=(
             FaultSpec(
                 "bad_deployment",
                 "payment-service",
-                {"error": "ValueError: negative currency amount"},
+                {"error": "ValueError: 金额为负数"},
             ),
         ),
         deploys=(
@@ -290,19 +296,19 @@ _register(
                 service="payment-service",
                 version="v2.5.0",
                 minutes_ago=6.0,
-                notes="payment: refund validation rewrite",
-                commit_message="refactor(payment): rewrite refund amount validation",
+                notes="payment：重写退款金额校验",
+                commit_message="refactor(payment): 重写退款金额校验",
             ),
         ),
         hidden_root_cause=(
-            "v2.5.0 rewrote refund amount validation and throws ValueError on "
-            "negative amounts, which refunds legitimately produce."
+            "v2.5.0 重写了退款金额校验，遇到负数金额就抛 ValueError，"
+            "而退款本来就可能是负数。"
         ),
         root_cause_category="deployment",
         correct_recovery=("rollback_deployment",),
         mitigations=(),
         verification_criteria=_healthy("payment-service"),
-        expected_evidence=("v2.5.0", "deployment", "error rate", "ValueError"),
+        expected_evidence=("v2.5.0", "发布", "错误率", "ValueError"),
         runbook_hint="deployment/rollback",
     )
 )
@@ -310,29 +316,28 @@ _register(
 _register(
     Scenario(
         name="payment-third-party-timeout",
-        title="Payment provider timing out",
+        title="支付渠道大面积超时",
         description=(
-            "Payment requests hang and then fail. The partner provider is returning "
-            "gateway timeouts."
+            "支付请求先挂起、再失败。合作方渠道一直在返回网关超时。"
         ),
         severity="SEV2",
         alert_service="payment-service",
-        trigger="partner payment API degradation",
+        trigger="合作方支付 API 劣化",
         symptoms=(
-            "p95 latency above 8s",
-            "504 responses from the provider",
-            "retry budget exhausted",
+            "p95 延迟超过 8s",
+            "渠道侧返回 504",
+            "重试预算被打光",
         ),
         faults=(FaultSpec("api_timeout", "external-payment-api"),),
         hidden_root_cause=(
-            "The partner payment API (acme-pay) is returning 504 Gateway Timeout; "
-            "callers block until their own deadline expires."
+            "合作方支付 API（acme-pay）持续返回 504 Gateway Timeout，"
+            "调用方一直阻塞到自己超时为止。"
         ),
         root_cause_category="third_party",
         correct_recovery=("enable_circuit_breaker", "switch_payment_provider"),
         mitigations=(),
         verification_criteria=_healthy("payment-service"),
-        expected_evidence=("504", "timeout", "external-payment-api", "upstream"),
+        expected_evidence=("504", "超时", "external-payment-api", "上游"),
         runbook_hint="payment/timeout",
     )
 )
@@ -340,23 +345,22 @@ _register(
 _register(
     Scenario(
         name="postgres-slow-queries",
-        title="Database queries blocking",
+        title="数据库查询互相阻塞",
         description=(
-            "Queries are taking seconds instead of milliseconds and connections are "
-            "piling up."
+            "查询从毫秒级变成秒级，连接不断堆积。"
         ),
         severity="SEV1",
         alert_service="checkout-service",
-        trigger="long-running migration left blocking transactions",
+        trigger="一个长时间运行的 migration 留下了阻塞事务",
         symptoms=(
-            "query latency above 2s",
-            "lock wait timeouts",
-            "connection count climbing",
+            "查询延迟超过 2s",
+            "锁等待超时",
+            "连接数持续攀升",
         ),
         faults=(FaultSpec("slow_database", "postgres"),),
         hidden_root_cause=(
-            "An uncommitted migration is holding row locks on orders, so ordinary "
-            "checkout queries block behind it and connections accumulate."
+            "一个未提交的 migration 一直占着 orders 表的行锁，"
+            "普通的结算查询全被堵在它后面，连接因此不断堆积。"
         ),
         root_cause_category="database",
         correct_recovery=("clear_deadlock", "restart_postgres"),
@@ -365,7 +369,7 @@ _register(
             Criterion("postgres", "latency_p95_ms", "<=", 200.0),
             *_healthy("checkout-service"),
         ),
-        expected_evidence=("slow query", "lock", "postgres", "timeout"),
+        expected_evidence=("慢查询", "锁", "postgres", "超时"),
         runbook_hint="database/deadlock",
     )
 )
@@ -373,29 +377,28 @@ _register(
 _register(
     Scenario(
         name="inventory-cpu-saturation",
-        title="Inventory service CPU saturated",
+        title="库存服务 CPU 打满",
         description=(
-            "Inventory is pinned at high CPU and requests are queueing behind the "
-            "scheduler."
+            "库存服务 CPU 钉在高位，请求全堵在调度器后面排队。"
         ),
         severity="SEV3",
         alert_service="inventory-service",
-        trigger="traffic surge on stock endpoints",
+        trigger="库存接口流量激增",
         symptoms=(
-            "CPU above 90%",
-            "request queue depth rising",
-            "latency rising proportionally",
+            "CPU 超过 90%",
+            "请求队列深度持续上涨",
+            "延迟随队列同步上升",
         ),
         faults=(FaultSpec("cpu_spike", "inventory-service"),),
         hidden_root_cause=(
-            "A traffic surge pushed inventory past its provisioned capacity; each "
-            "replica is saturated and requests queue behind the scheduler."
+            "一波流量激增把库存服务推过了它的预留容量，"
+            "每个副本都跑满，请求只能排在调度器后面。"
         ),
         root_cause_category="capacity",
         correct_recovery=("scale_service",),
         mitigations=("restart_service",),
         verification_criteria=_healthy("inventory-service", cpu_percent=80.0),
-        expected_evidence=("cpu", "saturation", "queue"),
+        expected_evidence=("cpu", "饱和", "队列"),
         runbook_hint="deployment/rollback",
     )
 )
@@ -403,24 +406,23 @@ _register(
 _register(
     Scenario(
         name="gateway-dependency-cascade",
-        title="Gateway errors caused by a failing dependency",
+        title="网关报错，根因在下游依赖",
         description=(
-            "The edge gateway is returning 5xx but its own metrics look mostly "
-            "fine — the failures come from somewhere downstream."
+            "边缘网关成片返回 5xx，但它自己的指标看起来基本正常——"
+            "失败来自下游某个组件。"
         ),
         severity="SEV1",
         alert_service="gateway",
-        trigger="user-service replicas became unready",
+        trigger="user-service 实例全部变为未就绪",
         symptoms=(
-            "gateway 5xx above 30%",
-            "gateway CPU and memory normal",
-            "user-service readiness probe failing",
+            "网关 5xx 超过 30%",
+            "网关 CPU 与内存正常",
+            "user-service 就绪探针失败",
         ),
         faults=(FaultSpec("dependency_failure", "user-service"),),
         hidden_root_cause=(
-            "user-service lost all ready replicas and was removed from the load "
-            "balancer, so a share of gateway requests fail regardless of gateway "
-            "health."
+            "user-service 丢掉了全部就绪副本，被负载均衡摘除，"
+            "于是无论网关自身是否健康，总有一部分请求必然失败。"
         ),
         root_cause_category="cascading",
         correct_recovery=("restart_service",),
@@ -429,7 +431,7 @@ _register(
             Criterion("user-service", "health", "==", "healthy"),
             *_healthy("gateway"),
         ),
-        expected_evidence=("user-service", "upstream", "503", "dependency"),
+        expected_evidence=("user-service", "上游", "503", "依赖"),
         runbook_hint="deployment/rollback",
     )
 )
@@ -437,18 +439,18 @@ _register(
 _register(
     Scenario(
         name="payment-high-error-rate",
-        title="Payment error budget exhausted",
+        title="支付错误预算耗尽",
         description=(
-            "Payments are failing at a high rate with no single obvious cause. A "
-            "release landed recently."
+            "支付以很高的比例失败，找不到单一明显的诱因。"
+            "最近刚落地过一次发布。"
         ),
         severity="SEV2",
         alert_service="payment-service",
-        trigger="unknown — errors began after the last release window",
+        trigger="未知——报错在上一次发布窗口之后开始",
         symptoms=(
-            "HTTP 500 on a large share of requests",
-            "unhandled exceptions in the request handler",
-            "no infrastructure metric regression",
+            "大量请求返回 HTTP 500",
+            "请求处理里出现未捕获异常",
+            "基础设施指标没有劣化",
         ),
         faults=(FaultSpec("high_error_rate", "payment-service"),),
         deploys=(
@@ -456,19 +458,19 @@ _register(
                 service="payment-service",
                 version="v2.4.9",
                 minutes_ago=11.0,
-                notes="payment: dependency bumps",
-                commit_message="chore(payment): bump sdk and http client",
+                notes="payment：升级依赖版本",
+                commit_message="chore(payment): 升级 sdk 与 http 客户端",
             ),
         ),
         hidden_root_cause=(
-            "v2.4.9 bumped the HTTP client and broke connection reuse, so a share "
-            "of outbound calls throw inside the request handler."
+            "v2.4.9 升级了 HTTP 客户端，破坏了连接复用，"
+            "导致一部分出站调用在请求处理里直接抛异常。"
         ),
         root_cause_category="deployment",
         correct_recovery=("rollback_deployment",),
         mitigations=("restart_service",),
         verification_criteria=_healthy("payment-service"),
-        expected_evidence=("error rate", "v2.4.9", "deployment", "500"),
+        expected_evidence=("错误率", "v2.4.9", "发布", "500"),
         runbook_hint="deployment/rollback",
     )
 )
@@ -476,24 +478,24 @@ _register(
 _register(
     Scenario(
         name="checkout-deployment-cascade",
-        title="Checkout regression surfacing at the edge",
+        title="结算服务的回归在边缘暴露",
         description=(
-            "The gateway is the loudest alarm, but its own metrics are clean. "
-            "Something it calls is failing."
+            "网关是喊得最响的那个，但它自己的指标很干净。"
+            "它调用的某个组件正在失败。"
         ),
         severity="SEV1",
         alert_service="gateway",
-        trigger="deploy checkout-service v1.8.4",
+        trigger="发布 checkout-service v1.8.4",
         symptoms=(
-            "gateway 5xx above 20%",
-            "gateway latency inflated by a slow dependency",
-            "checkout-service error rate elevated",
+            "网关 5xx 超过 20%",
+            "网关延迟被一个慢依赖拉高",
+            "checkout-service 错误率抬升",
         ),
         faults=(
             FaultSpec(
                 "bad_deployment",
                 "checkout-service",
-                {"error": "NullPointerException: cart totals"},
+                {"error": "NullPointerException: 购物车金额"},
             ),
         ),
         deploys=(
@@ -501,13 +503,13 @@ _register(
                 service="checkout-service",
                 version="v1.8.4",
                 minutes_ago=7.0,
-                notes="checkout: new cart totals calculation",
-                commit_message="feat(checkout): recompute cart totals with discounts",
+                notes="checkout：重写购物车金额计算",
+                commit_message="feat(checkout): 带折扣重算购物车金额",
             ),
         ),
         hidden_root_cause=(
-            "v1.8.4 rewrote cart total calculation and dereferences a null discount "
-            "node, so checkout throws and the gateway reports the resulting 5xx."
+            "v1.8.4 重写了购物车金额计算，解引用了一个空的折扣节点，"
+            "结算因此抛异常，网关再把由此产生的 5xx 报出来。"
         ),
         root_cause_category="deployment",
         correct_recovery=("rollback_deployment",),
@@ -516,7 +518,7 @@ _register(
             Criterion("checkout-service", "health", "==", "healthy"),
             *_healthy("gateway"),
         ),
-        expected_evidence=("checkout-service", "v1.8.4", "deployment", "500"),
+        expected_evidence=("checkout-service", "v1.8.4", "发布", "500"),
         runbook_hint="deployment/rollback",
     )
 )
@@ -524,29 +526,27 @@ _register(
 _register(
     Scenario(
         name="payment-provider-outage",
-        title="Payment provider returning errors",
+        title="支付渠道持续返回错误",
         description=(
-            "The partner payment provider is returning server errors for every "
-            "authorisation attempt."
+            "合作方支付渠道对每一次授权尝试都返回服务端错误。"
         ),
         severity="SEV1",
         alert_service="payment-service",
-        trigger="partner provider outage",
+        trigger="合作方渠道整体故障",
         symptoms=(
-            "503 from the provider",
-            "authorisation rejected",
-            "no local infrastructure regression",
+            "渠道返回 503",
+            "授权被拒绝",
+            "本地基础设施指标没有劣化",
         ),
         faults=(FaultSpec("third_party_api_failure", "external-payment-api"),),
         hidden_root_cause=(
-            "acme-pay is experiencing a full outage and returns 503 for every "
-            "authorisation request."
+            "acme-pay 正在经历整体故障，对每一次授权请求都返回 503。"
         ),
         root_cause_category="third_party",
         correct_recovery=("switch_payment_provider", "enable_circuit_breaker"),
         mitigations=(),
         verification_criteria=_healthy("payment-service"),
-        expected_evidence=("503", "acme-pay", "provider", "external"),
+        expected_evidence=("503", "acme-pay", "支付渠道", "外部"),
         runbook_hint="payment/timeout",
     )
 )
@@ -554,29 +554,27 @@ _register(
 _register(
     Scenario(
         name="checkout-cpu-saturation",
-        title="Checkout CPU saturated",
+        title="结算服务 CPU 打满",
         description=(
-            "Checkout is CPU-bound and shedding load; latency scales with the "
-            "queue depth."
+            "结算服务受 CPU 限制开始丢弃负载，延迟随队列深度线性上升。"
         ),
         severity="SEV3",
         alert_service="checkout-service",
-        trigger="traffic surge",
+        trigger="流量激增",
         symptoms=(
-            "CPU above 90%",
-            "latency increasing with queue depth",
-            "no error-rate regression yet",
+            "CPU 超过 90%",
+            "延迟随队列深度上升",
+            "错误率暂时还没劣化",
         ),
         faults=(FaultSpec("cpu_spike", "checkout-service"),),
         hidden_root_cause=(
-            "Checkout is running at its provisioned capacity and cannot absorb the "
-            "current traffic level."
+            "结算服务正跑在预留容量上限，吃不下当前的流量水位。"
         ),
         root_cause_category="capacity",
         correct_recovery=("scale_service",),
         mitigations=("restart_service",),
         verification_criteria=_healthy("checkout-service", cpu_percent=80.0),
-        expected_evidence=("cpu", "saturation", "queue"),
+        expected_evidence=("cpu", "饱和", "队列"),
         runbook_hint="deployment/rollback",
     )
 )

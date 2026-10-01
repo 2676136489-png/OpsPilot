@@ -1039,7 +1039,7 @@ def _print_case(result: CaseResult) -> None:
     mark = "OK  " if result.root_cause_correct else "MISS"
     if result.error:
         mark = "ERR "
-    env = "-" if result.env_passed is None else ("fixed" if result.env_passed else "broken")
+    env = "-" if result.env_passed is None else ("已修复" if result.env_passed else "未修复")
     print(
         f"[{mark}] {result.scenario:<32} "
         f"got={str(result.diagnosed_category):<12} want={result.expected_category:<12} "
@@ -1050,21 +1050,21 @@ def _print_case(result: CaseResult) -> None:
         f"{result.latency_ms:>7.0f}ms"
     )
     if result.error:
-        print(f"        error: {result.error}")
+        print(f"        错误：{result.error}")
     if result.missing_tools:
-        print(f"        missing tools: {', '.join(result.missing_tools)}")
+        print(f"        未调用的工具：{', '.join(result.missing_tools)}")
     if result.missing_evidence:
-        print(f"        missed evidence: {', '.join(result.missing_evidence)}")
+        print(f"        未采集到的证据：{', '.join(result.missing_evidence)}")
     if result.escalation_reason:
-        print(f"        escalated: {result.escalation_reason}")
+        print(f"        升级原因：{result.escalation_reason}")
 
 
 async def _main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Score the OpsPilot agent end to end.")
-    parser.add_argument("--only", default="", help="substring filter on scenario names")
-    parser.add_argument("--json", action="store_true", help="emit the raw suite as JSON")
-    parser.add_argument("--db", default="", help="reuse this database file instead of a temp one")
-    parser.add_argument("--keep-db", action="store_true", help="do not delete the scratch database")
+    parser = argparse.ArgumentParser(description="端到端给 OpsPilot Agent 打分。")
+    parser.add_argument("--only", default="", help="按场景名做子串过滤")
+    parser.add_argument("--json", action="store_true", help="把原始 suite 以 JSON 输出")
+    parser.add_argument("--db", default="", help="复用这个数据库文件，而不是建临时的")
+    parser.add_argument("--keep-db", action="store_true", help="不要删除临时数据库")
     args = parser.parse_args(argv)
 
     bootstrap_paths()
@@ -1078,7 +1078,7 @@ async def _main(argv: list[str] | None = None) -> int:
         return 0
 
     print("=" * 100)
-    print("OpsPilot agent evaluation — end to end, scored against the simulator's answer key")
+    print("OpsPilot Agent 评测 —— 端到端跑完整流程，对照模拟器的答案评分")
     print("=" * 100)
     for result in suite.cases:
         _print_case(result)

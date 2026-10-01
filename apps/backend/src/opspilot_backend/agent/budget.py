@@ -136,22 +136,22 @@ class Budget:
         if self.tool_calls >= self.max_tool_calls:
             self._exhaust(
                 EscalationReason.BUDGET_EXHAUSTED,
-                f"tool call limit reached ({self.tool_calls}/{self.max_tool_calls})",
+                f"工具调用次数已达上限（{self.tool_calls}/{self.max_tool_calls}）",
             )
         elif self.elapsed_seconds >= self.max_seconds:
             self._exhaust(
                 EscalationReason.BUDGET_EXHAUSTED,
-                f"time limit reached ({self.elapsed_seconds:.1f}s/{self.max_seconds:.0f}s)",
+                f"耗时已达上限（{self.elapsed_seconds:.1f}s/{self.max_seconds:.0f}s）",
             )
         elif self.tokens >= self.max_tokens:
             self._exhaust(
                 EscalationReason.BUDGET_EXHAUSTED,
-                f"token limit reached ({self.tokens}/{self.max_tokens})",
+                f"Token 用量已达上限（{self.tokens}/{self.max_tokens}）",
             )
         elif self.retries >= self.max_retries:
             self._exhaust(
                 EscalationReason.TOOL_FAILURES,
-                f"retry limit reached ({self.retries}/{self.max_retries})",
+                f"重试次数已达上限（{self.retries}/{self.max_retries}）",
             )
 
     def _exhaust(self, reason: EscalationReason, detail: str) -> None:

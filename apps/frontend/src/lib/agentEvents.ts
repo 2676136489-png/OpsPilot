@@ -16,6 +16,15 @@
  */
 
 import type { AgentEvent, AgentEventType } from '../types'
+import {
+  zhApprovalTier,
+  zhCategory,
+  zhDecision,
+  zhRisk,
+  zhSeverity,
+  zhStatus,
+} from '../i18n'
+import { escalationLabel, outcomeLabel } from './labels'
 
 /**
  * Tone vocabulary, deliberately identical to the badge/marker CSS vocabulary
@@ -113,9 +122,11 @@ export function describeEvent(evt: AgentEvent): string {
     case 'agent.failed':
       return `调查失败：${str(d.error || d.errors) || '未知错误'}`
     case 'agent.budget.exhausted':
-      return `预算耗尽，未能执行 ${str(d.tool)}（${str(d.reason)}）`
+      return `预算耗尽，未能执行 ${str(d.tool)}（${escalationLabel(str(d.reason))}）`
     case 'agent.escalated':
-      return `已移交人工：${str(d.reason)}${d.outcome ? `（${str(d.outcome)}）` : ''}`
+      return `已移交人工：${escalationLabel(str(d.reason))}${
+        d.outcome ? `（${outcomeLabel(str(d.outcome))}）` : ''
+      }`
 
     case 'investigation.started':
       return `分诊为 ${str(d.severity)}，服务 ${str(d.service)}`
@@ -144,41 +155,45 @@ export function describeEvent(evt: AgentEvent): string {
       return `${str(d.tool_name)} 失败：${str(d.error_message || d.error_code)}`
 
     case 'evidence.created':
-      return `[${str(d.severity)}] ${str(d.ref)} ${str(d.title)}${
+      return `[${zhSeverity(str(d.severity))}] ${str(d.ref)} ${str(d.title)}${
         d.relevance !== undefined ? `（相关性 ${pct(d.relevance)}）` : ''
       }`
     case 'hypothesis.created': {
       if (d.count !== undefined) return `无法提出假设：${str(d.reason)}`
-      return `${str(d.ref)} ${str(d.statement)} — 域 ${str(
-        d.domain || d.category,
+      return `${str(d.ref)} ${str(d.statement)} — 域 ${zhCategory(
+        str(d.domain || d.category),
       )}，置信度 ${pct(d.confidence)}`
     }
     case 'hypothesis.updated':
-      return `${str(d.ref)} ${str(d.status)} — 置信度 ${pct(d.confidence)}`
+      return `${str(d.ref)} ${zhStatus(str(d.status))} — 置信度 ${pct(d.confidence)}`
     case 'hypothesis.rejected':
       return `${str(d.ref)} 被否决 — ${str(d.statement)}`
     case 'diagnosis.completed':
-      return `${str(d.outcome)}：${str(d.root_cause)}（分类 ${str(
-        d.category,
+      return `${outcomeLabel(str(d.outcome))}：${str(d.root_cause)}（分类 ${zhCategory(
+        str(d.category),
       )}，置信度 ${pct(d.confidence)}）`
 
     case 'risk.assessed':
-      return `风险 ${str(d.risk_level)}，审批级别 ${str(d.approval_tier)}`
+      return `风险 ${zhRisk(str(d.risk_level))}，审批级别 ${zhApprovalTier(
+        str(d.approval_tier),
+      )}`
     case 'approval.required':
-      return `需要审批：风险 ${str(d.risk_level)}／级别 ${str(d.approval_tier)}`
+      return `需要审批：风险 ${zhRisk(str(d.risk_level))}／级别 ${zhApprovalTier(
+        str(d.approval_tier),
+      )}`
     case 'approval.decided':
-      return `审批 ${str(d.decision)}（${str(d.decided_by)}）`
+      return `审批 ${zhDecision(str(d.decision))}（${str(d.decided_by)}）`
 
     case 'recovery.plan.created': {
       const n = Array.isArray(d.actions) ? d.actions.length : 0
-      return `生成恢复方案：${n} 个动作，风险 ${str(d.risk_level)}`
+      return `生成恢复方案：${n} 个动作，风险 ${zhRisk(str(d.risk_level))}`
     }
     case 'recovery.started':
       return `开始执行恢复方案 ${str(d.plan_id).slice(0, 8)}`
     case 'recovery.action.completed': {
       const eff =
         d.effective === false ? '（未产生实际变化）' : d.effective ? '（已改变环境）' : ''
-      return `${str(d.ref)} ${str(d.tool)} → ${str(d.status)}${eff}`
+      return `${str(d.ref)} ${str(d.tool)} → ${zhStatus(str(d.status))}${eff}`
     }
     case 'recovery.completed':
       return `恢复完成，生效动作 ${str(d.effective_ref)}`
@@ -187,12 +202,14 @@ export function describeEvent(evt: AgentEvent): string {
     case 'recovery.rollback.started':
       return '开始回滚'
     case 'recovery.rollback.completed':
-      return `${str(d.ref)} 回滚 → ${str(d.status)}`
+      return `${str(d.ref)} 回滚 → ${zhStatus(str(d.status))}`
 
     case 'verification.started':
       return '开始验证环境'
     case 'verification.completed':
-      return `验证 ${str(d.status)}：${str(d.passed_checks)}/${str(d.total_checks)} 项通过`
+      return `验证${zhStatus(str(d.status))}：${str(d.passed_checks)}/${str(
+        d.total_checks,
+      )} 项通过`
 
     case 'postmortem.created':
       return `已生成复盘：${str(d.summary)}`

@@ -81,7 +81,7 @@ def _validate_severity(v: str) -> str:
     """Validate API severity and translate it to the domain value."""
     if v not in VALID_SEVERITIES:
         raise ValueError(
-            f"Invalid severity '{v}'. Must be one of {sorted(VALID_SEVERITIES)}."
+            f"severity 取值 '{v}' 不合法，必须是 {sorted(VALID_SEVERITIES)} 之一。"
         )
     return SEVERITY_TO_DOMAIN[v]
 
@@ -90,7 +90,7 @@ def _validate_status(v: str) -> str:
     """Validate API status and translate it to the domain value."""
     if v not in VALID_STATUSES:
         raise ValueError(
-            f"Invalid status '{v}'. Must be one of {sorted(VALID_STATUSES)}."
+            f"status 取值 '{v}' 不合法，必须是 {sorted(VALID_STATUSES)} 之一。"
         )
     return STATUS_TO_DOMAIN[v]
 
@@ -277,8 +277,8 @@ class DeploymentCreate(DeploymentBase):
     def _check_status(cls, v: str) -> str:
         if v not in VALID_DEPLOYMENT_STATUSES:
             raise ValueError(
-                f"Invalid deployment status '{v}'. "
-                f"Must be one of {sorted(VALID_DEPLOYMENT_STATUSES)}."
+                f"部署状态 '{v}' 不合法，"
+                f"必须是 {sorted(VALID_DEPLOYMENT_STATUSES)} 之一。"
             )
         return v
 

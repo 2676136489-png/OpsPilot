@@ -259,8 +259,8 @@ class NodeContext:
                 blocked=True,
                 error_type="budget_exhausted",
                 error_message=(
-                    "investigation budget exhausted: "
-                    f"{self.budget.exhaustion_detail or 'limit reached'}"
+                    "调查预算已耗尽："
+                    f"{self.budget.exhaustion_detail or '已达上限'}"
                 ),
             )
 
@@ -317,8 +317,8 @@ class NodeContext:
 def get_context(config: dict[str, Any] | None) -> NodeContext:
     """Pull the context out of LangGraph's RunnableConfig."""
     if not config:
-        raise RuntimeError("node invoked without a runtime context")
+        raise RuntimeError("节点在没有运行时上下文的情况下被调用")
     ctx = config.get("configurable", {}).get("ctx")
     if ctx is None:
-        raise RuntimeError("RunnableConfig is missing configurable.ctx")
+        raise RuntimeError("RunnableConfig 缺少 configurable.ctx")
     return ctx

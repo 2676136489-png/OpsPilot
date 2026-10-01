@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import { createAgentEventSource, formatSseTimestamp, type SseStatus } from '../api/sse'
 import { describeEvent, labelOf, toneOf, type EventTone } from '../lib/agentEvents'
 import { stageLabel } from '../lib/labels'
+import { zhStatus } from '../i18n'
 import { LiveDot } from '../ui/Badge'
 import { EmptyState } from '../ui/Feedback'
 import { Icon } from '../ui/Icon'
@@ -216,7 +217,7 @@ function StepRow({
             <span className="badge badge-sm badge-warning">第 {step.attempt} 次</span>
           )}
           <time className="agent-event-time">
-            {step.duration_ms != null ? `${step.duration_ms}ms` : step.status}
+            {step.duration_ms != null ? `${step.duration_ms}ms` : zhStatus(step.status)}
           </time>
         </div>
         {step.error && <div className="agent-event-desc hl-crit">{step.error}</div>}

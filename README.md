@@ -122,6 +122,10 @@ OpsPilot 把这段流程交给一个**状态机驱动的 Agent**，并且要求�
    一次典型假设生成从 651 个 token 浪费掉，降到 147–170 个 token 正常落库。
 2. **证据不足允许弃权。** `root_cause_diagnosis` 可以产出 `UNKNOWN`，这条路径计入 `escalated`，
    不算失败也不算成功。
+3. **输出语言在提示词里锁死。** 界面是中文的，提示词不写死语言，模型就会按自己的语料习惯回英文句子，
+   于是「中文界面里夹一段英文根因」——比整站英文更难读，因为它看起来像 bug。
+   `hypothesis_generation` 和 `postmortem` 的 system prompt 都显式写了「只用中文作答」，
+   并且限定「不要 markdown 围栏、不要任何说明文字」，把语言和结构一起约束掉。
 
 ---
 
@@ -173,7 +177,7 @@ cd evals && python cli.py
 
 ## 前端
 
-React 19 + TypeScript + Vite，9 个页面（指挥中心 / 故障 / 服务拓扑 / Agent 运行 / 审批 / Runbooks / 评估 / 可观测性 / 故障详情）。
+React 19 + TypeScript + Vite，9 个页面（指挥中心 / 故障 / 服务拓扑 / Agent 运行 / 审批 / 运维手册 / 评估 / 可观测性 / 故障详情）。
 
 - **SSE 事件流**。`GET /api/v1/agent/runs/{id}/stream` 从 `seq 0` 回放落库的完整事件日志，然后转到实时跟随。
   断线重连带 `Last-Event-ID`，服务端从游标续传，所以断连不会在时间线上留一个洞。
@@ -182,6 +186,16 @@ React 19 + TypeScript + Vite，9 个页面（指挥中心 / 故障 / 服务拓�
   「事件」来自 SSE 事件日志。没有一份数据是从运行快照反推出来的——反推出来的时间线无法展示
   重新规划、被否掉的假设或回滚，而这三样恰好是证明 Agent 在思考而不是在背稿的地方。
 - **拓扑图**用 dagre 做分层布局，节点颜色只编码健康度；健康度未知就画成灰色，不画成绿色。
+- **文案分层**：接口里的枚举值、工具名、指标名、服务名、厂商名一律保持英文原样
+  （`ROOT_CAUSE_CONFIRMED`、`latency_p95`、`acme-pay`），因为它们要么参与匹配、要么是别人系统的名字，
+  翻一次就会有两处各自为政的真话。给用户看的句子则全部走中文词表：后端 `domain/enums.py` 的
+  `zh_incident_status()` / `zh_risk()` / `zh_outcome()`，前端 `lib/labels.ts` 与 `i18n.ts`。
+  同一份词表只放一处——两个页面各自翻译同一个枚举，是两处迟早会分歧的地方。
+- **框架自己的英文也要收**：被拒的请求默认返回 pydantic 的 `Input should be a valid UUID...`，
+  而 `api/client.ts` 有一段专门把这些 `msg` 拼起来渲染的分支——也就是说这句话有通路到屏幕上，
+  只是 SPA 自己不会走那条路。"不常出现"正是一句英文能在中文界面里活下来的方式。
+  现在 `main.py` 注册了 `RequestValidationError` 处理器：`detail` 换成中文句子，
+  结构化的 `type`/`location` 原样留在 `errors` 里——那是定位字段的依据，翻译它等于删掉信息。
 - **主题与交互**：设计 token 集中在 `styles/tokens.css`，命令面板（⌘K）、抽屉、Toast、下拉都走 `ui/` 下的统一实现，
   页面不自己手搓浮层。
 
@@ -196,10 +210,16 @@ deploy/
 ├── src/            # 后端 + 内嵌模拟器
 ├── webroot/        # 编译好的 SPA
 ├── runbooks/       # 知识库
-├── opspilot.db     # SQLite
+├── opspilot.db     # SQLite（只带 schema，不带数据）
 ├── requirements.txt
 └── serve.py        # 入口
 ```
+
+`opspilot.db` 是**空表 + 完整 schema**，并在头部写入本次构建的时间戳。首屏那一条故障由
+`OPSPILOT_DEMO_SEED` 在启动时按场景定义生成，文案跟着 `opspilot_simulator.scenarios` 走。
+启动时会先核对那个戳：托管平台的上传是覆盖式的，SQLite 的 `-wal` 会让上一版的数据库接管新文件，
+而两者的 schema 完全相同、`integrity_check` 也都是 `ok`——只有戳能分辨。
+不匹配就把 `.db` 连同 `-wal`/`-shm` 一起删掉重建（库是可再生的），然后把戳补写回去。
 
 `serve.py` 用一个 FastAPI 进程同时提供 API、SSE、模拟器和 SPA（catch-all 回落到 `index.html`）。
 `OPSPILOT_EMBED_SIMULATOR=true` 会把故障模拟器挂到 `/__sim` 并把基础设施 provider 指回自己，
@@ -266,7 +286,7 @@ cp .env.example .env
 
 ```bash
 cd apps/backend
-PYTHONPATH=src python -m pytest tests -q          # 55 passed
+PYTHONPATH=src python -m pytest tests -q          # 101 passed
 cd apps/frontend && npx tsc -b && npx oxlint      # 类型 + lint
 cd evals && python cli.py                         # 12 个场景的端到端评估
 ```
@@ -275,6 +295,13 @@ cd evals && python cli.py                         # 12 个场景的端到端评�
 `test_recovery_rollback.py`（恢复不生效时的回退）、`test_tool_idempotency.py`（重复调用不重复生效）、
 `test_tracing.py`（span 血缘完整）、`test_agent_timeline.py`（时间线事件契约）、
 `test_incident_lifecycle.py`（状态机合法迁移）。
+
+另外四组守的是"不报错但结果不对"的那类问题，所以单独列出来：
+`test_status_labels.py` 断言每个线上枚举值都有中文标签（查表漏掉一个的形态是英文词漏进中文句子，
+不抛异常）；`test_deploy_database.py` 断言部署库只带 schema、且 `-wal` 残留组合不出"能打开但没表"的库；
+`test_shipped_database.py` 断言启动时能认出"这不是本次发布带的数据库"并重建，
+以及删不掉时不要因此起不来；`test_validation_errors.py` 断言被拒绝的请求不会把 pydantic 的英文
+原样送到浏览器，同时保留机器可读的字段定位。
 
 ---
 
@@ -318,7 +345,23 @@ cd evals && python cli.py                         # 12 个场景的端到端评�
 调用方无法区分「这个事件已经在跑了」和「服务坏了」。注册一个 handler 之后，
 重复启动返回 409 `{"code":"CONFLICT"}`，不存在的事件返回 404。
 
-**8. 服务端的控制帧违反了前端的类型契约。**
+**8. 改写日志文本会让信号抽取静默失效。**
+`agent/investigation.py` 的 `_LOG_PATTERNS` 是靠**子串匹配日志正文**来点亮信号的
+（`"queuepool"` → 连接池饱和、`"outofmemoryerror"` → OOM）。把模拟器日志翻成中文，
+匹配会全部落空，而失败形态是「证据变少、置信度变低」——不报错、不抛异常，只是诊断质量
+悄悄退化。所以模式表做成双语的：中文新词在前、英文旧词兜底。
+另一个坑是中文词必须是**短语**：`"缓存"` 会被健康日志里的「缓存命中率 0.91」点亮，
+必须写成 `"缓存读取失败"`；同理 `"连接池"`、`"堆空间"`、`"锁等待"`。
+这类改动只能靠评测集回归来守——`expected_evidence` 的召回率是唯一能看见它的指标。
+
+**9. 重建部署包会静默吞掉凭据。**
+`build_deploy.py` 先 `rmtree` 掉整个 `deploy/`，再重新生成 `.env`，而 `.env` 只从**当前 shell**
+的环境变量取值。Key 平时只存在于 `deploy/.env`（该目录被 gitignore，这是刻意的），
+于是「换台机器重建一次」就足以让线上实例丢掉模型 Key——症状是 agent 悄悄退化成模板输出，
+`usage.tokens` 恒为 0，不报任何错。改成删除前先读旧 `.env`，按「shell 优先、旧值兜底」合并，
+并在构建输出里区分来源。
+
+**10. 服务端的控制帧违反了前端的类型契约。**
 SSE 的 `stream.opened` / `stream.closed` 是传输控制帧（不落库、所以没有 `seq`），
 载荷只有 `{"run_id","status","last_event_id"}`——缺 `event_type`、缺 `data`。
 但它们被登记进了前端的事件类型表，于是被当成普通事件派发到时间线上，
@@ -327,7 +370,7 @@ SSE 的 `stream.opened` / `stream.closed` 是传输控制帧（不落库、所�
 修法是在生产端补齐信封（`control_payload()`），而不是在消费端到处 `?? {}`；
 消费端只保留一处网络值信任边界。补了回归测试，并验证了该测试能拦住旧实现。
 
-**9. 一个只在别人的浏览器里复现的渲染崩溃。**
+**11. 一个只在别人的浏览器里复现的渲染崩溃。**
 「未能在 '节点' 上执行 'insertBefore'：新节点要插入的节点不是该节点的子节点」——
 本地用 CDP 压测 32 次路由切换 + 浮层反复开关，一次都没复现。
 
@@ -347,6 +390,65 @@ SSE 的 `stream.opened` / `stream.closed` 是传输控制帧（不落库、所�
 一个孤儿遮罩层盖在刚修好的界面上——所以浮层现在统一挂到受管的 `#overlay-root`，重建时整块换掉。
 CDP 验证：路由扫荡 8 个页面无异常、端口探针记录 0 次 DOM 不变量违规、
 真实 Agent 运行的事件页签正常渲染 67 行、重建后 `<body>` 子节点数不增长。
+
+**12. 构建产物把开发库一起带上线，还顺手关掉了首屏种子。**
+`build_deploy.py` 原本是把 `apps/backend/opspilot.db` 原样拷进部署包，那是**开发库**——
+里面躺着本地跑出来的 4 条故障记录，连标题带时间戳一起被发布出去。
+更隐蔽的是它的副作用：`main.py` 的 `_seed_demo_incidents()` 守卫是 `count(incidents) == 0`，
+表非空就直接 `return`，于是这个「让新实例不至于空着首屏」的种子从来没执行过。
+表现是线上首屏是 4 条没人认识的旧故障，而不是按场景定义生成的那一条。
+改成只带 schema：`snapshot_sqlite()` 读一份自洽副本，`reset_sqlite()` 清空所有表（`VACUUM` 顺带收回页），
+首屏交还给种子逻辑。
+
+同一个函数上还叠着一个更安静的坑：`shutil.copy2` 只拷 `.db`，而 SQLite 把已提交但未 checkpoint
+的事务放在 `-wal` 里；目标目录若还残留上一轮构建的 `-wal`，就组合出一个"看着正常"的库。
+实测这个组合的失败形态是：**库能打开、`PRAGMA integrity_check` 返回 `ok`、但表整个不见了**
+（`no such table: incidents`）。所以构建闸门不能只看 pragma，`check_sqlite()` 现在会另外断言 schema 存在——
+一个没有表的库不算通过检查。`tests/test_deploy_database.py` 把这三种形态都固化了（8 个用例），
+其中「旧实现会红」是实测过的，不是推的。
+
+**13. 托管平台上传是"覆盖"，不是"替换"，于是线上跑的其实是上一版的数据库。**
+这是最花时间的一个，因为它同时伪装成两种完全不同的现象。
+
+线上要更新，平台是把新文件写到旧文件上。而 `db/session.py` 每个连接都执行
+`PRAGMA journal_mode=WAL`，所以**上一版留下的 `-wal`/`-shm` 会原地不动地留在那里**。
+SQLite 的 WAL 里带着 page 1 的副本，于是它堂而皇之地接管了新上传的主文件。实测（本次部署包 + 上一版的 WAL）：
+
+```
+integrity_check : ok
+user_version    : 1600000000      ← 上一版的构建戳
+incidents       : ['版本发布后支付授权开始报错', '缓存集群整体不可达']   ← 上一版的数据，共 2 条
+```
+
+我这次上传的是一个 0 行、23 表的新库——**它被完全忽略了**。没有报错、没有告警，
+`PRAGMA integrity_check` 说一切正常。之前几轮"重新发布"能"成功"，靠的就是这个：
+线上一直在跑更早的数据库，所以无论我改了多少文案，页面上的英文都没变过。
+同一机制的另一面是启动直接崩：上一版的 WAL 若是在写入中途被 kill 掉的（torn），
+`create_all` 的第一次反射就抛 `sqlite3.DatabaseError`，服务根本起不来。
+
+判据不能是文件内容——同一份 schema 的旧库和健康库长得一模一样。所以构建时给库盖一个戳：
+`build_deploy.py` 写 `PRAGMA user_version = <构建时间戳>` 并把同一个值写进 `.env` 的
+`OPSPILOT_BUILD_STAMP`；启动时对比，不一致就说明这个文件不是本次发布带的。
+
+```
+[opspilot] database: opspilot.db was unusable (build stamp mismatch
+  (file says 1600000000, this release ships 1790854896) — a previous release's
+  database is still in place) — deleted, schema will be rebuilt
+```
+
+三个细节是必须的，少一个就会变成新 bug：
+
+- **`-wal` 和 `-shm` 要一起删**。只删主文件的话，`create_all` 把表建进新文件，
+  旁边的旧 WAL 再覆盖一次——同一个故障推迟一个版本复发。
+- **重建之后要把戳补写回去**。否则下一次启动看到戳是 0，判定"不是我的库"，
+  再删一次——一次性的修复变成了每次重启都清空数据。
+- **删不掉不能导致启动失败**。只读挂载、权限位、别的进程占着文件，这些都会让 unlink 抛错；
+  而起不来是唯一没有恢复路径的结果。现在删失败只记一行、继续启动。
+
+复现是照着沙箱行为搭的：先用旧戳跑起一个实例、注入一个场景（得到「缓存集群整体不可达」），
+用 `/F` 杀掉以留下 WAL，再把新构建的主文件覆盖上去、旧 sidecar 原样放回。
+启动前 2 条旧故障 + 旧戳，启动后 1 条中文种子 + 新戳。
+`tests/test_shipped_database.py` 覆盖了戳不匹配、sidecar 连带删除、删失败不致命这几条。
 
 ---
 

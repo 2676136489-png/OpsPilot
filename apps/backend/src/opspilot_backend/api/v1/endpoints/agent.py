@@ -104,7 +104,7 @@ async def get_run(
     """Return the current state of an agent run (REST, non-streaming)."""
     payload = await AgentRunQueryService(session).get_run(run_id)
     if payload is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        raise HTTPException(status_code=404, detail=f"运行 {run_id} 不存在")
     return payload
 
 
@@ -158,7 +158,7 @@ async def get_run_trace(
     repo = AgentRunRepository(session)
     run = await repo.get(run_id)
     if run is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        raise HTTPException(status_code=404, detail=f"运行 {run_id} 不存在")
     rows = await repo.spans_for_run(run_id)
     flat = [_span_payload(row) for row in rows]
     by_kind: dict[str, int] = {}
@@ -206,7 +206,7 @@ async def get_run_steps(
     """
     timeline = await AgentRunQueryService(session).timeline(run_id)
     if timeline is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        raise HTTPException(status_code=404, detail=f"运行 {run_id} 不存在")
     steps = timeline["steps"]
     orphans = timeline["orphaned_tool_calls"]
     return {
@@ -233,7 +233,7 @@ async def get_run_events(
     """
     events = await AgentRunQueryService(session).events(run_id, after_seq=after_seq, limit=limit)
     if events is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        raise HTTPException(status_code=404, detail=f"运行 {run_id} 不存在")
     return {
         "run_id": run_id,
         "after_seq": after_seq,
@@ -260,7 +260,7 @@ async def stream_run_events(
     """
     run = await AgentRunRepository(session).get(run_id)
     if run is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        raise HTTPException(status_code=404, detail=f"运行 {run_id} 不存在")
 
     # Explicit cursor wins; otherwise honour a reconnecting EventSource's
     # header. Release this session's read transaction before streaming — it is
@@ -310,12 +310,12 @@ async def _decide(
     approval = await repo.get_approval(approval_id)
     if approval is None:
         raise HTTPException(
-            status_code=404, detail=f"Approval {approval_id} not found"
+            status_code=404, detail=f"审批 {approval_id} 不存在"
         )
     run_id = approval["run_id"]
     if not run_id:
         raise HTTPException(
-            status_code=409, detail="Approval is not attached to a run"
+            status_code=409, detail="该审批没有关联到任何一次运行"
         )
 
     async with _lock_for(run_id):
@@ -324,12 +324,12 @@ async def _decide(
         approval = await repo.get_approval(approval_id)
         if approval is None:
             raise HTTPException(
-                status_code=404, detail=f"Approval {approval_id} not found"
+                status_code=404, detail=f"审批 {approval_id} 不存在"
             )
         if approval["status"] != "pending":
             raise HTTPException(
                 status_code=409,
-                detail="Approval is not in 'pending' state",
+                detail="该审批不处于 'pending' 状态",
             )
 
         await repo.decide_approval(
@@ -361,5 +361,5 @@ async def reject_approval(
     session: AsyncSession = Depends(async_session),
 ) -> dict:
     """Reject a pending recovery — the run ends without executing actions."""
-    reason = body.reason if body and body.reason else "Rejected by operator"
+    reason = body.reason if body and body.reason else "操作人员拒绝"
     return await _decide(session, approval_id, "reject", reason)

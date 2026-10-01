@@ -68,7 +68,7 @@ export const router = createBrowserRouter([
       { path: 'topology', element: page(TopologyPage), handle: { crumb: '服务拓扑' } },
       { path: 'agents', element: page(AgentsPage), handle: { crumb: 'Agent 运行' } },
       { path: 'approvals', element: page(ApprovalsPage), handle: { crumb: '审批队列' } },
-      { path: 'runbooks', element: page(RunbooksPage), handle: { crumb: 'Runbooks' } },
+      { path: 'runbooks', element: page(RunbooksPage), handle: { crumb: '运维手册' } },
       { path: 'evaluations', element: page(EvaluationsPage), handle: { crumb: '评估' } },
       { path: 'observability', element: page(ObservabilityPage), handle: { crumb: '可观测性' } },
       { path: '*', element: <Navigate to="/" replace /> },

@@ -64,6 +64,8 @@ from opspilot_backend.domain.enums import (
     RecoveryPlanStatus,
     RiskLevel,
     VerificationStatus,
+    zh_outcome,
+    zh_risk,
 )
 from opspilot_backend.tools.registry import TOOL_REGISTRY
 
@@ -128,6 +130,28 @@ def _evidence_item(
 
 def _result_value(result: Any) -> dict[str, Any]:
     return result.result if isinstance(result.result, dict) else {}
+
+
+#: Health tokens as an operator reads them.
+#:
+#: ``ServiceHealth`` is wire vocabulary — ``healthy`` / ``degraded`` / ``down``
+#: — and it is what every comparison in this module switches on. Evidence
+#: *titles* are prose, though, and they were the last place the raw token
+#: reached the screen: an otherwise Chinese line ended in "健康状态：healthy".
+#: Mapping at the producer keeps the token intact for the logic and gives the
+#: console a word a human would actually write.
+_HEALTH_ZH: dict[str, str] = {
+    "healthy": "正常",
+    "degraded": "降级",
+    "down": "故障",
+    "critical": "严重",
+    "unknown": "未知",
+}
+
+
+def _health_zh(value: Any) -> str:
+    token = str(value if value is not None else "unknown").lower()
+    return _HEALTH_ZH.get(token, token)
 
 
 async def _escalate(
@@ -361,7 +385,7 @@ async def _persist_evidence(
         stage=AgentStage.LOAD_CONTEXT,
         reads=("incident",),
         writes=("evidence", "execution"),
-        description="Load service status and dependency topology before anything else.",
+        description="先加载服务状态与依赖拓扑，再做其他任何事。",
         max_attempts=2,
         timeout_s=30.0,
     )
@@ -383,7 +407,7 @@ async def load_context(state: IncidentState, config: RunnableConfig) -> dict[str
                 state, new_evidence,
                 type="metric",
                 source="get_service_status",
-                title=f"{service} health is {value.get('health', 'unknown')}",
+                title=f"{service} 健康状态：{_health_zh(value.get('health'))}",
                 description=(
                     f"error_rate={value.get('error_rate')} "
                     f"latency_p95={value.get('latency_p95')} "
@@ -399,7 +423,7 @@ async def load_context(state: IncidentState, config: RunnableConfig) -> dict[str
             state.incident.incident_id,
             "TRIAGING",
             stage=AgentStage.LOAD_CONTEXT,
-            summary="Agent loaded service context",
+            summary="已载入服务上下文",
         )
 
     deps = await ctx.call_tool("get_dependencies", {}, stage=AgentStage.LOAD_CONTEXT)
@@ -413,7 +437,7 @@ async def load_context(state: IncidentState, config: RunnableConfig) -> dict[str
                 state, new_evidence,
                 type="dependency",
                 source="get_dependencies",
-                title=f"{service} depends on {len(upstream)} component(s)",
+                title=f"{service} 依赖 {len(upstream)} 个组件",
                 description=", ".join(e.get("depends_on", "") for e in upstream),
                 value={"edges": upstream},
                 severity="low",
@@ -441,7 +465,7 @@ async def load_context(state: IncidentState, config: RunnableConfig) -> dict[str
         stage=AgentStage.TRIAGE,
         reads=("evidence",),
         writes=("meta", "plan"),
-        description="Assess blast radius and decide whether to investigate further.",
+        description="评估影响范围，并决定是否继续深入调查。",
         max_attempts=1,
         timeout_s=20.0,
     )
@@ -464,7 +488,7 @@ async def triage(state: IncidentState, config: RunnableConfig) -> dict[str, Any]
         state.incident.incident_id,
         "TRIAGING",
         stage=AgentStage.TRIAGE,
-        summary=f"Triaged as {severity}",
+        summary=f"分诊定级为 {severity}",
     )
     plan = state.plan.model_dump()
     plan["iteration"] = 0
@@ -482,8 +506,8 @@ async def triage(state: IncidentState, config: RunnableConfig) -> dict[str, Any]
         reads=("evidence", "plan"),
         writes=("plan",),
         description=(
-            "Rank the explanations the evidence still allows and pick the "
-            "probes that separate them."
+            "对证据仍然支持的候选解释排序，"
+            "并挑出能把它们区分开的探针。"
         ),
         max_attempts=1,
         timeout_s=20.0,
@@ -538,7 +562,7 @@ async def investigation_planner(
         "INVESTIGATING",
         stage=AgentStage.INVESTIGATION_PLANNER,
         summary=(
-            f"Round {plan['iteration']}: {len(steps)} probe(s); "
+            f"第 {plan['iteration']} 轮：{len(steps)} 个探针；"
             f"{assessment.reason}"
         ),
     )
@@ -555,7 +579,7 @@ async def investigation_planner(
         stage=AgentStage.PARALLEL_INVESTIGATION,
         reads=("plan",),
         writes=("evidence", "plan", "execution"),
-        description="Execute the planned tool calls concurrently and turn results into evidence.",
+        description="并发执行计划中的工具调用，并把结果转成证据。",
         max_attempts=2,
         timeout_s=60.0,
     )
@@ -613,7 +637,7 @@ async def parallel_investigation(
                     "tool": step.tool,
                     "error": result.error_message
                     or result.error_type
-                    or "tool returned no result",
+                    or "工具没有返回结果",
                 }
             )
             continue
@@ -658,8 +682,8 @@ async def parallel_investigation(
                         state, new_evidence,
                         type="log",
                         source="query_logs",
-                        title="No ERROR-level logs in the window",
-                        description="Ruled out log-signature based causes.",
+                        title="时间窗内没有 ERROR 级日志",
+                        description="由此可排除基于日志特征的原因。",
                         value={"count": 0},
                         severity="low",
                         confidence=0.7,
@@ -687,7 +711,7 @@ async def parallel_investigation(
                     state, new_evidence,
                     type="deployment",
                     source="get_deployments",
-                    title=f"{len(deployments)} recent deployment(s)",
+                    title=f"最近 {len(deployments)} 次发布",
                     description=", ".join(d.get("version", "") for d in deployments[:3]),
                     value={"deployments": deployments},
                     severity="high" if deployments else "low",
@@ -702,7 +726,7 @@ async def parallel_investigation(
                     state, new_evidence,
                     type="commit",
                     source="get_recent_commits",
-                    title=f"{len(commits)} recent commit(s)",
+                    title=f"最近 {len(commits)} 次提交",
                     description="; ".join(c.get("message", "")[:80] for c in commits[:3]),
                     value={"commits": commits},
                     severity="medium",
@@ -718,7 +742,7 @@ async def parallel_investigation(
                         state, new_evidence,
                         type="runbook",
                         source="search_runbooks",
-                        title=f"Runbook: {hit.get('title')}",
+                        title=f"Runbook：{hit.get('title')}",
                         description=str(hit.get("excerpt", ""))[:300],
                         value=hit,
                         severity="low",
@@ -739,7 +763,7 @@ async def parallel_investigation(
                     source="get_service_status",
                     service=str(step.arguments.get("service") or state.incident.service),
                     title=(
-                        f"{step.arguments.get('service')} health is {health}"
+                        f"{step.arguments.get('service')} 健康状态：{_health_zh(health)}"
                     ),
                     description=(
                         f"error_rate={value.get('error_rate')} "
@@ -762,7 +786,7 @@ async def parallel_investigation(
                     type="observation",
                     source=step.tool,
                     service=str(step.arguments.get("service") or state.incident.service),
-                    title=f"{step.tool} returned {len(value)} field(s)",
+                    title=f"{step.tool} 返回 {len(value)} 个字段",
                     description=str(value)[:300],
                     value=value,
                     severity="low",
@@ -816,7 +840,7 @@ async def parallel_investigation(
         stage=AgentStage.EVIDENCE_AGGREGATION,
         reads=("evidence", "plan"),
         writes=("plan", "decision"),
-        description="Decide whether the evidence is sufficient to start explaining it.",
+        description="判断现有证据是否足以开始给出解释。",
         max_attempts=1,
         timeout_s=15.0,
     )
@@ -851,10 +875,10 @@ async def evidence_aggregation(
 
     if ctx.budget.exhausted:
         decision, why = "escalate", (
-            f"investigation budget exhausted: {ctx.budget.exhaustion_detail}"
+            f"调查预算已耗尽：{ctx.budget.exhaustion_detail}"
         )
     elif gained <= 0:
-        decision, why = "diagnose", "the last round produced no new evidence"
+        decision, why = "diagnose", "上一轮没有产生新的证据"
     elif not assessment.probes:
         decision, why = "diagnose", assessment.reason
     elif (
@@ -867,16 +891,15 @@ async def evidence_aggregation(
         # action to take — restarting a dependency that is failing because of
         # a bad release changes nothing. Keep drilling.
         decision, why = "replan", (
-            "a dependency is implicated but its failure mode is not "
-            "characterised yet"
+            "已经锁定某个依赖，但它的失败方式还没有被刻画出来"
         )
     elif assessment.confidence >= _COMMIT_CONFIDENCE and iteration >= 1:
         decision, why = "diagnose", (
-            f"'{assessment.top_domain}' reached {assessment.confidence:.2f} — "
-            "committed"
+            f"「{assessment.top_domain}」的置信度已达 {assessment.confidence:.2f}，"
+            "可以定论"
         )
     elif iteration >= max_iterations:
-        decision, why = "diagnose", f"reached the {max_iterations}-round limit"
+        decision, why = "diagnose", f"已达 {max_iterations} 轮上限"
     else:
         decision, why = "replan", assessment.reason
 
@@ -908,7 +931,7 @@ async def evidence_aggregation(
         stage=AgentStage.HYPOTHESIS_GENERATION,
         reads=("evidence",),
         writes=("hypotheses",),
-        description="Propose explanations, each backed by specific evidence refs.",
+        description="提出候选解释，每一条都要有具体的证据引用支撑。",
         max_attempts=1,
         timeout_s=90.0,
     )
@@ -926,7 +949,7 @@ async def hypothesis_generation(
         # INSUFFICIENT_EVIDENCE instead of vanishing on a "stop" edge.
         await ctx.emit(
             EventType.HYPOTHESIS_CREATED.value,
-            {"count": 0, "reason": "no fault domain was supported by the evidence"},
+            {"count": 0, "reason": "没有任何故障域被现有证据支持"},
             stage=AgentStage.HYPOTHESIS_GENERATION,
         )
         return {"hypotheses": [], "decision": "continue"}
@@ -945,12 +968,12 @@ async def hypothesis_generation(
             # is the worst possible outcome — paying traffic that changes
             # nothing, and no evidence in the logs that it was dropped.
             system=(
-                "You are a site reliability engineer. Rewrite the reasoning for "
-                "each hypothesis below, keeping every piece of evidence it cites.\n"
-                "Reply with a JSON array and nothing else — one object per "
-                "hypothesis, in the same order, each with exactly one key "
-                '"reasoning" whose value is a single sentence under 40 words. '
-                "No markdown fences, no commentary."
+                "你是一名站点可靠性工程师（SRE）。请重写下面每一条假设的推理，"
+                "保留它引用的每一项证据。\n"
+                "只用中文作答。返回一个 JSON 数组，除此之外不要有任何内容——"
+                "每条假设一个对象，顺序与输入一致，每个对象只有一个 "
+                '"reasoning" 键，值是一句不超过 60 字的中文。'
+                "不要 markdown 代码块，不要任何说明文字。"
             ),
             user=statements,
         )
@@ -1002,7 +1025,7 @@ async def hypothesis_generation(
         stage=AgentStage.HYPOTHESIS_VERIFICATION,
         reads=("hypotheses", "evidence"),
         writes=("hypotheses", "evidence"),
-        description="Run a targeted probe per hypothesis and move confidence accordingly.",
+        description="对每条假设跑一次针对性探针，并据此调整置信度。",
         max_attempts=2,
         timeout_s=60.0,
     )
@@ -1073,7 +1096,7 @@ async def hypothesis_verification(
                         type="deployment",
                         source=f"{tool}:verify:{hyp.ref}",
                         service=target,
-                        title=f"[{hyp.ref}] deployment history",
+                        title=f"[{hyp.ref}] 发布历史",
                         value=value,
                         severity="high",
                         confidence=0.85,
@@ -1104,7 +1127,7 @@ async def hypothesis_verification(
                         type="metric",
                         source=f"{tool}:verify:{hyp.ref}",
                         service=target,
-                        title=f"[{hyp.ref}] {target} health is {value.get('health')}",
+                            title=f"[{hyp.ref}] {target} 健康状态：{_health_zh(value.get('health'))}",
                         value=value,
                         severity="high",
                         confidence=0.9,
@@ -1169,10 +1192,10 @@ async def hypothesis_verification(
             "INVESTIGATING",
             stage=AgentStage.HYPOTHESIS_VERIFICATION,
             summary=(
-                f"Hypothesis round {plan['hypothesis_rounds']}: rejected "
-                + ", ".join(h.domain or h.category for h in updated
+                f"第 {plan['hypothesis_rounds']} 轮假设："
+                + "、".join(h.domain or h.category for h in updated
                             if h.status == HypothesisStatus.REJECTED.value)
-                + " — generating a new one"
+                + " 已被否决 —— 正在生成新的假设"
             ),
         )
         return {
@@ -1196,8 +1219,8 @@ async def hypothesis_verification(
         reads=("hypotheses", "evidence"),
         writes=("diagnosis",),
         description=(
-            "Pick the winning hypothesis and state one of four outcomes. "
-            "Never invents a cause to avoid admitting uncertainty."
+            "选中胜出的假设，并给出四种结论之一。"
+            "绝不为了回避承认不确定而编造根因。"
         ),
         max_attempts=1,
         timeout_s=30.0,
@@ -1231,8 +1254,8 @@ async def root_cause_diagnosis(
                 else EscalationReason.BUDGET_EXHAUSTED.value
             )
             summary = (
-                f"{summary} The investigation budget was spent: "
-                f"{ctx.budget.exhaustion_detail}."
+                f"{summary} 调查预算已经用尽："
+                f"{ctx.budget.exhaustion_detail}。"
             )
         elif not state.evidence:
             outcome = DiagnosisOutcome.INVESTIGATION_FAILED.value
@@ -1243,12 +1266,12 @@ async def root_cause_diagnosis(
     if not statement:
         statement = {
             DiagnosisOutcome.INSUFFICIENT_EVIDENCE.value: (
-                "Insufficient evidence to determine a root cause"
+                "证据不足以判定根因"
             ),
             DiagnosisOutcome.INVESTIGATION_FAILED.value: (
-                "Investigation could not be completed"
+                "调查未能完成"
             ),
-        }.get(outcome, "No root cause determined")
+        }.get(outcome, "未能判定根因")
 
     diagnosis = DiagnosisInfo(
         root_cause=statement,
@@ -1278,14 +1301,14 @@ async def root_cause_diagnosis(
             state.incident.incident_id,
             "DIAGNOSING",
             stage=AgentStage.ROOT_CAUSE_DIAGNOSIS,
-            summary=f"[{outcome}] {statement}",
+            summary=f"[{zh_outcome(outcome)}] {statement}",
         )
     else:
         await ctx.persistence.set_incident_status(
             state.incident.incident_id,
             "ESCALATED",
             stage=AgentStage.ROOT_CAUSE_DIAGNOSIS,
-            summary=f"[{outcome}] {statement}",
+            summary=f"[{zh_outcome(outcome)}] {statement}",
         )
         await ctx.emit(
             EventType.RUN_ESCALATED.value,
@@ -1333,7 +1356,7 @@ async def root_cause_diagnosis(
         stage=AgentStage.RECOVERY_PLANNER,
         reads=("diagnosis",),
         writes=("recovery",),
-        description="Turn the diagnosis into concrete, ordered recovery actions.",
+        description="把诊断结论转成具体、有序的恢复动作。",
         max_attempts=1,
         timeout_s=30.0,
     )
@@ -1380,8 +1403,8 @@ async def recovery_planner(
     recovery["requires_reverification"] = summary["reverify"]
     recovery["manual_only"] = summary["manual_only"]
     recovery["rationale"] = (
-        f"Diagnosed {diagnosis.root_cause} (confidence {diagnosis.confidence:.2f}, "
-        f"outcome {diagnosis.outcome})."
+        f"诊断为「{diagnosis.root_cause}」"
+        f"（置信度 {diagnosis.confidence:.2f}，结论 {zh_outcome(diagnosis.outcome)}）。"
     )
     recovery["expected_impact"] = "; ".join(a["expected_impact"] for a in actions)
     recovery["verification_criteria"] = verification_criteria(kind)
@@ -1424,7 +1447,7 @@ async def recovery_planner(
         stage=AgentStage.RISK_ASSESSMENT,
         reads=("recovery",),
         writes=("recovery",),
-        description="Derive the plan's approval tier from its worst action; nothing above LOW runs unattended.",
+        description="按方案里风险最高的动作推导审批层级；高于 LOW 的方案不允许无人值守执行。",
         max_attempts=1,
         timeout_s=15.0,
     )
@@ -1488,7 +1511,7 @@ async def risk_assessment(
         stage=AgentStage.HUMAN_APPROVAL,
         reads=("recovery",),
         writes=("recovery",),
-        description="Pause the graph until a human approves; nothing auto-approves this.",
+        description="暂停工作流直到人工批准；这一步没有任何自动批准路径。",
         max_attempts=1,
         timeout_s=120.0,
     )
@@ -1545,7 +1568,7 @@ async def human_approval(
             state.incident.incident_id,
             "WAITING_APPROVAL",
             stage=AgentStage.HUMAN_APPROVAL,
-            summary=f"Risk {recovery.get('risk_level')} — approval required",
+            summary=f"风险等级 {zh_risk(recovery.get('risk_level'))} —— 需要人工审批",
         )
         await ctx.emit(
             EventType.APPROVAL_REQUIRED.value,
@@ -1566,7 +1589,7 @@ async def human_approval(
         {
             "approval_id": approval_id,
             "risk_level": recovery.get("risk_level"),
-            "message": "Human approval required before executing recovery",
+            "message": "执行恢复动作前需要人工审批",
         }
     )
 
@@ -1582,7 +1605,7 @@ async def human_approval(
             state.incident.incident_id,
             "FAILED",
             stage=AgentStage.HUMAN_APPROVAL,
-            summary="Recovery rejected by human reviewer",
+            summary="人工审核拒绝了这次恢复",
         )
         return {"recovery": recovery, "decision": "stop"}
 
@@ -1594,7 +1617,7 @@ async def human_approval(
         state.incident.incident_id,
         "RECOVERING",
         stage=AgentStage.HUMAN_APPROVAL,
-        summary="Recovery approved",
+        summary="恢复方案已获批准",
     )
     return {"recovery": recovery, "decision": "continue"}
 
@@ -1609,7 +1632,7 @@ async def human_approval(
         stage=AgentStage.RECOVERY_EXECUTOR,
         reads=("recovery",),
         writes=("recovery",),
-        description="Run the plan in order, stopping at the first action that changes the environment.",
+        description="按顺序执行方案，在第一个真正改变环境状态的动作处停下。",
         max_attempts=1,
         timeout_s=90.0,
     )
@@ -1658,7 +1681,7 @@ async def recovery_executor(
         spec = TOOL_REGISTRY.get(action.get("tool", ""))
         if spec is None:
             action["status"] = RecoveryActionStatus.FAILED.value
-            action["error"] = f"unknown tool {action.get('tool')!r}"
+            action["error"] = f"未知工具 {action.get('tool')!r}"
             continue
 
         # Whether a human had to sign this off is a property of *this* action,
@@ -1749,7 +1772,7 @@ async def recovery_executor(
         EventType.RECOVERY_FAILED.value,
         {
             "executed": executed,
-            "reason": "no action changed the observed state",
+            "reason": "没有任何一个动作改变了观测到的状态",
             "actions": [
                 {"ref": a.get("ref"), "status": a.get("status"), "effective": a.get("effective")}
                 for a in actions
@@ -1757,7 +1780,7 @@ async def recovery_executor(
         },
         stage=AgentStage.RECOVERY_EXECUTOR,
     )
-    await _escalate(ctx, state, "No recovery action changed the observed state")
+    await _escalate(ctx, state, "所有恢复动作都没有改变观测到的状态")
     return {"recovery": recovery, "decision": "escalate"}
 
 
@@ -1771,7 +1794,7 @@ async def recovery_executor(
         stage=AgentStage.ROLLBACK,
         reads=("recovery",),
         writes=("recovery",),
-        description="Undo the executed actions via their declared compensating tools.",
+        description="用各动作自己声明的补偿工具，撤销已执行的动作。",
         max_attempts=1,
         timeout_s=90.0,
     )
@@ -1815,7 +1838,7 @@ async def rollback(
                     "ref": action.get("ref"),
                     "tool": tool,
                     "status": "refused",
-                    "reason": "CRITICAL action is never compensated autonomously",
+                    "reason": "CRITICAL 级动作永远不由 Agent 自动补偿",
                 },
                 stage=AgentStage.ROLLBACK,
             )
@@ -1865,7 +1888,7 @@ async def rollback(
         state.incident.incident_id,
         "ROLLING_BACK",
         stage=AgentStage.ROLLBACK,
-        summary=f"Compensating {len(rollback_refs)} action(s)",
+        summary=f"正在补偿 {len(rollback_refs)} 个动作",
     )
     await ctx.emit(
         EventType.RECOVERY_ROLLBACK_STARTED.value,
@@ -1892,7 +1915,7 @@ async def rollback(
         stage=AgentStage.VERIFICATION,
         reads=("recovery",),
         writes=("verification",),
-        description="Probe the service against the plan's criteria — no hardcoded 'passed'.",
+        description="按方案的判定条件探测服务 —— 不允许硬编码成「通过」。",
         max_attempts=2,
         timeout_s=60.0,
     )
@@ -1927,7 +1950,7 @@ async def verification(
                     "name": f"{target}.probe",
                     "passed": False,
                     "actual": result.error_message,
-                    "threshold": "tool success",
+                    "threshold": "工具执行成功",
                 }
             )
             continue
@@ -1955,7 +1978,7 @@ async def verification(
         state.incident.incident_id,
         "VERIFYING",
         stage=AgentStage.VERIFICATION,
-        summary=f"{passed}/{len(checks)} checks passed",
+        summary=f"{passed}/{len(checks)} 项检查通过",
     )
     await ctx.emit(
         EventType.VERIFICATION_COMPLETED.value,
@@ -1979,7 +2002,7 @@ async def verification(
         await _escalate(
             ctx,
             state,
-            "Verification failed again after rollback",
+            "回滚之后验证再次失败",
             stage=AgentStage.VERIFICATION,
             detail={"checks": checks, "rollback_outcome": recovery.get("rollback_outcome")},
         )
@@ -1993,7 +2016,7 @@ async def verification(
         await ctx.emit(
             EventType.RECOVERY_FAILED.value,
             {
-                "reason": "verification failed after the recovery was effective",
+                "reason": "恢复动作生效之后验证仍未通过",
                 "checks": checks,
                 "rollback_targets": [
                     a.get("ref")
@@ -2013,7 +2036,7 @@ async def verification(
     await _escalate(
         ctx,
         state,
-        "Recovery failed and no action could be compensated autonomously",
+        "恢复失败，且没有任何动作可以被 Agent 自动补偿",
         stage=AgentStage.VERIFICATION,
         detail={"checks": checks},
     )
@@ -2030,7 +2053,7 @@ async def verification(
         stage=AgentStage.POSTMORTEM,
         reads=("diagnosis", "evidence", "recovery", "verification"),
         writes=("postmortem_ref",),
-        description="Write the postmortem from the stored timeline and close the incident.",
+        description="根据已存储的时间线撰写复盘，并关闭故障。",
         max_attempts=1,
         timeout_s=90.0,
     )
@@ -2051,8 +2074,8 @@ async def postmortem(
     ]
     payload = {
         "summary": (
-            f"{state.incident.title or state.incident.service}: "
-            f"{diagnosis.root_cause if diagnosis else 'unresolved'}"
+            f"{state.incident.title or state.incident.service}："
+            f"{diagnosis.root_cause if diagnosis else '未定位'}"
         ),
         "root_cause": diagnosis.root_cause if diagnosis else None,
         "timeline": timeline,
@@ -2062,12 +2085,12 @@ async def postmortem(
             if h.status != HypothesisStatus.REJECTED.value
         ],
         "lessons_learned": [
-            "Detection relied on metric thresholds rather than log alerts.",
-            "Recovery required manual approval — verify the on-call rotation.",
+            "这次是靠指标阈值发现问题的，日志告警没有先行触发。",
+            "恢复动作需要人工审批，建议复核一下值班轮换是否合理。",
         ],
         "action_items": [
-            f"Add an alert for {state.incident.service} error_rate > 1%",
-            "Extend the runbook with the verified recovery procedure",
+            f"为 {state.incident.service} 增加告警：error_rate > 1%",
+            "把已验证有效的恢复步骤补进 runbook",
         ],
         "generated_by": "agent",
     }
@@ -2078,12 +2101,12 @@ async def postmortem(
             llm,
             ctx,
             purpose="postmortem_narrative",
-            system="You are an SRE writing a blameless postmortem. Be specific and short.",
+            system="你是一名 SRE，正在写一份对事不对人的故障复盘。要具体、简短，用中文作答。",
             user=(
-                f"Root cause: {diagnosis.root_cause}\n"
-                f"Evidence: {[e.title for e in state.evidence][:10]}\n"
-                f"Recovery: {[a.tool for a in state.recovery.actions]}\n"
-                f"Verification: {state.verification.status}"
+                f"根因：{diagnosis.root_cause}\n"
+                f"证据：{[e.title for e in state.evidence][:10]}\n"
+                f"恢复动作：{[a.tool for a in state.recovery.actions]}\n"
+                f"验证结果：{state.verification.status}"
             ),
         )
         if narrative.text:
@@ -2094,7 +2117,7 @@ async def postmortem(
         state.incident.incident_id,
         "RESOLVED",
         stage=AgentStage.POSTMORTEM,
-        summary="Incident resolved and postmortem written",
+        summary="故障已恢复，复盘已生成",
     )
     await ctx.emit(
         EventType.POSTMORTEM_CREATED.value,

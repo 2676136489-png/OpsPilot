@@ -89,7 +89,7 @@ async def get_incident_timeline(
     inc = await session.get(Incident, incident_id)
     if inc is None:
         raise HTTPException(
-            status_code=404, detail=f"Incident {incident_id} not found"
+            status_code=404, detail=f"故障 {incident_id} 不存在"
         )
     rows = await IncidentRepository(session).timeline(incident_id)
     return {

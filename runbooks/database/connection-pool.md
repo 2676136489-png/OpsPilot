@@ -1,69 +1,69 @@
-# Database Connection Pool Exhaustion
+# 数据库连接池耗尽
 
-**Service**: api-gateway, payment-service, user-service  
-**Category**: database  
-**Severity**: high  
-**Source**: SRE Runbook — v2.3  
+**服务**: api-gateway, payment-service, user-service  
+**分类**: database  
+**严重级别**: high  
+**来源**: SRE 运维手册 — v2.3  
 
 ---
 
-## Symptoms
+## 现象
 
-The following symptoms indicate a database connection pool exhaustion incident:
+出现以下现象说明发生了数据库连接池耗尽事故：
 
-- HTTP 503 / 504 errors with messages containing "connection timeout" or "pool limit reached"
-- Application logs show `sqlalchemy.exc.TimeoutError: QueuePool limit of size N overflow reached`
-- Prometheus metric `db_connections_active` equals `db_connections_max` (saturation ratio 100%)
-- P95 latency spikes above 2000ms for all database-dependent endpoints
-- Request queuing observed in application logs: "queuing requests"
-- CPU usage on database server may be elevated due to connection churn
+- HTTP 503 / 504 错误，报错信息包含 "connection timeout" 或 "pool limit reached"
+- 应用日志出现 `sqlalchemy.exc.TimeoutError: QueuePool limit of size N overflow reached`
+- Prometheus 指标 `db_connections_active` 等于 `db_connections_max`（饱和率 100%）
+- 所有依赖数据库的接口 P95 延迟飙升至 2000ms 以上
+- 应用日志中出现请求排队："queuing requests"
+- 数据库服务器 CPU 使用率可能因连接频繁创建销毁而升高
 
-## Root Cause Pattern
+## 根因模式
 
-Connection pool exhaustion occurs when:
+连接池耗尽通常发生在以下情况：
 
-1. **Slow queries hold connections** — a SELECT that takes 10+ seconds keeps a connection busy, preventing others from using it. Autovacuum operations, missing indexes, or lock waits are common triggers.
-2. **Pool size too small** — max_connections configured below peak concurrent demand (e.g., 100 connections for 500 concurrent requests).
-3. **Connection leak** — a code path opens a connection without closing it, gradually consuming the pool over minutes or hours.
-4. **Database-side block** — PostgreSQL reaches its own max_connections limit, so new connections from the application pool are rejected.
+1. **慢查询长期占用连接** —— 一条执行 10 秒以上的 SELECT 会一直占着连接，其他请求无法使用。autovacuum、缺失索引或锁等待是常见诱因。
+2. **连接池过小** —— max_connections 配置低于并发峰值需求（例如 500 个并发请求只配了 100 个连接）。
+3. **连接泄漏** —— 某段代码打开连接后没有关闭，几分钟到几小时内逐步耗尽连接池。
+4. **数据库侧阻塞** —— PostgreSQL 自身达到 max_connections 上限，应用连接池发起的新连接被拒绝。
 
-## Resolution Steps
+## 处置步骤
 
-### Immediate mitigation (first 5 minutes)
+### 紧急缓解（前 5 分钟）
 
-1. **Restart the affected service pods** — This releases all held connections. Use the orchestrator to restart:
+1. **重启受影响的服务 Pod** —— 这会释放所有被占用的连接。用编排工具重启：
    ```
    kubectl rollout restart deployment/api-gateway
    ```
-   Expect ~30 seconds of downtime while pods restart.
+   Pod 重启期间预计有约 30 秒不可用。
 
-2. **Increase pool size temporarily** — If restart alone is insufficient, bump SQLAlchemy `pool_size` + `max_overflow`:
+2. **临时调大连接池** —— 如果仅靠重启不够，调高 SQLAlchemy 的 `pool_size` 和 `max_overflow`：
    ```
-   pool_size=100  # was 50
-   max_overflow=20  # was 10
+   pool_size=100  # 原为 50
+   max_overflow=20  # 原为 10
    pool_pre_ping=True
    ```
-   Rolling restart required to pick up the new config.
+   需要滚动重启才能加载新配置。
 
-### Root cause remediation (after service is healthy)
+### 根因修复（服务恢复健康后）
 
-3. **Identify and optimize slow queries**:
+3. **定位并优化慢查询**：
    ```sql
    SELECT query, calls, total_time, mean_time
    FROM pg_stat_statements
    ORDER BY total_time DESC
    LIMIT 20;
    ```
-   Add missing indexes or rewrite queries that hold connections too long.
+   为缺失的索引补上索引，或重写长时间占用连接的查询。
 
-4. **Check for connection leaks** — Review recent PRs that touch database context managers. Ensure every `get_session()` is wrapped in a `try/finally` or uses async context manager pattern.
+4. **排查连接泄漏** —— 检查近期改动过数据库上下文管理器的 PR。确保每个 `get_session()` 都用 `try/finally` 包裹，或采用异步上下文管理器写法。
 
-5. **Tune PostgreSQL `max_connections`** if the database-side limit is the bottleneck.
+5. **调整 PostgreSQL 的 `max_connections`**，如果瓶颈在数据库侧上限的话。
 
-## Verification
+## 验证
 
-- After restart: check `db_connections_active` drops below 80% of max
-- After pool increase: confirm error_rate returns to baseline (< 1%)
-- Query `pg_stat_activity` shows no sessions waiting on lock
-- P95 latency returns to normal range (< 500ms)
-- Run synthetic health checks against all database endpoints
+- 重启后：检查 `db_connections_active` 降到最大值的 80% 以下
+- 调大连接池后：确认 error_rate 回落到基线（< 1%）
+- 查询 `pg_stat_activity`，确认没有会话在等待锁
+- P95 延迟回落到正常范围（< 500ms）
+- 对所有数据库接口跑一遍合成健康检查

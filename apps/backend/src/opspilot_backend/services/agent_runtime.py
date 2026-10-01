@@ -103,7 +103,7 @@ class AgentRuntimeService:
         active = await self._active_run(key)
         if active is not None:
             raise ConflictError(
-                f"incident {key} already has a run in state {active.status}"
+                f"故障 {key} 已经有一个状态为 {active.status} 的运行"
             )
 
         # How the run will actually reason, recorded once: nothing ever wrote
@@ -163,7 +163,7 @@ class AgentRuntimeService:
             raise NotFoundError("AgentRun", run_id)
         if run.status != AgentRunStatus.WAITING_APPROVAL:
             raise ConflictError(
-                f"run {run.id} is {run.status}, only waiting_approval can be resumed"
+                f"运行 {run.id} 当前状态为 {run.status}，只有 waiting_approval 才能被恢复"
             )
         # Release this session's read transaction before the graph runs in its
         # own session — a held SHARED lock would starve the run's commits on

@@ -14,6 +14,7 @@ from opspilot_backend.domain.enums import (
     ActorType,
     IncidentStatus,
     ALLOWED_TRANSITIONS,
+    zh_incident_status,
 )
 from opspilot_backend.domain.errors import InvalidStateTransitionError
 from opspilot_backend.models import (
@@ -125,7 +126,7 @@ class IncidentRepository:
         )
         self.session.add(incident)
         await self.session.flush()
-        self._append_event_sync(incident, "incident.created", f"Incident created: {title}")
+        self._append_event_sync(incident, "incident.created", f"已创建故障：{title}")
         await self.session.flush()
         return incident
 
@@ -210,7 +211,9 @@ class IncidentRepository:
         await self.append_event(
             incident.id,
             "incident.status_changed",
-            summary or f"{previous} → {target.value}",
+            summary or (
+                f"{zh_incident_status(previous)} → {zh_incident_status(target.value)}"
+            ),
             actor=actor,
             actor_type=actor_type,
             data=data,

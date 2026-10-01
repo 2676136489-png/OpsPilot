@@ -96,13 +96,13 @@ def generate_hypotheses(
                 confidence=round(score, 2),
                 status=HypothesisStatus.PROPOSED.value,
                 reasoning=(
-                    f"Required signal(s) {sorted(support)} present"
+                    f"所需信号 {sorted(support)} 已经出现"
                     + (
-                        f"; corroborated by {sorted(corroboration)}"
+                        f"；并有 {sorted(corroboration)} 佐证"
                         if corroboration
                         else ""
                     )
-                    + f". Cited evidence: {', '.join(refs[:6])}."
+                    + f"。引用证据：{'、'.join(refs[:6])}。"
                 ),
                 evidence_refs=refs,
             )
@@ -264,7 +264,7 @@ def apply_verification(
         hypothesis.confidence = round(max(0.0, hypothesis.confidence - 0.20), 2)
         hypothesis.status = HypothesisStatus.REJECTED.value
         hypothesis.reasoning += (
-            " | verification probe returned no data — hypothesis not supported"
+            " | 验证探针没有返回任何数据 —— 该假设不成立"
         )
         return hypothesis
 
@@ -285,8 +285,7 @@ def apply_verification(
         hypothesis.confidence = round(max(0.0, hypothesis.confidence - 0.30), 2)
         hypothesis.status = HypothesisStatus.REJECTED.value
         hypothesis.reasoning += (
-            " | the probed component measures healthy now — the claimed "
-            "failure is no longer present"
+            " | 被探测的组件当前测量结果为健康 —— 所声称的故障已不复存在"
         )
         return hypothesis
 
@@ -294,7 +293,7 @@ def apply_verification(
         # No domain means no declared test — nothing was actually verified.
         hypothesis.status = HypothesisStatus.TESTING.value
         hypothesis.reasoning += (
-            f" | {len(new_evidence)} evidence item(s) added without a defined test"
+            f" | 新增了 {len(new_evidence)} 条证据，但这条假设没有定义可执行的检验"
         )
         return hypothesis
 
@@ -305,7 +304,7 @@ def apply_verification(
         hypothesis.confidence = round(max(0.0, hypothesis.confidence - 0.30), 2)
         hypothesis.status = HypothesisStatus.REJECTED.value
         hypothesis.reasoning += (
-            f" | contradicted by {sorted(contradicting)}; required {sorted(domain.required)} absent"
+            f" | 被 {sorted(contradicting)} 反驳；而所需的 {sorted(domain.required)} 并未出现"
         )
         return hypothesis
 
@@ -318,7 +317,7 @@ def apply_verification(
             if hypothesis.confidence >= _CONFIRM_AT
             else HypothesisStatus.TESTING.value
         )
-        hypothesis.reasoning += f" | confirmed by {sorted(required_hits)}"
+        hypothesis.reasoning += f" | 被 {sorted(required_hits)} 证实"
         return hypothesis
 
     # The probe ran but could not reproduce this domain's signals. That
@@ -334,7 +333,7 @@ def apply_verification(
         else HypothesisStatus.TESTING.value
     )
     hypothesis.reasoning += (
-        f" | required {sorted(domain.required)} not reproduced by the probe"
+        f" | 探针未能复现所需的 {sorted(domain.required)}"
     )
     return hypothesis
 
@@ -382,12 +381,12 @@ def decide_root_cause(state: IncidentState) -> RootCause:
         if state.evidence:
             return RootCause(
                 "", "unknown", "", 0.0, [],
-                "Every hypothesis was rejected or none cited stored evidence.",
+                "所有假设都被否决，或者没有任何假设引用了已存证据。",
                 DiagnosisOutcome.INSUFFICIENT_EVIDENCE.value,
             )
         return RootCause(
             "", "unknown", "", 0.0, [],
-            "No evidence was collected, so no explanation could be tested.",
+            "没有收集到任何证据，因此也无法检验任何解释。",
             DiagnosisOutcome.INVESTIGATION_FAILED.value,
         )
 
@@ -408,8 +407,8 @@ def decide_root_cause(state: IncidentState) -> RootCause:
         outcome = DiagnosisOutcome.INSUFFICIENT_EVIDENCE.value
 
     summary = (
-        f"{top.statement}. {outcome} at confidence {top.confidence:.2f} based on "
-        f"{len(refs)} evidence item(s): " + ", ".join(refs[:8]) + f". {top.reasoning}"
+        f"{top.statement}。判定为 {outcome}，置信度 {top.confidence:.2f}，"
+        f"依据 {len(refs)} 条证据：" + "、".join(refs[:8]) + f"。{top.reasoning}"
     )
     return RootCause(
         statement=top.statement,
@@ -431,108 +430,108 @@ RECOVERY_TEMPLATES: dict[str, list[dict[str, Any]]] = {
         {
             "tool": "rollback_deployment",
             "risk_level": "CRITICAL",
-            "reason": "Revert the change that is leaking connections if one landed in the window.",
-            "expected_impact": "Temporary feature loss from the reverted release.",
+            "reason": "如果故障窗口内确实有过一次发布，回退那个泄漏连接的变更。",
+            "expected_impact": "回退版本会暂时失去它带来的功能。",
         },
         {
             "tool": "increase_pool_size",
             "risk_level": "MEDIUM",
-            "reason": "Raise the pool ceiling so queued requests are served while the leak is fixed.",
-            "expected_impact": "Higher database load; buys time rather than curing the leak.",
+            "reason": "调高连接池上限，让排队的请求先被服务，同时再修泄漏。",
+            "expected_impact": "数据库负载升高；这只是争取时间，治不了泄漏。",
         },
         {
             "tool": "restart_service",
             "risk_level": "HIGH",
-            "reason": "Restart drains the saturated pool.",
-            "expected_impact": "Brief downtime; the pool refills if the leak is still present.",
+            "reason": "重启可以把被打满的连接池清空。",
+            "expected_impact": "短暂停机；如果泄漏还在，连接池会重新填满。",
         },
     ],
     "slow_database": [
         {
             "tool": "clear_deadlock",
             "risk_level": "HIGH",
-            "reason": "Kill the blocking transaction holding row locks.",
-            "expected_impact": "In-flight statements on the blocked rows are rolled back.",
+            "reason": "杀掉一直持有行锁的阻塞事务。",
+            "expected_impact": "被阻塞行上正在执行的语句会被回滚。",
         },
         {
             "tool": "restart_postgres",
             "risk_level": "CRITICAL",
-            "reason": "Recycle the datastore if locks cannot be cleared.",
-            "expected_impact": "All connections drop; brief full outage on dependent services.",
+            "reason": "如果锁清不掉，就重启数据库。",
+            "expected_impact": "所有连接断开；依赖它的服务会短暂全面不可用。",
         },
     ],
     "deployment": [
         {
             "tool": "rollback_deployment",
             "risk_level": "CRITICAL",
-            "reason": "Revert to the last known-good version that preceded the error spike.",
-            "expected_impact": "Temporary feature loss from the reverted release.",
+            "reason": "回退到错误率飙升之前最后一个已知正常的版本。",
+            "expected_impact": "回退版本会暂时失去它带来的功能。",
         }
     ],
     "memory": [
         {
             "tool": "rollback_deployment",
             "risk_level": "CRITICAL",
-            "reason": "Revert the release that introduced the unbounded retention.",
-            "expected_impact": "Temporary feature loss; heap returns to baseline for good.",
+            "reason": "回退那个引入无界持有的版本。",
+            "expected_impact": "暂时失去该功能；堆内存会永久回到基线。",
         },
         {
             "tool": "restart_service",
             "risk_level": "HIGH",
-            "reason": "Restart reclaims leaked heap before the OOM kill.",
-            "expected_impact": "Brief downtime; the leak restarts from zero.",
+            "reason": "在容器被 OOM 杀掉之前，先重启把泄漏的堆内存收回。",
+            "expected_impact": "短暂停机；泄漏会从零重新开始累积。",
         },
     ],
     "redis": [
         {
             "tool": "restart_redis",
             "risk_level": "HIGH",
-            "reason": "Fail over or restart the cache cluster.",
-            "expected_impact": "Cold cache for a few minutes.",
+            "reason": "对缓存集群做故障转移或重启。",
+            "expected_impact": "缓存冷启动，几分钟内命中率偏低。",
         }
     ],
     "third_party": [
         {
             "tool": "enable_circuit_breaker",
             "risk_level": "MEDIUM",
-            "reason": "Stop calling a provider that is failing and fail fast instead.",
-            "expected_impact": "Requests fail immediately rather than hanging; partial feature loss.",
+            "reason": "停止调用一个正在失败的渠道，改为快速失败。",
+            "expected_impact": "请求立刻失败而不是挂起；部分功能降级。",
         },
         {
             "tool": "switch_payment_provider",
             "risk_level": "CRITICAL",
-            "reason": "Route authorisation to the standby provider.",
-            "expected_impact": "Traffic moves to the backup processor; reconciliations needed.",
+            "reason": "把授权请求切到备用渠道。",
+            "expected_impact": "流量转移到备用通道；后续需要做对账。",
         },
     ],
     "capacity": [
         {
             "tool": "scale_service",
             "risk_level": "MEDIUM",
-            "reason": "Add capacity to bring CPU and latency back within SLO.",
-            "expected_impact": "Higher resource cost.",
+            "reason": "扩容，把 CPU 和延迟拉回 SLO 以内。",
+            "expected_impact": "资源成本上升。",
         }
     ],
     "dependency": [
         {
             "tool": "restart_service",
             "risk_level": "HIGH",
-            "reason": "Restart the failing dependency that the alerting service calls.",
-            "expected_impact": "Brief downtime on the dependency.",
+            "reason": "重启告警服务所调用的那个故障依赖。",
+            "expected_impact": "该依赖短暂停机。",
         },
         {
             "tool": "enable_circuit_breaker",
             "risk_level": "MEDIUM",
-            "reason": "Shed load from the failing dependency so callers degrade gracefully.",
-            "expected_impact": "Reduced functionality until the dependency recovers.",
+            "reason": "把流量从故障依赖上卸掉，让调用方优雅降级。",
+            "expected_impact": "依赖恢复之前功能受限。",
         },
     ],
     "unknown": [
         {
             "tool": "restart_service",
             "risk_level": "HIGH",
-            "reason": "No confident cause; restart is the lowest-risk mitigation.",
-            "expected_impact": "Brief downtime.",
+            "reason": "没有足够可信的结论，重启是风险最低的缓解手段。",
+            "expected_impact": "短暂停机。",
         }
     ],
 }

@@ -96,7 +96,7 @@ class ToolExecutor:
                 # a real outcome and must be reported as such.
                 ok = False
                 error_code = "verification_failed"
-                error_message = "post-action health probe did not pass"
+                error_message = "动作执行后的健康探测未通过"
 
         status = ToolCallStatus.SUCCEEDED if ok else ToolCallStatus.FAILED
         if error_code == "timeout":
@@ -165,14 +165,14 @@ class ToolExecutor:
     def _policy_check(self, tool_name: str, ctx: ToolContext) -> ToolSpec:
         spec = TOOL_REGISTRY.get(tool_name)
         if spec is None:
-            raise KeyError(f"unknown tool: {tool_name!r}")
+            raise KeyError(f"未知工具：{tool_name!r}")
         if (
             spec.allowed_stages
             and ctx.stage is not None
             and ctx.stage not in spec.allowed_stages
         ):
             raise PermissionError(
-                f"tool {tool_name!r} is not allowed in stage {ctx.stage.value!r}"
+                f"工具 {tool_name!r} 不允许在当前阶段 {ctx.stage.value!r} 调用"
             )
         return spec
 
@@ -182,8 +182,8 @@ class ToolExecutor:
     def _permission_check(self, spec: ToolSpec, ctx: ToolContext) -> None:
         if spec.permission_level not in ctx.granted_permissions:
             raise PermissionError(
-                f"actor {ctx.actor!r} lacks {spec.permission_level.value!r} "
-                f"required by {spec.name!r}"
+                f"执行者 {ctx.actor!r} 缺少 {spec.name!r} 所需的 "
+                f"{spec.permission_level.value!r} 权限"
             )
 
     def _validate(self, spec: ToolSpec, arguments: dict[str, Any]) -> Any:
@@ -191,7 +191,7 @@ class ToolExecutor:
             return spec.validate_arguments(arguments)
         except ValidationError as exc:
             raise ValueError(
-                f"invalid arguments for {spec.name}: {exc.errors()}"
+                f"工具 {spec.name} 的参数不合法：{exc.errors()}"
             ) from exc
 
     # ------------------------------------------------------------------
@@ -216,7 +216,7 @@ class ToolExecutor:
                     blocked=True,
                     error_type="approval_required",
                     error_message=(
-                        "high-risk action requires an APPROVED approval "
+                        "高风险动作需要一个状态为 APPROVED 的审批记录 "
                         f"(approval_id={approval_id!r})"
                     ),
                     risk_level=spec.risk_level.value,
@@ -234,7 +234,7 @@ class ToolExecutor:
             action_id=None,
             action_type=spec.name,
             risk_level=spec.risk_level.value,
-            reason=args.get("reason", f"agent requested {spec.name}"),
+            reason=args.get("reason", f"Agent 申请执行 {spec.name}"),
             requested_by=ctx.actor,
         )
         await self.hooks.emit(
@@ -262,7 +262,7 @@ class ToolExecutor:
             approval_id=str(approval.get("id") or ""),
             parameters=args,
             outcome="blocked",
-            detail="awaiting human decision",
+            detail="等待人工决策",
         )
         return ToolResult(
             tool_name=spec.name,
@@ -270,7 +270,7 @@ class ToolExecutor:
             arguments=args,
             blocked=True,
             error_type="approval_required",
-            error_message=f"{spec.name} requires human approval before execution",
+            error_message=f"{spec.name} 需要人工审批后才能执行",
             risk_level=spec.risk_level.value,
             permission_level=spec.permission_level.value,
             approval_id=str(approval.get("id") or ""),
@@ -296,7 +296,7 @@ class ToolExecutor:
                 return payload, None, None, attempts
             except asyncio.TimeoutError:
                 last_error = "timeout"
-                last_message = f"timed out after {spec.timeout_s}s"
+                last_message = f"调用超过 {spec.timeout_s}s 未返回"
                 log_event(
                     "tool.timeout", tool=spec.name, attempt=attempts, run_id=ctx.run_id
                 )

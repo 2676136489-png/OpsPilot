@@ -106,7 +106,7 @@ class InvalidStateTransitionError(ConflictError):
             for s in _allowed_for(current)
         )
         super().__init__(
-            f"Cannot transition incident from {current.value} to {target.value}",
+            f"故障状态不能从 {current.value} 直接变为 {target.value}",
             details={
                 "current_status": current.value,
                 "target_status": target.value,
@@ -120,7 +120,7 @@ class ApprovalRequiredError(ConflictError):
 
     def __init__(self, approval_id: str, risk: str) -> None:
         super().__init__(
-            "This recovery action requires human approval before execution",
+            "该恢复动作必须先经过人工审批才能执行",
             details={"approval_id": approval_id, "risk_level": risk},
         )
 
@@ -131,7 +131,7 @@ class ToolExecutionError(AppError):
 
     def __init__(self, tool_name: str, reason: str) -> None:
         super().__init__(
-            f"Tool {tool_name!r} failed: {reason}",
+            f"工具 {tool_name!r} 执行失败：{reason}",
             details={"tool_name": tool_name, "reason": reason},
         )
 
@@ -140,7 +140,7 @@ class ToolTimeoutError(ToolExecutionError):
     code = ErrorCode.TOOL_TIMEOUT
 
     def __init__(self, tool_name: str, timeout_s: float) -> None:
-        super().__init__(tool_name, f"timed out after {timeout_s}s")
+        super().__init__(tool_name, f"超过 {timeout_s}s 未返回")
 
 
 class DependencyUnavailableError(AppError):

@@ -23,6 +23,7 @@ import { escalationLabel, outcomeLabel, serviceLabel, stageLabel, stageProgress 
 import {
   zhCategory,
   zhHealth,
+  zhRisk,
   zhSeverity,
   zhStatus,
 } from '../i18n'
@@ -252,7 +253,7 @@ export function IncidentDetailPage() {
               <>
                 <div className="plan-meta">
                   <span className={`badge badge-sm badge-${riskTone(run.recovery_plan.risk_level)}`}>
-                    风险 {run.recovery_plan.risk_level}
+                    风险 {zhRisk(run.recovery_plan.risk_level)}
                   </span>
                   <span className="plan-status mono">
                     {zhStatus(run.recovery_plan.status)}
