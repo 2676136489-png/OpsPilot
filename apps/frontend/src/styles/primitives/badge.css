@@ -228,6 +228,16 @@
 .live-closed {
   color: var(--muted-foreground);
 }
+.live-unreachable {
+  color: var(--critical);
+}
+
+/* A blinking dot reads as "still working on it". Once the client has stopped
+   retrying, that motion is the lie — so this one holds still. */
+.live-unreachable::before {
+  animation: none;
+  opacity: 0.6;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .live-dot::before {

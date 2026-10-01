@@ -160,12 +160,101 @@ async def lifespan(app: FastAPI):  # noqa: D401 — FastAPI lifespan signature
     # its stamp can be written without the next boot mistaking it for a stray.
     _stamp_database_file()
 
+    # Before anything can be served: a run this process did not start cannot be
+    # making progress, and leaving it saying otherwise is what makes a page wait
+    # forever on a stream that will never advance.
+    reconciled = await _reconcile_orphaned_runs()
+    if reconciled:
+        log_event("agent.run.reconciled", detail=reconciled)
+        print(f"[opspilot] runs: {reconciled}", flush=True)
+
     if settings.demo_seed:
         await _seed_demo_incidents()
 
     yield
     # Dispose engine on shutdown
     await async_engine.dispose()
+
+
+async def _reconcile_orphaned_runs() -> str:
+    """Terminate runs the previous process left mid-flight.
+
+    The database outlives the process; a run does not. A run is a task in this
+    process's memory plus a row that claims it is ``running``, so killing the
+    process — a redeploy, a crash, Ctrl-C — leaves the row promising progress
+    that will never arrive. Three things then go wrong and they compound: the
+    dashboard shows an investigation that is permanently under way, the client
+    keeps polling it because it is not terminal, and its stream can only ever
+    be replayed and never advanced, so the page settles into a reconnect loop
+    with no exit.
+
+    Reaching this line means this process has not started a single run yet, so
+    any non-terminal row belongs to a process that is gone. ``pending`` and
+    ``running`` are ended. ``waiting_approval`` is deliberately left alone: it
+    is parked at a LangGraph interrupt whose checkpoint lives in this same
+    database, so approving it after a restart resumes real work instead of
+    reviving a corpse.
+
+    Assumes one server process, which is what the deploy unit is — ``serve.py``
+    runs a single uvicorn worker, because the sandbox exposes one port for one
+    process. A multi-worker deployment would have worker 2 terminate worker 1's
+    live runs here, and would need a lease or a heartbeat column instead.
+    """
+    from sqlalchemy import select
+
+    from opspilot_backend.db.session import async_session_factory
+    from opspilot_backend.domain.enums import AgentRunStatus, EventType, IncidentStatus
+    from opspilot_backend.models import AgentRun
+    from opspilot_backend.repositories.agent_run import AgentRunRepository
+
+    in_flight = [AgentRunStatus.PENDING.value, AgentRunStatus.RUNNING.value]
+    message = (
+        "调查进程在本次运行结束前退出（服务重启），该运行已终止。可以重新发起调查。"
+    )
+
+    try:
+        async with async_session_factory() as session:
+            orphans = list(
+                (
+                    await session.execute(
+                        select(AgentRun).where(AgentRun.status.in_(in_flight))
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if not orphans:
+                return ""
+
+            repo = AgentRunRepository(session)
+            for run in orphans:
+                run_id = str(run.id)
+                incident_id = str(run.incident_id) if run.incident_id else None
+                # Same path the runtime uses on a crash, so the timeline reads
+                # the same either way. ``update_run`` fills in ``ended_at``.
+                await repo.update_run(
+                    run_id, status=AgentRunStatus.FAILED.value, error=message
+                )
+                await repo.append_event(
+                    EventType.AGENT_FAILED.value,
+                    {"error": message},
+                    run_id=run_id,
+                    incident_id=incident_id,
+                )
+                # Tolerates an illegal transition internally (it logs and moves
+                # on), so a state-machine rejection cannot cost us the run fix.
+                if incident_id:
+                    await repo.set_incident_status(
+                        incident_id, IncidentStatus.FAILED.value, summary=message
+                    )
+            await session.commit()
+
+        for run in orphans:
+            log_event("agent.run.orphaned", run_id=str(run.id), stage=run.current_stage)
+        return f"{len(orphans)} orphaned run(s) terminated"
+    except Exception as exc:  # noqa: BLE001 — never let bookkeeping block startup
+        log_event("agent.run.reconcile_failed", detail=str(exc))
+        return f"reconcile failed: {exc}"
 
 
 async def _seed_demo_incidents() -> None:

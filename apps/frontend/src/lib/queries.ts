@@ -153,7 +153,25 @@ export function useScenarios() {
   })
 }
 
+/**
+ * Run statuses that are over — nothing will move them again.
+ *
+ * Kept as one list because it has to match the server's own
+ * `_TERMINAL_RUN_STATUSES` exactly. It did not: `cancelled` was missing, so a
+ * cancelled run read as live here while the server treated it as finished,
+ * which closed its stream on connect. The page then polled a run that would
+ * never change and sat on a stream that would never stay open.
+ */
+const TERMINAL_RUN_STATUSES: ReadonlySet<string> = new Set([
+  'completed',
+  'failed',
+  'cancelled',
+])
+
 /** True while the run can still make progress — i.e. it is worth polling. */
 export function isRunLive(status: string | undefined): boolean {
-  return status !== 'completed' && status !== 'failed'
+  // Unknown means "the run has not loaded yet", which is the first render on
+  // the detail page. Staying optimistic there is what subscribes the page
+  // immediately instead of waiting a round trip.
+  return !status || !TERMINAL_RUN_STATUSES.has(status)
 }

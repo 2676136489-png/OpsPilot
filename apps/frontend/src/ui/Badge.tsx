@@ -99,7 +99,7 @@ export function LiveDot({
   state,
   label,
 }: {
-  state: 'live' | 'connecting' | 'error' | 'closed'
+  state: 'live' | 'connecting' | 'error' | 'closed' | 'unreachable'
   label: string
 }) {
   return <span className={clsx('live-dot', `live-${state}`)}>{label}</span>

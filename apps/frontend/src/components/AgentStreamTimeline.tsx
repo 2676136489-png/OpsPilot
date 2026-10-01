@@ -99,14 +99,16 @@ export function AgentStreamTimeline({
     autoscroll.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48
   }, [])
 
-  const transport: 'live' | 'connecting' | 'error' | 'closed' =
+  const transport: 'live' | 'connecting' | 'error' | 'closed' | 'unreachable' =
     status === 'open'
       ? 'live'
       : status === 'connecting'
         ? 'connecting'
         : status === 'error'
           ? 'error'
-          : 'closed'
+          : status === 'unreachable'
+            ? 'unreachable'
+            : 'closed'
 
   const toolCallCount = steps.reduce((n, s) => n + s.tool_calls.length, 0)
 
@@ -400,12 +402,16 @@ function previewOf(value: unknown): string {
   }
 }
 
-function liveLabel(state: 'live' | 'connecting' | 'error' | 'closed'): string {
+function liveLabel(
+  state: 'live' | 'connecting' | 'error' | 'closed' | 'unreachable',
+): string {
   return state === 'live'
     ? '实时'
     : state === 'connecting'
       ? '连接中'
       : state === 'error'
         ? '重连中'
-        : '已结束'
+        : state === 'unreachable'
+          ? '连接中断'
+          : '已结束'
 }

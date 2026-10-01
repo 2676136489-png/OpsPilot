@@ -27,7 +27,25 @@ import { API_BASE } from './client'
 export type SseListener = (event: AgentEvent) => void
 export type SseStatusListener = (status: SseStatus) => void
 
-export type SseStatus = 'connecting' | 'open' | 'closed' | 'error'
+export type SseStatus =
+  | 'connecting'
+  | 'open'
+  | 'closed'
+  /** The transport is broken but the browser is still retrying. */
+  | 'error'
+  /** Retried `MAX_RECONNECT_ATTEMPTS` times and gave up. Terminal. */
+  | 'unreachable'
+
+/**
+ * How many failed reconnects to tolerate before giving up.
+ *
+ * `EventSource` retries a dropped connection forever, by design. That is right
+ * for a blip and wrong for a server that is simply gone — a replaced deploy, a
+ * stopped dev server, a tab left open overnight. Left uncapped, the badge says
+ * "重连中" indefinitely, which reads as *a live system that is briefly lagging*
+ * when the truth is *nothing is listening*. Five attempts is roughly 15s.
+ */
+const MAX_RECONNECT_ATTEMPTS = 5
 
 export interface SseHandle {
   eventSource: EventSource
@@ -84,12 +102,32 @@ export function createAgentEventSource(
     })
   }
 
-  eventSource.onopen = () => setStatus('open')
+  let attempts = 0
+
+  eventSource.onopen = () => {
+    attempts = 0
+    setStatus('open')
+  }
+
   eventSource.onerror = () => {
-    // EventSource reconnects on its own; the distinction the UI needs is
-    // "the server hung up because the run finished" versus "the transport
-    // broke", because only the second is worth showing a retry for.
-    setStatus(eventSource.readyState === EventSource.CLOSED ? 'closed' : 'error')
+    // Two different failures share this handler:
+    //
+    // - `CLOSED` means the browser already gave up (a 404, or a response that
+    //   was not an event stream). It will not retry, so neither should we.
+    // - `CONNECTING` means it is retrying right now.
+    //
+    // Only the second is worth showing a retry for — until it stops being a
+    // retry and becomes a lie.
+    if (eventSource.readyState === EventSource.CLOSED) {
+      setStatus('closed')
+      return
+    }
+    attempts += 1
+    if (attempts > MAX_RECONNECT_ATTEMPTS) {
+      shutdown('unreachable')
+      return
+    }
+    setStatus('error')
   }
 
   for (const type of AGENT_EVENT_TYPES) {
@@ -104,13 +142,43 @@ export function createAgentEventSource(
     })
   }
 
-  const close = () => {
+  // Registered *after* the loop on purpose: `EventSource` calls listeners in
+  // registration order, so the generic listener above has already handed this
+  // frame to the UI by the time we tear the stream down.
+  eventSource.addEventListener('stream.closed', (ev: Event) => {
+    const msg = ev as MessageEvent
+    try {
+      const payload = JSON.parse(msg.data) as AgentEvent
+      // Only the field this decision needs, so a frame missing it degrades to
+      // "keep retrying" rather than throwing on a destructure.
+      const data = payload.data as { reason?: unknown } | null | undefined
+      if (data?.reason === 'terminal') {
+        // The server *deliberately* ended the response because the run is
+        // over. `EventSource` cannot tell that apart from a dropped
+        // connection, so it reconnects a few seconds later, the server
+        // replays the whole log and closes again — a loop that never ends and
+        // that re-sends the entire timeline every few seconds. The server
+        // said why it stopped; believe it and stop.
+        //
+        // `idle_timeout` is the opposite case and must keep retrying: there
+        // the run may still be alive and only the connection gave out.
+        shutdown('closed')
+      }
+    } catch {
+      // Same policy as above — an unparseable frame is not a UI state.
+    }
+  })
+
+  const shutdown = (final: SseStatus) => {
     eventSource.close()
-    setStatus('closed')
     listeners.clear()
     anyListeners.clear()
+    setStatus(final)
+    // Last, so the listeners above hear the final status.
     statusListeners.clear()
   }
+
+  const close = () => shutdown('closed')
 
   return {
     eventSource,

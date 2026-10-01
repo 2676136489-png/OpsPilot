@@ -564,6 +564,57 @@ new ApiError('API 500 Internal Server Error', 500, 'boom', url).detail
 和评测里"夹具本身缺关键词"是同一类错误：**验证代码也是代码，也得被验证**。
 现在它改成只在 statusText 本身是英文时才报警。
 
+**17. 「重连中」永远不会结束——三个缺陷叠在同一个徽标上。**
+
+用户报的现象是一句话：「怎么又要重连」。截图是一条**已经解决**的故障，`Agent 调查过程`
+面板上挂着「重连中」。这个徽标背后其实是三个各自独立的缺陷，任何一个都能让它永不停。
+
+*第一层是客户端从不收尾。* 服务端对已经跑完的 run 是这么处理的：回放完整个事件日志，
+发一帧 `stream.closed` 并带上 `reason: "terminal"`，然后**直接把 HTTP 响应关掉**（实测 1.4 秒内
+收尾）。但 `EventSource` 规范里区分不了「服务端有意结束」和「链路断了」——两者都只是 TCP 关闭，
+它一律按 `retry` 间隔（约 3.6s）重连。重连带着 `Last-Event-ID` 回去，服务端于是**把整份日志
+再重放一遍**，再关，再重连。消息量随重连次数线性放大，而徽标一直写着「重连中」。
+
+实测复现：拿 Node 内置的 `EventSource`（Undici 实现，遵循 WHATWG，重连语义和浏览器一致，
+需要 `--experimental-eventsource`）连线上一条已终态的 run，**12 秒内数到 4 次
+`stream.opened`**。
+
+修法是听服务端把话说完：监听到 `stream.closed` 且 `reason === "terminal"` 就主动 `close()`。
+关键是不能一刀切——`reason === "idle_timeout"` 是**相反**的情况，那时 run 可能还活着、
+只是这条连接没了，必须继续重连。服务端既然说了原因，就按原因分支。
+
+另外加了个上限 `MAX_RECONNECT_ATTEMPTS = 5`（约 15 秒），超了就进终态 `unreachable`，
+文案「连接中断」，红点**停止闪烁**——一个还在闪的点读起来是「系统在努力」，而事实是
+**对面根本没人应**。规范不会给你这个能力，浏览器把"一直重试"写死了，只能自己数。
+
+*第二层是进程重启留下的孤儿 run。* 数据库跨进程活着，run 不活。服务重启后，一个停在
+`running` 的 run 永远不会有人推进它：首屏永远显示调查中，页面永远轮询，流只能回放不能前进——
+于是又回到第一层的无限重连。加了一个启动对账 `_reconcile_orphaned_runs()`：进程刚起来时，
+任何非终态的 run 必然属于已经消失的进程，`pending`/`running` 直接终止（写中文 error、
+补一条 `agent.failed` 事件、关联故障转 FAILED）。
+**`waiting_approval` 刻意保留**——那是 LangGraph interrupt 的 checkpoint，躺在同一个库里，
+重启后批准它还能继续真实干活，把它一起杀掉等于把可恢复的工作扔掉。
+对账写成幂等的（第二次跑返回空），且任何异常都只记日志、不阻断启动。
+这里有个前提写在 docstring 里：`serve.py` 跑的是单 uvicorn worker，所以"非终态即孤儿"成立；
+多 worker 就得引入 lease/heartbeat 才能这么判。
+
+*第三层是前端的状态判据和服务端不一致。* 服务端的 `_TERMINAL_RUN_STATUSES` 是
+`{completed, failed, cancelled}`（`services/agent_stream.py`），前端 `isRunLive` 只排除了前两个。
+于是 `cancelled` 的 run 在前端读作「还活着」——页面继续轮询一个不会再变的 run，
+同时挂着一条一连上就被服务端关掉的流。改成两边共用同一份词表。
+
+验证这次没走静态检查，而是**真的跑了要上线的那些字节**。`dist/` 里的 SSE chunk 没法直接
+import——它静态依赖 app 入口，而入口在模块顶层就 `mount()`，需要整套 DOM。所以用 Vite 的
+**库模式**另打一个 harness（同一份 `src/api/sse.ts`、同一条工具链），再写两个用例：
+一条连线上真实存在过的流，断言 `stream.opened === 1`（修复前是 4）；另一条把 `EventSource`
+换成"每 20ms 触发一次 `onerror`"的桩，断言最终收敛到 `unreachable` 且真的调了 `close()`——
+**计数器是真实代码里的那个，不是测试里另写一遍的**。
+
+顺带记两个环境坑：`.tmp/` 下的 vite 配置文件不能 `import { defineConfig } from 'vite'`
+（从那里向上找不到 `node_modules`，配置加载阶段就 `ERR_MODULE_NOT_FOUND`；`defineConfig`
+只是类型助手，导出普通对象等价）；Windows 上 Node 动态 import 必须转成 `file://` URL，
+裸盘符路径报 `ERR_UNSUPPORTED_ESM_URL_SCHEME`。
+
 ---
 
 ## 目录结构
