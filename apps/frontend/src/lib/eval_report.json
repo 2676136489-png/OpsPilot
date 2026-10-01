@@ -1,11 +1,11 @@
 {
-  "generated_at": "20261001T111746Z",
+  "generated_at": "20261001T114758Z",
   "report": {
     "total": 12,
     "errors": 0,
     "root_cause_accuracy": 1.0,
     "evidence_accuracy": {
-      "recall": 0.6528,
+      "recall": 0.6736,
       "utilisation": 0.2915,
       "traceability": 0.3323
     },
@@ -50,16 +50,16 @@
       "budget_exhausted_runs": 0
     },
     "latency_ms": {
-      "avg": 1362.7,
-      "p50": 1239.7,
-      "p95": 2216.9,
-      "max": 2876.8,
-      "avg_workflow": 1110.375
+      "avg": 1802.8,
+      "p50": 1667.4,
+      "p95": 2709.5,
+      "max": 3611.0,
+      "avg_workflow": 1464.15
     },
     "trace_integrity": {
       "single_root": 12,
       "with_dangling_parents": 0,
-      "avg_spans": 126.0833,
+      "avg_spans": 130.1667,
       "avg_depth": 5.0
     },
     "breakdowns": {
@@ -82,7 +82,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 2876.8
+          "latency_ms": 3611.0
         },
         "checkout-db-pool-exhaustion": {
           "correct": true,
@@ -93,7 +93,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1066.2
+          "latency_ms": 1418.2
         },
         "checkout-deployment-cascade": {
           "correct": true,
@@ -104,7 +104,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1388.9
+          "latency_ms": 1966.4
         },
         "checkout-memory-leak": {
           "correct": true,
@@ -115,7 +115,7 @@
           "recall": 0.5,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 982.2
+          "latency_ms": 1398.0
         },
         "gateway-dependency-cascade": {
           "correct": true,
@@ -126,7 +126,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1325.5
+          "latency_ms": 1867.0
         },
         "inventory-cpu-saturation": {
           "correct": true,
@@ -137,7 +137,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1677.0
+          "latency_ms": 1972.0
         },
         "payment-bad-deployment": {
           "correct": true,
@@ -148,7 +148,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1035.4
+          "latency_ms": 1425.6
         },
         "payment-high-error-rate": {
           "correct": true,
@@ -159,7 +159,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1007.8
+          "latency_ms": 1437.3
         },
         "payment-provider-outage": {
           "correct": true,
@@ -170,7 +170,7 @@
           "recall": 0.25,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1153.9
+          "latency_ms": 1491.5
         },
         "payment-third-party-timeout": {
           "correct": true,
@@ -178,10 +178,10 @@
           "expected": "third_party",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 10,
-          "recall": 0.5,
+          "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 999.8
+          "latency_ms": 1324.4
         },
         "postgres-slow-queries": {
           "correct": true,
@@ -192,7 +192,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1511.9
+          "latency_ms": 1843.3
         },
         "redis-failure": {
           "correct": true,
@@ -203,7 +203,7 @@
           "recall": 0.6667,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1326.8
+          "latency_ms": 1878.3
         }
       },
       "difficulty": {

@@ -1,5 +1,5 @@
 {
-  "generated_at": "20261001T111746Z",
+  "generated_at": "20261001T114758Z",
   "suite": {
     "environment": {
       "OPSPILOT_SIM_EVAL_MODE": "1",
@@ -10,8 +10,8 @@
     },
     "database": "eval.db",
     "simulator_mode": "in-process (ASGI)",
-    "started_at": "2026-10-01T11:17:29+00:00",
-    "duration_ms": 16694.5,
+    "started_at": "2026-10-01T11:47:35+00:00",
+    "duration_ms": 22161.1,
     "cases": [
       {
         "scenario": "checkout-cpu-saturation",
@@ -28,9 +28,9 @@
           "get_service_status",
           "query_metrics"
         ],
-        "run_id": "6ba6a39e-a20e-4c8f-a193-dd1e0d349164",
-        "incident_id": "ba53cb9b-b9f1-4c1e-9319-a6fbb5f30ffb",
-        "trace_id": "f52f1612e0fa4003a885a54ad4ff00b4",
+        "run_id": "e5535c91-540a-47b4-a369-1dadb88d3d1a",
+        "incident_id": "d5f783f7-a84d-426f-a7cf-63b4fabf9f22",
+        "trace_id": "01adfd98eee04fd9b06895d59e236214",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -322,7 +322,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 23,
+            "duration_ms": 28,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -332,7 +332,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 11,
+            "duration_ms": 12,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -342,7 +342,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 24,
+            "duration_ms": 58,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -352,7 +352,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 20,
+            "duration_ms": 49,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -362,7 +362,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 23,
+            "duration_ms": 56,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -372,7 +372,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 26,
+            "duration_ms": 61,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -382,7 +382,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 57,
+            "duration_ms": 12,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -392,7 +392,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 25,
+            "duration_ms": 38,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -402,7 +402,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 27,
+            "duration_ms": 42,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -412,7 +412,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 30,
+            "duration_ms": 46,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -422,7 +422,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 32,
+            "duration_ms": 51,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -432,7 +432,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 55,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -442,7 +442,7 @@
             "name": "get_recent_commits",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 11,
+            "duration_ms": 48,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -452,7 +452,7 @@
             "name": "search_runbooks",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 18,
+            "duration_ms": 56,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -462,7 +462,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 8,
+            "duration_ms": 58,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -472,7 +472,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -482,7 +482,7 @@
             "name": "scale_service",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 14,
+            "duration_ms": 15,
             "risk_level": "MEDIUM",
             "permission_level": "mutate_infra",
             "error": null,
@@ -492,7 +492,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -507,7 +507,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 96,
+            "duration_ms": 114,
             "error": null
           },
           {
@@ -515,7 +515,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 30,
+            "duration_ms": 45,
             "error": null
           },
           {
@@ -523,7 +523,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 78,
+            "duration_ms": 19,
             "error": null
           },
           {
@@ -531,7 +531,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 91,
+            "duration_ms": 167,
             "error": null
           },
           {
@@ -539,7 +539,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 7,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -547,7 +547,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 14,
+            "duration_ms": 23,
             "error": null
           },
           {
@@ -555,7 +555,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 88,
+            "duration_ms": 85,
             "error": null
           },
           {
@@ -571,7 +571,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 74,
+            "duration_ms": 156,
             "error": null
           },
           {
@@ -579,7 +579,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 12,
+            "duration_ms": 10,
             "error": null
           },
           {
@@ -587,7 +587,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 11,
-            "duration_ms": 11,
+            "duration_ms": 58,
             "error": null
           },
           {
@@ -595,7 +595,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 141,
+            "duration_ms": 69,
             "error": null
           },
           {
@@ -603,7 +603,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 15,
+            "duration_ms": 32,
             "error": null
           },
           {
@@ -611,7 +611,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 94,
+            "duration_ms": 102,
             "error": null
           },
           {
@@ -619,7 +619,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 29,
+            "duration_ms": 10,
             "error": null
           },
           {
@@ -627,7 +627,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 16,
-            "duration_ms": 28,
+            "duration_ms": 16,
             "error": null
           },
           {
@@ -635,7 +635,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 17,
-            "duration_ms": 67,
+            "duration_ms": 99,
             "error": null
           },
           {
@@ -643,7 +643,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 18,
-            "duration_ms": 8,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -651,7 +651,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 19,
-            "duration_ms": 10,
+            "duration_ms": 20,
             "error": null
           },
           {
@@ -659,7 +659,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 20,
-            "duration_ms": 28,
+            "duration_ms": 69,
             "error": null
           },
           {
@@ -667,7 +667,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 21,
-            "duration_ms": 18,
+            "duration_ms": 26,
             "error": null
           },
           {
@@ -675,7 +675,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 22,
-            "duration_ms": 16,
+            "duration_ms": 53,
             "error": null
           },
           {
@@ -683,7 +683,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 23,
-            "duration_ms": 55,
+            "duration_ms": 17,
             "error": null
           },
           {
@@ -699,7 +699,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 25,
-            "duration_ms": 24,
+            "duration_ms": 18,
             "error": null
           },
           {
@@ -707,7 +707,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 26,
-            "duration_ms": 81,
+            "duration_ms": 72,
             "error": null
           },
           {
@@ -715,7 +715,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 27,
-            "duration_ms": 26,
+            "duration_ms": 57,
             "error": null
           },
           {
@@ -723,7 +723,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 28,
-            "duration_ms": 43,
+            "duration_ms": 33,
             "error": null
           }
         ],
@@ -827,16 +827,16 @@
             "tool_calls": 18,
             "tokens": 0,
             "retries": 0,
-            "seconds": 1.35
+            "seconds": 1.78
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 2876.8,
-        "workflow_ms": 1657.0,
-        "span_count": 173,
+        "latency_ms": 3611.0,
+        "workflow_ms": 2025.1,
+        "span_count": 184,
         "span_kinds": {
-          "db": 51,
+          "db": 62,
           "http.client": 26,
           "tool": 18,
           "node": 28,
@@ -869,9 +869,9 @@
           "get_service_status",
           "query_metrics"
         ],
-        "run_id": "6b0e94ac-eff2-4f46-a4c4-32195759470f",
-        "incident_id": "876ff287-1967-4ca5-a732-b6a22a5f6c6b",
-        "trace_id": "ed09e6546ff046829086114aa0b14b17",
+        "run_id": "9498a207-4479-4b06-9dc7-61058efdd797",
+        "incident_id": "16571580-db6a-419d-b7e2-c99c388fed08",
+        "trace_id": "23bacaaf67cb4ee987f4b6d4538987fe",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -1109,7 +1109,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1119,7 +1119,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1129,7 +1129,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 13,
+            "duration_ms": 38,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1139,7 +1139,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 21,
+            "duration_ms": 51,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1147,6 +1147,16 @@
           },
           {
             "name": "get_deployments",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 49,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
             "duration_ms": 65,
@@ -1159,17 +1169,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 69,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1179,7 +1179,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 4,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1189,7 +1189,7 @@
             "name": "rollback_deployment",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 27,
+            "duration_ms": 16,
             "risk_level": "CRITICAL",
             "permission_level": "destructive",
             "error": null,
@@ -1199,7 +1199,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 11,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1214,7 +1214,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 69,
+            "duration_ms": 110,
             "error": null
           },
           {
@@ -1222,7 +1222,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 7,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -1230,7 +1230,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 9,
+            "duration_ms": 62,
             "error": null
           },
           {
@@ -1238,7 +1238,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 136,
+            "duration_ms": 166,
             "error": null
           },
           {
@@ -1246,7 +1246,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 22,
+            "duration_ms": 44,
             "error": null
           },
           {
@@ -1254,7 +1254,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 15,
+            "duration_ms": 53,
             "error": null
           },
           {
@@ -1262,7 +1262,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 77,
+            "duration_ms": 88,
             "error": null
           },
           {
@@ -1270,7 +1270,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 13,
+            "duration_ms": 41,
             "error": null
           },
           {
@@ -1278,7 +1278,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 58,
+            "duration_ms": 19,
             "error": null
           },
           {
@@ -1286,7 +1286,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 9,
+            "duration_ms": 15,
             "error": null
           },
           {
@@ -1302,7 +1302,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 11,
+            "duration_ms": 21,
             "error": null
           },
           {
@@ -1310,7 +1310,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 92,
+            "duration_ms": 72,
             "error": null
           },
           {
@@ -1318,7 +1318,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 47,
+            "duration_ms": 44,
             "error": null
           },
           {
@@ -1326,7 +1326,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 11,
+            "duration_ms": 59,
             "error": null
           }
         ],
@@ -1441,16 +1441,16 @@
             "tool_calls": 10,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.62
+            "seconds": 0.89
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1066.2,
-        "workflow_ms": 934.2,
-        "span_count": 102,
+        "latency_ms": 1418.2,
+        "workflow_ms": 1156.6,
+        "span_count": 104,
         "span_kinds": {
-          "db": 33,
+          "db": 35,
           "http.client": 15,
           "tool": 10,
           "node": 15,
@@ -1483,9 +1483,9 @@
           "get_deployments",
           "get_service_status"
         ],
-        "run_id": "a8606488-b4e0-4b1a-aab2-16c0e0fc71ac",
-        "incident_id": "4a50340c-20cf-403a-834c-4adf5d9935e6",
-        "trace_id": "1b8a697e6966453d9c5a194f37e2bc52",
+        "run_id": "fe1c42e9-7218-4504-9954-de19fc89addd",
+        "incident_id": "1f4ae5b4-9735-46bd-a29d-47fd7b6338b7",
+        "trace_id": "20fcd0652d3f4cf9ba91ef6478a07873",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -1841,7 +1841,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 9,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1851,7 +1851,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 38,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1861,7 +1861,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 16,
+            "duration_ms": 36,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1871,56 +1871,6 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 25,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_deployments",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 20,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 25,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 45,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 47,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "query_logs",
-            "ok": true,
-            "status": "succeeded",
             "duration_ms": 51,
             "risk_level": "LOW",
             "permission_level": "read_only",
@@ -1928,10 +1878,60 @@
             "attempt": 1
           },
           {
+            "name": "get_deployments",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 48,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 64,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 23,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 27,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 53,
+            "duration_ms": 32,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "query_logs",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 37,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1941,7 +1941,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 14,
+            "duration_ms": 24,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1951,7 +1951,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 16,
+            "duration_ms": 28,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1961,7 +1961,7 @@
             "name": "get_recent_commits",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 18,
+            "duration_ms": 33,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1971,7 +1971,7 @@
             "name": "search_runbooks",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 22,
+            "duration_ms": 46,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1981,7 +1981,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -1991,7 +1991,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2001,7 +2001,7 @@
             "name": "rollback_deployment",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 10,
+            "duration_ms": 49,
             "risk_level": "CRITICAL",
             "permission_level": "destructive",
             "error": null,
@@ -2011,7 +2011,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2021,7 +2021,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 11,
+            "duration_ms": 20,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2036,7 +2036,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 83,
+            "duration_ms": 78,
             "error": null
           },
           {
@@ -2044,7 +2044,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 32,
+            "duration_ms": 43,
             "error": null
           },
           {
@@ -2052,7 +2052,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 40,
+            "duration_ms": 14,
             "error": null
           },
           {
@@ -2060,7 +2060,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 99,
+            "duration_ms": 165,
             "error": null
           },
           {
@@ -2068,7 +2068,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 25,
+            "duration_ms": 11,
             "error": null
           },
           {
@@ -2076,7 +2076,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 40,
+            "duration_ms": 41,
             "error": null
           },
           {
@@ -2084,7 +2084,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 116,
+            "duration_ms": 164,
             "error": null
           },
           {
@@ -2092,7 +2092,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 6,
+            "duration_ms": 46,
             "error": null
           },
           {
@@ -2100,7 +2100,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 13,
+            "duration_ms": 23,
             "error": null
           },
           {
@@ -2108,7 +2108,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 106,
+            "duration_ms": 151,
             "error": null
           },
           {
@@ -2116,7 +2116,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 11,
-            "duration_ms": 7,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -2124,7 +2124,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 14,
+            "duration_ms": 50,
             "error": null
           },
           {
@@ -2140,7 +2140,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 37,
+            "duration_ms": 20,
             "error": null
           },
           {
@@ -2148,7 +2148,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 23,
+            "duration_ms": 19,
             "error": null
           },
           {
@@ -2156,7 +2156,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 16,
-            "duration_ms": 24,
+            "duration_ms": 15,
             "error": null
           },
           {
@@ -2172,7 +2172,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 18,
-            "duration_ms": 10,
+            "duration_ms": 22,
             "error": null
           },
           {
@@ -2180,7 +2180,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 19,
-            "duration_ms": 35,
+            "duration_ms": 101,
             "error": null
           },
           {
@@ -2188,7 +2188,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 20,
-            "duration_ms": 75,
+            "duration_ms": 82,
             "error": null
           },
           {
@@ -2196,7 +2196,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 21,
-            "duration_ms": 11,
+            "duration_ms": 41,
             "error": null
           }
         ],
@@ -2293,18 +2293,18 @@
             "tool_calls": 19,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.98
+            "seconds": 1.44
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1388.9,
-        "workflow_ms": 1210.0,
+        "latency_ms": 1966.4,
+        "workflow_ms": 1743.1,
         "span_count": 154,
         "span_kinds": {
+          "db": 47,
           "http.client": 23,
           "tool": 19,
-          "db": 47,
           "node": 21,
           "run": 2,
           "db.batch": 42
@@ -2335,9 +2335,9 @@
           "get_service_status",
           "query_metrics"
         ],
-        "run_id": "2a8a7f7e-445d-4f45-95e2-f6878a158f69",
-        "incident_id": "7e75c6d9-d5bf-4312-af05-f89e84f82500",
-        "trace_id": "d3bf2b5a1fac4ebd9f6a833ebc523e19",
+        "run_id": "acf290e8-a90e-4b71-bc5f-3900a899e581",
+        "incident_id": "ce902276-9232-4746-8b5e-de0bf6bd601c",
+        "trace_id": "35e958d23e61486689c895221738ade2",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -2548,7 +2548,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 11,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2558,7 +2558,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2568,7 +2568,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 11,
+            "duration_ms": 22,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2578,7 +2578,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 18,
+            "duration_ms": 40,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2588,7 +2588,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 30,
+            "duration_ms": 35,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2598,7 +2598,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 33,
+            "duration_ms": 40,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2608,7 +2608,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 4,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2618,7 +2618,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 4,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2628,7 +2628,7 @@
             "name": "rollback_deployment",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 10,
+            "duration_ms": 15,
             "risk_level": "CRITICAL",
             "permission_level": "destructive",
             "error": null,
@@ -2638,7 +2638,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -2653,7 +2653,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 39,
+            "duration_ms": 111,
             "error": null
           },
           {
@@ -2661,7 +2661,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 6,
+            "duration_ms": 28,
             "error": null
           },
           {
@@ -2669,7 +2669,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 42,
+            "duration_ms": 27,
             "error": null
           },
           {
@@ -2677,7 +2677,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 93,
+            "duration_ms": 147,
             "error": null
           },
           {
@@ -2685,7 +2685,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 6,
+            "duration_ms": 43,
             "error": null
           },
           {
@@ -2693,7 +2693,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 57,
+            "duration_ms": 21,
             "error": null
           },
           {
@@ -2701,7 +2701,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 71,
+            "duration_ms": 118,
             "error": null
           },
           {
@@ -2709,7 +2709,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 12,
+            "duration_ms": 52,
             "error": null
           },
           {
@@ -2717,7 +2717,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 24,
+            "duration_ms": 48,
             "error": null
           },
           {
@@ -2725,7 +2725,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 29,
+            "duration_ms": 15,
             "error": null
           },
           {
@@ -2741,7 +2741,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 12,
+            "duration_ms": 29,
             "error": null
           },
           {
@@ -2749,7 +2749,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 84,
+            "duration_ms": 61,
             "error": null
           },
           {
@@ -2757,7 +2757,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 38,
+            "duration_ms": 61,
             "error": null
           },
           {
@@ -2765,7 +2765,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 43,
+            "duration_ms": 20,
             "error": null
           }
         ],
@@ -2868,19 +2868,19 @@
             "tool_calls": 10,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.58
+            "seconds": 0.89
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 982.2,
-        "workflow_ms": 822.9,
+        "latency_ms": 1398.0,
+        "workflow_ms": 1186.5,
         "span_count": 103,
         "span_kinds": {
+          "db": 34,
           "http.client": 15,
           "tool": 10,
           "node": 15,
-          "db": 34,
           "run": 2,
           "db.batch": 27
         },
@@ -2910,9 +2910,9 @@
           "get_dependencies",
           "get_service_status"
         ],
-        "run_id": "b5b299e9-d851-47ad-bde5-2a09cb30a7a6",
-        "incident_id": "d927a350-434e-48f8-ae0b-c14b8c3d25c9",
-        "trace_id": "4fa26849f6e74cfcbc647b7dc021c41c",
+        "run_id": "96aec42f-bf68-4587-b3ba-e55ae0d0d5bc",
+        "incident_id": "625046ec-695c-4eb6-a00f-f6327ca8fa1d",
+        "trace_id": "2d926f47f1fa457e80ae00c3c9130c79",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -3175,7 +3175,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 21,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3185,7 +3185,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 8,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3195,7 +3195,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 33,
+            "duration_ms": 43,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3205,7 +3205,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 60,
+            "duration_ms": 83,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3215,7 +3215,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 58,
+            "duration_ms": 80,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3225,7 +3225,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 61,
+            "duration_ms": 86,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3235,7 +3235,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 12,
+            "duration_ms": 29,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3245,7 +3245,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 15,
+            "duration_ms": 33,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3255,7 +3255,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 49,
+            "duration_ms": 38,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3265,7 +3265,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 53,
+            "duration_ms": 43,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3275,7 +3275,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 12,
+            "duration_ms": 67,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3285,7 +3285,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 12,
+            "duration_ms": 71,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3295,7 +3295,7 @@
             "name": "get_recent_commits",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 15,
+            "duration_ms": 76,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3305,7 +3305,7 @@
             "name": "search_runbooks",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 19,
+            "duration_ms": 80,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3315,7 +3315,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3325,7 +3325,7 @@
             "name": "restart_service",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 10,
+            "duration_ms": 47,
             "risk_level": "HIGH",
             "permission_level": "mutate_infra",
             "error": null,
@@ -3335,7 +3335,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3345,7 +3345,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3360,7 +3360,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 87,
+            "duration_ms": 95,
             "error": null
           },
           {
@@ -3368,7 +3368,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 36,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -3376,7 +3376,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 26,
+            "duration_ms": 24,
             "error": null
           },
           {
@@ -3384,7 +3384,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 111,
+            "duration_ms": 174,
             "error": null
           },
           {
@@ -3392,7 +3392,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 26,
+            "duration_ms": 10,
             "error": null
           },
           {
@@ -3400,7 +3400,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 8,
+            "duration_ms": 11,
             "error": null
           },
           {
@@ -3408,7 +3408,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 117,
+            "duration_ms": 155,
             "error": null
           },
           {
@@ -3416,7 +3416,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 25,
+            "duration_ms": 11,
             "error": null
           },
           {
@@ -3424,7 +3424,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 6,
+            "duration_ms": 41,
             "error": null
           },
           {
@@ -3432,7 +3432,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 60,
+            "duration_ms": 155,
             "error": null
           },
           {
@@ -3448,7 +3448,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 25,
+            "duration_ms": 59,
             "error": null
           },
           {
@@ -3456,7 +3456,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 95,
+            "duration_ms": 66,
             "error": null
           },
           {
@@ -3464,7 +3464,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 25,
+            "duration_ms": 23,
             "error": null
           },
           {
@@ -3472,7 +3472,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 12,
+            "duration_ms": 64,
             "error": null
           },
           {
@@ -3480,7 +3480,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 16,
-            "duration_ms": 40,
+            "duration_ms": 35,
             "error": null
           },
           {
@@ -3496,7 +3496,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 18,
-            "duration_ms": 13,
+            "duration_ms": 19,
             "error": null
           },
           {
@@ -3504,7 +3504,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 19,
-            "duration_ms": 69,
+            "duration_ms": 110,
             "error": null
           },
           {
@@ -3512,7 +3512,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 20,
-            "duration_ms": 36,
+            "duration_ms": 85,
             "error": null
           },
           {
@@ -3520,7 +3520,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 21,
-            "duration_ms": 11,
+            "duration_ms": 19,
             "error": null
           }
         ],
@@ -3629,17 +3629,17 @@
             "tool_calls": 18,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.94
+            "seconds": 1.38
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1325.5,
-        "workflow_ms": 1174.8,
-        "span_count": 148,
+        "latency_ms": 1867.0,
+        "workflow_ms": 1659.4,
+        "span_count": 153,
         "span_kinds": {
+          "db": 49,
           "http.client": 22,
-          "db": 44,
           "tool": 18,
           "node": 21,
           "run": 2,
@@ -3671,9 +3671,9 @@
           "get_service_status",
           "query_metrics"
         ],
-        "run_id": "02e04d86-5004-46a3-bc94-cc51386d4d92",
-        "incident_id": "e6a6ce5d-462c-4619-8f39-782e61a0d438",
-        "trace_id": "79995358fdff4c4794527d6d8b9e3384",
+        "run_id": "b9af8c41-611f-4d7e-9ed4-c823e24ed5ea",
+        "incident_id": "b9454628-d73d-48cc-8cc2-ee80d705e7e7",
+        "trace_id": "905468277c3243c4899fe53786167939",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -3925,7 +3925,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 40,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3935,7 +3935,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3945,7 +3945,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 21,
+            "duration_ms": 56,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3955,7 +3955,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 18,
+            "duration_ms": 47,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3965,7 +3965,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 21,
+            "duration_ms": 54,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -3973,6 +3973,16 @@
           },
           {
             "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 59,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
             "duration_ms": 24,
@@ -3982,20 +3992,10 @@
             "attempt": 1
           },
           {
-            "name": "query_metrics",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 7,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
             "name": "get_recent_commits",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 8,
+            "duration_ms": 12,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4005,7 +4005,7 @@
             "name": "search_runbooks",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 11,
+            "duration_ms": 16,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4015,7 +4015,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4025,7 +4025,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4035,7 +4035,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4045,7 +4045,7 @@
             "name": "scale_service",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 10,
+            "duration_ms": 16,
             "risk_level": "MEDIUM",
             "permission_level": "mutate_infra",
             "error": null,
@@ -4055,7 +4055,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 14,
+            "duration_ms": 17,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4070,7 +4070,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 83,
+            "duration_ms": 112,
             "error": null
           },
           {
@@ -4078,7 +4078,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 24,
+            "duration_ms": 25,
             "error": null
           },
           {
@@ -4086,7 +4086,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 38,
+            "duration_ms": 25,
             "error": null
           },
           {
@@ -4094,7 +4094,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 93,
+            "duration_ms": 161,
             "error": null
           },
           {
@@ -4102,7 +4102,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 37,
+            "duration_ms": 9,
             "error": null
           },
           {
@@ -4110,7 +4110,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 39,
+            "duration_ms": 28,
             "error": null
           },
           {
@@ -4118,7 +4118,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 68,
+            "duration_ms": 76,
             "error": null
           },
           {
@@ -4126,7 +4126,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 25,
+            "duration_ms": 27,
             "error": null
           },
           {
@@ -4142,7 +4142,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 38,
+            "duration_ms": 8,
             "error": null
           },
           {
@@ -4150,7 +4150,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 11,
-            "duration_ms": 10,
+            "duration_ms": 26,
             "error": null
           },
           {
@@ -4158,7 +4158,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 70,
+            "duration_ms": 61,
             "error": null
           },
           {
@@ -4166,7 +4166,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 27,
+            "duration_ms": 34,
             "error": null
           },
           {
@@ -4174,7 +4174,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 56,
+            "duration_ms": 65,
             "error": null
           },
           {
@@ -4182,7 +4182,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 67,
+            "duration_ms": 85,
             "error": null
           },
           {
@@ -4190,7 +4190,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 16,
-            "duration_ms": 7,
+            "duration_ms": 13,
             "error": null
           },
           {
@@ -4198,7 +4198,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 17,
-            "duration_ms": 10,
+            "duration_ms": 63,
             "error": null
           },
           {
@@ -4206,7 +4206,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 18,
-            "duration_ms": 81,
+            "duration_ms": 78,
             "error": null
           },
           {
@@ -4214,7 +4214,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 19,
-            "duration_ms": 20,
+            "duration_ms": 40,
             "error": null
           },
           {
@@ -4222,7 +4222,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 20,
-            "duration_ms": 22,
+            "duration_ms": 17,
             "error": null
           },
           {
@@ -4230,7 +4230,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 21,
-            "duration_ms": 9,
+            "duration_ms": 16,
             "error": null
           },
           {
@@ -4246,7 +4246,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 23,
-            "duration_ms": 13,
+            "duration_ms": 20,
             "error": null
           },
           {
@@ -4254,7 +4254,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 24,
-            "duration_ms": 94,
+            "duration_ms": 78,
             "error": null
           },
           {
@@ -4262,7 +4262,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 25,
-            "duration_ms": 55,
+            "duration_ms": 71,
             "error": null
           },
           {
@@ -4270,7 +4270,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 26,
-            "duration_ms": 16,
+            "duration_ms": 20,
             "error": null
           }
         ],
@@ -4372,16 +4372,16 @@
             "tool_calls": 14,
             "tokens": 0,
             "retries": 0,
-            "seconds": 1.23
+            "seconds": 1.49
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1677.0,
-        "workflow_ms": 1518.7,
-        "span_count": 154,
+        "latency_ms": 1972.0,
+        "workflow_ms": 1754.6,
+        "span_count": 163,
         "span_kinds": {
-          "db": 48,
+          "db": 57,
           "http.client": 22,
           "tool": 14,
           "node": 26,
@@ -4414,9 +4414,9 @@
           "get_deployments",
           "get_service_status"
         ],
-        "run_id": "d5a38cb3-134f-423f-a36f-09bed6e17052",
-        "incident_id": "b6fec98f-2516-4d21-b69a-3e2e4727f3d0",
-        "trace_id": "c18159da3eb5440c91cfb6f627bb50e9",
+        "run_id": "2fb5dad7-2c27-4f82-8325-7eb6afb4ba3e",
+        "incident_id": "1d9dc407-1a12-4bc4-ac1b-d6afdeb6540c",
+        "trace_id": "d4a86d6389b84ad481c49bea4c680e8d",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -4609,7 +4609,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 23,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4619,7 +4619,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 12,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4629,7 +4629,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 47,
+            "duration_ms": 37,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4639,7 +4639,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 59,
+            "duration_ms": 53,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4649,7 +4649,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 58,
+            "duration_ms": 51,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4659,7 +4659,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 61,
+            "duration_ms": 84,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4669,7 +4669,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4679,7 +4679,7 @@
             "name": "rollback_deployment",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 12,
+            "duration_ms": 17,
             "risk_level": "CRITICAL",
             "permission_level": "destructive",
             "error": null,
@@ -4689,7 +4689,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 11,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -4704,7 +4704,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 74,
+            "duration_ms": 95,
             "error": null
           },
           {
@@ -4712,7 +4712,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 9,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -4720,7 +4720,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 28,
+            "duration_ms": 15,
             "error": null
           },
           {
@@ -4728,7 +4728,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 129,
+            "duration_ms": 173,
             "error": null
           },
           {
@@ -4736,7 +4736,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 11,
+            "duration_ms": 23,
             "error": null
           },
           {
@@ -4744,7 +4744,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 14,
+            "duration_ms": 51,
             "error": null
           },
           {
@@ -4752,7 +4752,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 27,
+            "duration_ms": 77,
             "error": null
           },
           {
@@ -4760,7 +4760,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 56,
+            "duration_ms": 33,
             "error": null
           },
           {
@@ -4768,7 +4768,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 30,
+            "duration_ms": 19,
             "error": null
           },
           {
@@ -4776,7 +4776,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 11,
+            "duration_ms": 45,
             "error": null
           },
           {
@@ -4792,7 +4792,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 21,
+            "duration_ms": 22,
             "error": null
           },
           {
@@ -4800,7 +4800,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 72,
+            "duration_ms": 97,
             "error": null
           },
           {
@@ -4808,7 +4808,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 24,
+            "duration_ms": 60,
             "error": null
           },
           {
@@ -4816,7 +4816,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 47,
+            "duration_ms": 43,
             "error": null
           }
         ],
@@ -4900,16 +4900,16 @@
             "tool_calls": 9,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.6
+            "seconds": 0.88
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1035.4,
-        "workflow_ms": 857.9,
-        "span_count": 95,
+        "latency_ms": 1425.6,
+        "workflow_ms": 1211.9,
+        "span_count": 103,
         "span_kinds": {
-          "db": 29,
+          "db": 37,
           "http.client": 14,
           "tool": 9,
           "node": 15,
@@ -4942,9 +4942,9 @@
           "get_service_status",
           "query_logs"
         ],
-        "run_id": "b58c2ca1-7708-4144-aca5-36ea2150f2a5",
-        "incident_id": "8117cf79-1f67-46c6-9f7a-e18da70ef4ed",
-        "trace_id": "57b7bfa9a8ef42b3843424fe1af2a02d",
+        "run_id": "cab781e9-6c1b-47da-a512-2abba8138ba2",
+        "incident_id": "e376db17-0eea-415d-b02a-8f3976afcf08",
+        "trace_id": "80d14ef10bff4bf3a5d545d70ef62795",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -5121,7 +5121,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 23,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5131,7 +5131,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 25,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5141,7 +5141,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 13,
+            "duration_ms": 34,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5151,7 +5151,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 22,
+            "duration_ms": 50,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5161,7 +5161,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 19,
+            "duration_ms": 47,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5171,7 +5171,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 22,
+            "duration_ms": 53,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5181,7 +5181,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 41,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5191,7 +5191,7 @@
             "name": "rollback_deployment",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 10,
+            "duration_ms": 32,
             "risk_level": "CRITICAL",
             "permission_level": "destructive",
             "error": null,
@@ -5201,7 +5201,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5216,7 +5216,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 61,
+            "duration_ms": 97,
             "error": null
           },
           {
@@ -5224,7 +5224,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 43,
+            "duration_ms": 38,
             "error": null
           },
           {
@@ -5232,7 +5232,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 12,
+            "duration_ms": 25,
             "error": null
           },
           {
@@ -5240,7 +5240,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 107,
+            "duration_ms": 156,
             "error": null
           },
           {
@@ -5248,7 +5248,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 18,
+            "duration_ms": 10,
             "error": null
           },
           {
@@ -5256,7 +5256,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 30,
+            "duration_ms": 17,
             "error": null
           },
           {
@@ -5264,7 +5264,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 44,
+            "duration_ms": 76,
             "error": null
           },
           {
@@ -5272,7 +5272,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 21,
+            "duration_ms": 36,
             "error": null
           },
           {
@@ -5288,7 +5288,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 26,
+            "duration_ms": 14,
             "error": null
           },
           {
@@ -5304,7 +5304,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 13,
+            "duration_ms": 21,
             "error": null
           },
           {
@@ -5312,7 +5312,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 85,
+            "duration_ms": 100,
             "error": null
           },
           {
@@ -5320,7 +5320,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 31,
+            "duration_ms": 55,
             "error": null
           },
           {
@@ -5328,7 +5328,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 45,
+            "duration_ms": 35,
             "error": null
           }
         ],
@@ -5412,16 +5412,16 @@
             "tool_calls": 9,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.64
+            "seconds": 0.84
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1007.8,
-        "workflow_ms": 843.1,
-        "span_count": 94,
+        "latency_ms": 1437.3,
+        "workflow_ms": 1216.3,
+        "span_count": 92,
         "span_kinds": {
-          "db": 28,
+          "db": 26,
           "http.client": 14,
           "tool": 9,
           "node": 15,
@@ -5455,9 +5455,9 @@
           "get_service_status",
           "query_logs"
         ],
-        "run_id": "bfb3e27c-c29f-4bd7-8662-12d2a7809517",
-        "incident_id": "4bcc758b-c9cf-4b26-a7b1-a601b4f2bef8",
-        "trace_id": "288d29efe2b048fa8573dc682fdbfbf9",
+        "run_id": "bc997d31-9130-496d-a3d4-4ed6c5f26f50",
+        "incident_id": "10955a6b-f900-445d-893f-06f391b75b1f",
+        "trace_id": "bef33102094e4e42b95182d43371c7ba",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -5622,7 +5622,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5632,7 +5632,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 10,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5642,7 +5642,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 12,
+            "duration_ms": 54,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5652,7 +5652,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 23,
+            "duration_ms": 70,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5662,7 +5662,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 17,
+            "duration_ms": 67,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5672,7 +5672,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 22,
+            "duration_ms": 73,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5682,7 +5682,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5692,7 +5692,7 @@
             "name": "enable_circuit_breaker",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 11,
+            "duration_ms": 17,
             "risk_level": "MEDIUM",
             "permission_level": "mutate_infra",
             "error": null,
@@ -5702,7 +5702,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 37,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5712,7 +5712,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -5727,7 +5727,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 84,
+            "duration_ms": 97,
             "error": null
           },
           {
@@ -5735,7 +5735,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 9,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -5743,7 +5743,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 9,
+            "duration_ms": 65,
             "error": null
           },
           {
@@ -5751,7 +5751,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 229,
+            "duration_ms": 157,
             "error": null
           },
           {
@@ -5759,7 +5759,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 14,
+            "duration_ms": 19,
             "error": null
           },
           {
@@ -5767,7 +5767,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 36,
+            "duration_ms": 45,
             "error": null
           },
           {
@@ -5775,7 +5775,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 65,
+            "duration_ms": 61,
             "error": null
           },
           {
@@ -5783,7 +5783,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 12,
+            "duration_ms": 44,
             "error": null
           },
           {
@@ -5791,7 +5791,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 10,
+            "duration_ms": 67,
             "error": null
           },
           {
@@ -5799,7 +5799,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 38,
+            "duration_ms": 64,
             "error": null
           },
           {
@@ -5815,7 +5815,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 14,
+            "duration_ms": 22,
             "error": null
           },
           {
@@ -5823,7 +5823,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 44,
+            "duration_ms": 81,
             "error": null
           },
           {
@@ -5831,7 +5831,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 70,
+            "duration_ms": 77,
             "error": null
           },
           {
@@ -5839,7 +5839,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 15,
+            "duration_ms": 50,
             "error": null
           }
         ],
@@ -5935,16 +5935,16 @@
             "tool_calls": 10,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.75
+            "seconds": 0.87
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1153.9,
-        "workflow_ms": 935.6,
-        "span_count": 98,
+        "latency_ms": 1491.5,
+        "workflow_ms": 1252.3,
+        "span_count": 106,
         "span_kinds": {
-          "db": 29,
+          "db": 37,
           "http.client": 15,
           "tool": 10,
           "node": 15,
@@ -5979,9 +5979,9 @@
           "get_service_status",
           "query_logs"
         ],
-        "run_id": "27503b53-7d99-4dfc-94e4-57c1ce5145b8",
-        "incident_id": "0d1210e8-e40e-4de2-807e-8c20daa735ae",
-        "trace_id": "3e2e11b4a0aa480e9270694823af5c3e",
+        "run_id": "919da4e1-b3be-4f2b-8764-0b8a20577b03",
+        "incident_id": "dcb62ca1-5d2d-4814-910a-0163f8b00468",
+        "trace_id": "a7a17045c6fc4d458a4710890786944a",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -6123,11 +6123,10 @@
             "has_tool_call": true
           }
         ],
-        "evidence_recall": 0.5,
+        "evidence_recall": 0.75,
         "evidence_utilisation": 0.2727,
         "evidence_linked_share": 0.2727,
         "missing_evidence": [
-          "504",
           "\u8d85\u65f6"
         ],
         "tools_called": [
@@ -6145,7 +6144,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6155,7 +6154,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6165,7 +6164,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 46,
+            "duration_ms": 22,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6175,7 +6174,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 57,
+            "duration_ms": 35,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6185,7 +6184,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 54,
+            "duration_ms": 34,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6195,7 +6194,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 57,
+            "duration_ms": 38,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6205,7 +6204,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 53,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6215,7 +6214,7 @@
             "name": "enable_circuit_breaker",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 12,
+            "duration_ms": 14,
             "risk_level": "MEDIUM",
             "permission_level": "mutate_infra",
             "error": null,
@@ -6225,7 +6224,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6235,7 +6234,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 7,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6250,7 +6249,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 51,
+            "duration_ms": 93,
             "error": null
           },
           {
@@ -6258,7 +6257,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 22,
+            "duration_ms": 48,
             "error": null
           },
           {
@@ -6274,7 +6273,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 143,
+            "duration_ms": 131,
             "error": null
           },
           {
@@ -6282,7 +6281,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 6,
+            "duration_ms": 33,
             "error": null
           },
           {
@@ -6290,7 +6289,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 56,
+            "duration_ms": 15,
             "error": null
           },
           {
@@ -6298,7 +6297,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 41,
+            "duration_ms": 81,
             "error": null
           },
           {
@@ -6306,7 +6305,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 13,
+            "duration_ms": 25,
             "error": null
           },
           {
@@ -6314,7 +6313,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 10,
+            "duration_ms": 18,
             "error": null
           },
           {
@@ -6322,7 +6321,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 21,
+            "duration_ms": 15,
             "error": null
           },
           {
@@ -6338,7 +6337,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 12,
+            "duration_ms": 20,
             "error": null
           },
           {
@@ -6346,7 +6345,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 79,
+            "duration_ms": 56,
             "error": null
           },
           {
@@ -6354,7 +6353,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 63,
+            "duration_ms": 70,
             "error": null
           },
           {
@@ -6362,7 +6361,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 16,
+            "duration_ms": 21,
             "error": null
           }
         ],
@@ -6458,16 +6457,16 @@
             "tool_calls": 10,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.63
+            "seconds": 0.81
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 999.8,
-        "workflow_ms": 847.4,
-        "span_count": 103,
+        "latency_ms": 1324.4,
+        "workflow_ms": 1086.3,
+        "span_count": 97,
         "span_kinds": {
-          "db": 34,
+          "db": 28,
           "http.client": 15,
           "tool": 10,
           "node": 15,
@@ -6502,9 +6501,9 @@
           "query_logs",
           "query_metrics"
         ],
-        "run_id": "860ed325-50ed-4ee1-bf02-6c051a4564b7",
-        "incident_id": "52a52e1f-27f9-4cb6-8002-74ba950312ad",
-        "trace_id": "8577bc2700484fd4a1ac43175eb6db93",
+        "run_id": "ceb7451a-6ead-4941-a12d-90b8cf51f89f",
+        "incident_id": "45b09b8f-a852-4e1f-a6e7-d892f12e9a3e",
+        "trace_id": "ec56e4d79edb4ff993e24b4f65cde59b",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -6900,7 +6899,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6910,7 +6909,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 41,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6920,7 +6919,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 13,
+            "duration_ms": 37,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6930,7 +6929,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 22,
+            "duration_ms": 53,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6940,7 +6939,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 19,
+            "duration_ms": 46,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6950,7 +6949,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 23,
+            "duration_ms": 53,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6960,7 +6959,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 30,
+            "duration_ms": 36,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6970,7 +6969,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 33,
+            "duration_ms": 40,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6980,7 +6979,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 68,
+            "duration_ms": 44,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -6990,7 +6989,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 71,
+            "duration_ms": 48,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7000,7 +6999,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 30,
+            "duration_ms": 37,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7010,7 +7009,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 33,
+            "duration_ms": 40,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7020,7 +7019,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 35,
+            "duration_ms": 44,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7030,7 +7029,7 @@
             "name": "get_deployments",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 38,
+            "duration_ms": 46,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7040,7 +7039,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7050,7 +7049,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 4,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7060,7 +7059,7 @@
             "name": "clear_deadlock",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 14,
+            "duration_ms": 17,
             "risk_level": "HIGH",
             "permission_level": "mutate_infra",
             "error": null,
@@ -7070,7 +7069,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7080,7 +7079,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 4,
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7095,7 +7094,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 65,
+            "duration_ms": 100,
             "error": null
           },
           {
@@ -7103,7 +7102,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 40,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -7111,7 +7110,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 28,
+            "duration_ms": 15,
             "error": null
           },
           {
@@ -7119,7 +7118,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 104,
+            "duration_ms": 169,
             "error": null
           },
           {
@@ -7127,7 +7126,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 6,
+            "duration_ms": 46,
             "error": null
           },
           {
@@ -7135,7 +7134,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 6,
+            "duration_ms": 12,
             "error": null
           },
           {
@@ -7143,7 +7142,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 115,
+            "duration_ms": 137,
             "error": null
           },
           {
@@ -7151,7 +7150,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 15,
+            "duration_ms": 11,
             "error": null
           },
           {
@@ -7159,7 +7158,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 54,
+            "duration_ms": 27,
             "error": null
           },
           {
@@ -7167,7 +7166,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 120,
+            "duration_ms": 125,
             "error": null
           },
           {
@@ -7175,7 +7174,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 11,
-            "duration_ms": 9,
+            "duration_ms": 35,
             "error": null
           },
           {
@@ -7183,7 +7182,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 29,
+            "duration_ms": 34,
             "error": null
           },
           {
@@ -7191,7 +7190,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 83,
+            "duration_ms": 92,
             "error": null
           },
           {
@@ -7199,7 +7198,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 12,
+            "duration_ms": 30,
             "error": null
           },
           {
@@ -7207,7 +7206,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 12,
+            "duration_ms": 51,
             "error": null
           },
           {
@@ -7215,7 +7214,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 16,
-            "duration_ms": 29,
+            "duration_ms": 36,
             "error": null
           },
           {
@@ -7231,7 +7230,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 18,
-            "duration_ms": 34,
+            "duration_ms": 18,
             "error": null
           },
           {
@@ -7239,7 +7238,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 19,
-            "duration_ms": 57,
+            "duration_ms": 74,
             "error": null
           },
           {
@@ -7247,7 +7246,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 20,
-            "duration_ms": 55,
+            "duration_ms": 89,
             "error": null
           },
           {
@@ -7255,7 +7254,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 21,
-            "duration_ms": 13,
+            "duration_ms": 20,
             "error": null
           }
         ],
@@ -7364,18 +7363,18 @@
             "tool_calls": 19,
             "tokens": 0,
             "retries": 0,
-            "seconds": 1.02
+            "seconds": 1.32
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1511.9,
-        "workflow_ms": 1362.8,
-        "span_count": 152,
+        "latency_ms": 1843.3,
+        "workflow_ms": 1637.2,
+        "span_count": 157,
         "span_kinds": {
-          "db": 44,
           "http.client": 24,
           "tool": 19,
+          "db": 49,
           "node": 21,
           "run": 2,
           "db.batch": 42
@@ -7406,9 +7405,9 @@
           "get_service_status",
           "query_logs"
         ],
-        "run_id": "99c8b72c-8620-4881-9e2a-c2f504c096ba",
-        "incident_id": "e9291196-41f5-4a0d-87c4-5c85d1e1d741",
-        "trace_id": "abbae9b928b74515a4eec919772b419f",
+        "run_id": "02b7ae85-0d47-43ed-9eb0-9ceacb6f0068",
+        "incident_id": "8c621a3c-fc38-4033-be07-3074d2f43544",
+        "trace_id": "0ba26e23fabd4463abad1175287a84ea",
         "run_status": "completed",
         "incident_status": "RESOLVED",
         "reasoning_mode": "deterministic",
@@ -7662,7 +7661,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 10,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7672,7 +7671,7 @@
             "name": "get_dependencies",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7682,7 +7681,7 @@
             "name": "query_logs",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 12,
+            "duration_ms": 24,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7692,7 +7691,7 @@
             "name": "query_metrics",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 71,
+            "duration_ms": 43,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7700,66 +7699,6 @@
           },
           {
             "name": "get_deployments",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 69,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 74,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 5,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 12,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 31,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "get_service_status",
-            "ok": true,
-            "status": "succeeded",
-            "duration_ms": 34,
-            "risk_level": "LOW",
-            "permission_level": "read_only",
-            "error": null,
-            "attempt": 1
-          },
-          {
-            "name": "query_logs",
             "ok": true,
             "status": "succeeded",
             "duration_ms": 37,
@@ -7772,7 +7711,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 7,
+            "duration_ms": 43,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7782,7 +7721,67 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 8,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 53,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 72,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 77,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "query_logs",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 82,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 39,
+            "risk_level": "LOW",
+            "permission_level": "read_only",
+            "error": null,
+            "attempt": 1
+          },
+          {
+            "name": "get_service_status",
+            "ok": true,
+            "status": "succeeded",
+            "duration_ms": 8,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7792,7 +7791,7 @@
             "name": "restart_redis",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 10,
+            "duration_ms": 19,
             "risk_level": "HIGH",
             "permission_level": "mutate_infra",
             "error": null,
@@ -7802,7 +7801,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 6,
+            "duration_ms": 25,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7812,7 +7811,7 @@
             "name": "get_service_status",
             "ok": true,
             "status": "succeeded",
-            "duration_ms": 5,
+            "duration_ms": 9,
             "risk_level": "LOW",
             "permission_level": "read_only",
             "error": null,
@@ -7827,7 +7826,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 1,
-            "duration_ms": 75,
+            "duration_ms": 101,
             "error": null
           },
           {
@@ -7835,7 +7834,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 2,
-            "duration_ms": 28,
+            "duration_ms": 31,
             "error": null
           },
           {
@@ -7843,7 +7842,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 3,
-            "duration_ms": 39,
+            "duration_ms": 43,
             "error": null
           },
           {
@@ -7851,7 +7850,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 4,
-            "duration_ms": 120,
+            "duration_ms": 163,
             "error": null
           },
           {
@@ -7859,7 +7858,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 5,
-            "duration_ms": 65,
+            "duration_ms": 42,
             "error": null
           },
           {
@@ -7867,7 +7866,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 6,
-            "duration_ms": 9,
+            "duration_ms": 18,
             "error": null
           },
           {
@@ -7875,7 +7874,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 7,
-            "duration_ms": 61,
+            "duration_ms": 92,
             "error": null
           },
           {
@@ -7883,7 +7882,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 8,
-            "duration_ms": 7,
+            "duration_ms": 10,
             "error": null
           },
           {
@@ -7891,7 +7890,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 9,
-            "duration_ms": 97,
+            "duration_ms": 154,
             "error": null
           },
           {
@@ -7899,7 +7898,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 10,
-            "duration_ms": 18,
+            "duration_ms": 24,
             "error": null
           },
           {
@@ -7907,7 +7906,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 11,
-            "duration_ms": 16,
+            "duration_ms": 56,
             "error": null
           },
           {
@@ -7915,7 +7914,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 12,
-            "duration_ms": 80,
+            "duration_ms": 107,
             "error": null
           },
           {
@@ -7923,7 +7922,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 13,
-            "duration_ms": 11,
+            "duration_ms": 21,
             "error": null
           },
           {
@@ -7931,7 +7930,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 14,
-            "duration_ms": 11,
+            "duration_ms": 17,
             "error": null
           },
           {
@@ -7939,7 +7938,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 15,
-            "duration_ms": 41,
+            "duration_ms": 16,
             "error": null
           },
           {
@@ -7955,7 +7954,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 17,
-            "duration_ms": 12,
+            "duration_ms": 37,
             "error": null
           },
           {
@@ -7963,7 +7962,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 18,
-            "duration_ms": 36,
+            "duration_ms": 99,
             "error": null
           },
           {
@@ -7971,7 +7970,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 19,
-            "duration_ms": 62,
+            "duration_ms": 93,
             "error": null
           },
           {
@@ -7979,7 +7978,7 @@
             "status": "completed",
             "attempt": 1,
             "sequence": 20,
-            "duration_ms": 11,
+            "duration_ms": 18,
             "error": null
           }
         ],
@@ -8087,18 +8086,18 @@
             "tool_calls": 16,
             "tokens": 0,
             "retries": 0,
-            "seconds": 0.91
+            "seconds": 1.37
           },
           "exhausted": false
         },
         "tokens": 0,
-        "latency_ms": 1326.8,
-        "workflow_ms": 1160.1,
-        "span_count": 137,
+        "latency_ms": 1878.3,
+        "workflow_ms": 1640.5,
+        "span_count": 146,
         "span_kinds": {
+          "db": 49,
           "http.client": 21,
           "tool": 16,
-          "db": 40,
           "node": 20,
           "run": 2,
           "db.batch": 38
@@ -8121,7 +8120,7 @@
     "errors": 0,
     "root_cause_accuracy": 1.0,
     "evidence_accuracy": {
-      "recall": 0.6528,
+      "recall": 0.6736,
       "utilisation": 0.2915,
       "traceability": 0.3323
     },
@@ -8166,16 +8165,16 @@
       "budget_exhausted_runs": 0
     },
     "latency_ms": {
-      "avg": 1362.7,
-      "p50": 1239.7,
-      "p95": 2216.9,
-      "max": 2876.8,
-      "avg_workflow": 1110.375
+      "avg": 1802.8,
+      "p50": 1667.4,
+      "p95": 2709.5,
+      "max": 3611.0,
+      "avg_workflow": 1464.15
     },
     "trace_integrity": {
       "single_root": 12,
       "with_dangling_parents": 0,
-      "avg_spans": 126.0833,
+      "avg_spans": 130.1667,
       "avg_depth": 5.0
     },
     "breakdowns": {
@@ -8198,7 +8197,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 2876.8
+          "latency_ms": 3611.0
         },
         "checkout-db-pool-exhaustion": {
           "correct": true,
@@ -8209,7 +8208,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1066.2
+          "latency_ms": 1418.2
         },
         "checkout-deployment-cascade": {
           "correct": true,
@@ -8220,7 +8219,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1388.9
+          "latency_ms": 1966.4
         },
         "checkout-memory-leak": {
           "correct": true,
@@ -8231,7 +8230,7 @@
           "recall": 0.5,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 982.2
+          "latency_ms": 1398.0
         },
         "gateway-dependency-cascade": {
           "correct": true,
@@ -8242,7 +8241,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1325.5
+          "latency_ms": 1867.0
         },
         "inventory-cpu-saturation": {
           "correct": true,
@@ -8253,7 +8252,7 @@
           "recall": 0.3333,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1677.0
+          "latency_ms": 1972.0
         },
         "payment-bad-deployment": {
           "correct": true,
@@ -8264,7 +8263,7 @@
           "recall": 1.0,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1035.4
+          "latency_ms": 1425.6
         },
         "payment-high-error-rate": {
           "correct": true,
@@ -8275,7 +8274,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1007.8
+          "latency_ms": 1437.3
         },
         "payment-provider-outage": {
           "correct": true,
@@ -8286,7 +8285,7 @@
           "recall": 0.25,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1153.9
+          "latency_ms": 1491.5
         },
         "payment-third-party-timeout": {
           "correct": true,
@@ -8294,10 +8293,10 @@
           "expected": "third_party",
           "outcome": "ROOT_CAUSE_CONFIRMED",
           "tools": 10,
-          "recall": 0.5,
+          "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 999.8
+          "latency_ms": 1324.4
         },
         "postgres-slow-queries": {
           "correct": true,
@@ -8308,7 +8307,7 @@
           "recall": 0.75,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1511.9
+          "latency_ms": 1843.3
         },
         "redis-failure": {
           "correct": true,
@@ -8319,7 +8318,7 @@
           "recall": 0.6667,
           "env_fixed": true,
           "escalated": false,
-          "latency_ms": 1326.8
+          "latency_ms": 1878.3
         }
       },
       "difficulty": {
