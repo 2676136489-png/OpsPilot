@@ -537,6 +537,33 @@ Run `npm run build` in apps/frontend, then rebuild the deploy unit.
 `tests/test_build_gates.py` 覆盖了通过、拦下、点名到具体文件、以及不该误报的几种
 （前端的 README/Dockerfile、`src/` 下万一出现的 `node_modules`）。
 
+**16. 在 bundle 里搜到字符串，不等于那行代码会执行。**
+
+重建之后我以为错误路径已经全中文了——`grep` 一下产物，`HTTP_STATUS_ZH` 在里面，
+十二个状态码一个不少。但 `ApiError.detail` 是个 getter，它有三跳：
+`detail` → `message`（AppError 信封）→ 兜底。搜字符串只能证明**词存在**，
+证明不了**哪一跳在跑**；而当时的兜底跳是 `return this.message`，
+也就是 `fetch` 的 `API 500 Internal Server Error`。
+
+所以改成直接执行产物里的那个类：
+
+```js
+const mod = await import('../apps/frontend/dist/assets/Panel-*.js')
+const ApiError = mod.d              // 打包器的导出名，压缩后是单字母
+new ApiError('API 500 Internal Server Error', 500, 'boom', url).detail
+```
+
+不依赖浏览器，但真的跑了要上线的那些字节。六个 payload 形状里第五个当场失败——
+反代的错误页、纯文本 500、被截断的流都会走到那一跳，所以它不是假想路径。
+修法是状态码查表给中文原因、并保留数字状态码（HTTP/2 干脆没有 reason phrase，
+`statusText` 本来就不值得透传）。
+
+这里还有一次自摆乌龙值得记：检查脚本第一版把**正确答案**判成失败——
+`status 0`（连不上后端）的 message 本身就是最终文案，
+却被"结果等于 statusText 就报错"这条规则误伤。断言写错方向，
+和评测里"夹具本身缺关键词"是同一类错误：**验证代码也是代码，也得被验证**。
+现在它改成只在 statusText 本身是英文时才报警。
+
 ---
 
 ## 目录结构
