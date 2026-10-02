@@ -25,6 +25,7 @@ export const queryKeys = {
   /** The run belonging to an incident — the detail page's entry point. */
   incidentRun: (incidentId: string) => ['agent', 'incident-run', incidentId] as const,
   runTimeline: (runId: string) => ['agent', 'run', runId, 'timeline'] as const,
+  runEvents: (runId: string) => ['agent', 'run', runId, 'events'] as const,
   runTrace: (runId: string) => ['agent', 'run', runId, 'trace'] as const,
   metrics: ['metrics'] as const,
   scenarios: ['simulator', 'scenarios'] as const,
@@ -131,6 +132,25 @@ export function useRunTimeline(runId: string | undefined, live: boolean) {
   return useQuery({
     queryKey: queryKeys.runTimeline(runId ?? ''),
     queryFn: () => api.agent.timeline(runId!),
+    enabled: Boolean(runId),
+    refetchInterval: live ? 3_000 : false,
+  })
+}
+
+/**
+ * The persisted event log for one run.
+ *
+ * Separate from `useRunTimeline` because the two answer different questions:
+ * the timeline endpoint returns node executions and tool calls, the events
+ * endpoint returns the SSE payloads — and the hypothesis lifecycle
+ * (`hypothesis.created` / `updated` / `rejected`) only exists in the latter.
+ * Polled on the same schedule as the timeline, and for the same reason: a
+ * terminal run's log is immutable, so polling it forever buys nothing.
+ */
+export function useRunEvents(runId: string | undefined, live: boolean) {
+  return useQuery({
+    queryKey: queryKeys.runEvents(runId ?? ''),
+    queryFn: () => api.agent.events(runId!),
     enabled: Boolean(runId),
     refetchInterval: live ? 3_000 : false,
   })

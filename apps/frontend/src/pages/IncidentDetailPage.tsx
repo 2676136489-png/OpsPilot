@@ -7,12 +7,14 @@ import { Alert, ConfidenceMeter, EmptyState, LoadingBlock } from '../ui/Feedback
 import { SeverityBadge, StatusBadge, HealthDot } from '../ui/Badge'
 import { Icon } from '../ui/Icon'
 import { AgentStreamTimeline } from '../components/AgentStreamTimeline'
+import { HypothesisPanel } from '../components/HypothesisPanel'
 import {
   isRunLive,
   queryKeys,
   useIncident,
   useIncidentRun,
   useIncidentTimeline,
+  useRunEvents,
   useRunTimeline,
   useServices,
 } from '../lib/queries'
@@ -60,6 +62,9 @@ export function IncidentDetailPage() {
   const run = runQ.data ?? null
   const live = isRunLive(run?.status)
   const timelineQ = useRunTimeline(run?.id, live)
+  // The hypothesis lifecycle lives only in the event log, not in the timeline
+  // endpoint, so the rejected candidates need their own fetch.
+  const eventsQ = useRunEvents(run?.id, live)
 
   const start = useCallback(async () => {
     if (!incident || starting) return
@@ -248,7 +253,10 @@ export function IncidentDetailPage() {
             )}
           </Panel>
 
-          <Panel title="恢复方案">
+          <Panel
+            title="恢复方案"
+            subtitle="按顺序执行；高风险步骤会先挂起等人工批准"
+          >
             {run?.recovery_plan?.steps?.length ? (
               <>
                 <div className="plan-meta">
@@ -332,6 +340,8 @@ export function IncidentDetailPage() {
               />
             )}
           </Panel>
+
+          <HypothesisPanel events={eventsQ.data?.events} />
 
           {run?.verification && (
             <Alert
@@ -450,7 +460,10 @@ function RootCauseBlock({
         分类 · {zhCategory(rootCause.category)}
         {rootCause.outcome ? ` · ${outcomeLabel(rootCause.outcome)}` : ''}
       </div>
-      <ConfidenceMeter value={rootCause.confidence} />
+      <ConfidenceMeter
+        value={rootCause.confidence}
+        hint="证据支持度，不是正确率。100% 表示本轮采到的证据全部指向该根因，与是否查错无关。"
+      />
       {rootCause.reasoning_summary && (
         <p className="rc-reasoning">{rootCause.reasoning_summary}</p>
       )}

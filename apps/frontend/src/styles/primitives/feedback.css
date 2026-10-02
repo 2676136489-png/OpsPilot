@@ -332,6 +332,16 @@
   color: var(--foreground);
 }
 
+/* Optional third line under the meter. A percentage on its own has no scale —
+   97% of what? — so callers that show one to a decision-maker pass a sentence
+   saying what the number is a proportion *of*. */
+.meter-hint {
+  margin-top: var(--space-1);
+  font-size: var(--text-2xs);
+  color: var(--muted-foreground);
+  line-height: var(--leading-normal);
+}
+
 /* --- Progress (determinate, for recovery execution) ----------------------- */
 .progress {
   height: 4px;

@@ -85,10 +85,12 @@ export function ConfidenceMeter({
   value,
   label = '置信度',
   tone = 'primary',
+  hint,
 }: {
   value: number
   label?: string
   tone?: 'primary' | 'agent' | 'success' | 'warning' | 'critical'
+  hint?: string
 }) {
   const pct = Math.max(0, Math.min(1, value)) * 100
   return (
@@ -103,6 +105,10 @@ export function ConfidenceMeter({
         <span>{label}</span>
         <span className="meter-value">{pct.toFixed(1)}%</span>
       </div>
+      {/* A bare percentage is not interpretable on its own — 97% of what?
+          Opt-in so the approval queue, which reuses this component for a
+          narrower decision, does not inherit a paragraph it does not need. */}
+      {hint != null && <div className="meter-hint">{hint}</div>}
     </div>
   )
 }

@@ -418,3 +418,95 @@
   font-size: var(--text-2xs);
   white-space: nowrap;
 }
+
+/* --- Hypothesis candidates ------------------------------------------------
+   The point of this block is to make a *losing* candidate legible. A card that
+   only ever shows the winner teaches the reader nothing about how the decision
+   was made, and a rejected hypothesis still carries the evidence it was
+   rejected on — that is the interesting part. */
+
+.hypo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hypo {
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.hypo-confirmed {
+  border-left-color: var(--success);
+}
+
+.hypo-testing {
+  border-left-color: var(--agent);
+}
+
+.hypo-rejected,
+.hypo-abandoned {
+  border-left-color: var(--muted-foreground);
+  /* Dimmed, but not disabled-looking: a rejected candidate is a real result,
+     not an unavailable control. */
+  opacity: 0.82;
+}
+
+.hypo-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.hypo-ref {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  color: var(--muted-foreground);
+  letter-spacing: var(--tracking-caps);
+}
+
+.hypo-state {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  color: var(--foreground-secondary);
+}
+
+.hypo-confirmed .hypo-state {
+  color: var(--success);
+}
+
+.hypo-testing .hypo-state {
+  color: var(--agent);
+}
+
+.hypo-conf {
+  margin-left: auto;
+  font-size: var(--text-2xs);
+  color: var(--foreground-secondary);
+}
+
+.hypo-statement {
+  font-size: var(--text-sm);
+  color: var(--foreground);
+  line-height: var(--leading-normal);
+}
+
+.hypo-reasoning {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--foreground-secondary);
+  line-height: var(--leading-normal);
+}
+
+.hypo-evidence {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}

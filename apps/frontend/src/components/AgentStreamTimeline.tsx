@@ -142,12 +142,22 @@ export function AgentStreamTimeline({
         </div>
       </div>
 
-      {view === 'steps' && (
-        <div className="agent-timeline-sub">
-          {toolCallCount} 次工具调用
-          {run.current_node && live ? ` · 当前节点 ${stageLabel(run.current_node)}` : ''}
-        </div>
-      )}
+      {/* The two tabs read from different stores, and the difference is not
+          guessable from the row contents: 步骤 comes from node execution
+          records, 事件 comes from the SSE event log. Without this line the
+          only cue is which tab happens to be selected. */}
+      <div className="agent-timeline-sub">
+        {view === 'steps' ? (
+          <>
+            每个节点一条，含它发起的工具调用与结果 · 共 {toolCallCount} 次工具调用
+            {run.current_node && live ? ` · 当前节点 ${stageLabel(run.current_node)}` : ''}
+          </>
+        ) : (
+          <>
+            服务端推送的原始事件流，含被否掉的假设与重新规划 · 断线后从游标续传
+          </>
+        )}
+      </div>
 
       <div className="agent-timeline-scroll" ref={scrollRef} onScroll={onScroll}>
         {view === 'steps' ? (
