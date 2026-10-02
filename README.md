@@ -4,56 +4,63 @@
 
 线上地址：**https://opspilot-v2.app.workbuddy.host/**
 
-> 打开后点「注入故障」→ 选一个场景 → 点「开始调查」，就能看着 Agent 一步步调工具、改主意、给出诊断。
-> 想先读代码：从 `apps/backend/src/opspilot_backend/agent/graph.py` 和 `services/agent_stream.py` 入手。
+打开后点「注入故障」选一个场景，再点「开始调查」，就能看着 Agent 一步步调工具、改主意、给出诊断。
+想先读代码：`apps/backend/src/opspilot_backend/agent/graph.py` 和 `services/agent_stream.py`。
+
+![指挥中心](docs/images/dashboard.png)
 
 ---
 
 ## 它解决的是什么问题
 
 值班工程师遇到告警时的真实流程是：看指标 → 翻日志 → 查最近部署 → 凭经验猜 → 试一下 → 反复。
-每一步都要人做，而且中间过程不留痕：事后复盘时没人说得清当初为什么排除了某个假设。
+每一步都要人做，中间过程不留痕，事后复盘时没人说得清当初为什么排除了某个假设。
 
 OpsPilot 把这段流程交给一个**状态机驱动的 Agent**，并且要求它把每一步都落库：
 调了哪个工具、拿到什么证据、提出哪些假设、哪些被否掉、为什么否掉、诊断置信度多少、恢复动作有没有生效。
-用户可以实时看着它跑，也可以事后翻完整的调查账本。
+可以实时看着它跑，也可以事后翻完整的调查账本。
 
 关键约束是**不许编**。诊断允许输出 `UNKNOWN`，验证失败就是失败，恢复后指标没回基线就触发回滚。
 一个会说「我没查出来」的系统，比一个总能给出漂亮答案的系统更适合放在生产旁边。
 
 ---
 
-## 一次调查里到底发生了什么
+## 一次调查里发生了什么
 
-15 个节点，跑在 LangGraph 的 `StateGraph` 上（`agent/graph.py`），每个节点声明自己的 stage、超时、预算和失败语义（`agent/node_spec.py`）。
+15 个节点跑在 LangGraph 的 `StateGraph` 上（`agent/graph.py`），每个节点声明自己的 stage、超时、预算和失败语义（`agent/node_spec.py`）。
 
-| Stage | 节点 | 做什么 |
-|---|---|---|
-| `load_context` | `load_context` | 拉服务拓扑、依赖、当前健康态，建调查上下文 |
-| `triage` | `triage` | 定级（SEV1–4）、圈定受影响面、划时间窗 |
-| `investigation_planner` | `investigation_planner` | 规划要采哪些证据，而不是把工具全调一遍 |
-| `parallel_investigation` | `parallel_investigation` | 并发跑工具调用，任一超时不阻塞其余 |
-| `evidence_aggregation` | `evidence_aggregation` | 证据归一化、去重、标注可信度与时效 |
-| `hypothesis_generation` | `hypothesis_generation` | 生成候选假设并给出置信度（模型参与） |
-| `hypothesis_verification` | `hypothesis_verification` | **主动找反驳证据**，能证伪就退回重新规划 |
-| `root_cause_diagnosis` | `root_cause_diagnosis` | 出根因、类别与把握程度；证据不足就如实弃权 |
-| `recovery_planner` | `recovery_planner` | 生成分步恢复方案（含回滚点） |
-| `risk_assessment` | `risk_assessment` | 按动作风险定审批策略 |
-| `human_approval` | `human_approval` | 人在环闸门（LangGraph `interrupt`） |
-| `recovery_executor` | `recovery_executor` | 逐步执行，每步记录是否真正改变了环境 |
-| `rollback` | `rollback` | 执行失败或验证不通过时按方案回退 |
-| `verification` | `verification` | 回查指标，判断是否真的恢复 |
-| `postmortem` | `postmortem` | 生成复盘：时间线、证据链、被否假设、遗留风险 |
+| Stage | 做什么 |
+|---|---|
+| `load_context` | 拉服务拓扑、依赖、当前健康态，建调查上下文 |
+| `triage` | 定级（SEV1–4）、圈定受影响面、划时间窗 |
+| `investigation_planner` | 规划要采哪些证据，而不是把工具全调一遍 |
+| `parallel_investigation` | 并发跑工具调用，任一超时不阻塞其余 |
+| `evidence_aggregation` | 证据归一化、去重、标注可信度与时效 |
+| `hypothesis_generation` | 生成候选假设并给出置信度 |
+| `hypothesis_verification` | **主动找反驳证据**，能证伪就退回重新规划 |
+| `root_cause_diagnosis` | 出根因、类别与把握程度；证据不足就弃权 |
+| `recovery_planner` | 生成分步恢复方案（含回滚点） |
+| `risk_assessment` | 按动作风险定审批策略 |
+| `human_approval` | 人在环闸门（LangGraph `interrupt`） |
+| `recovery_executor` | 逐步执行，每步记录是否真正改变了环境 |
+| `rollback` | 执行失败或验证不通过时按方案回退 |
+| `verification` | 回查指标，判断是否真的恢复 |
+| `postmortem` | 生成复盘：时间线、证据链、被否假设、遗留风险 |
 
-循环不是装饰。评测里 **12/12 次运行都发生了重新规划**，平均 4.9 轮，平均 18.9 步、14 个不同 stage。
+循环不是装饰。评测里 12/12 次运行都发生了重新规划，平均 4.9 轮、18.9 步、14 个 stage。
 一个只会一条道走到黑的流程不需要 15 个节点。
+
+![故障详情](docs/images/incident.png)
+
+上面这张是一次真实运行的详情页：17 条证据、2 个候选假设、置信度 0.97、恢复动作分三步（已完成 / 待执行 / 预检）、
+右侧是根因分析引用了哪几条证据（E001 / E003 / E004 / E016），底部是回查结果 `6/6 项检查通过`。
 
 ### 状态与断点
 
 - `agent/state.py` 定义 `IncidentState`，节点只返回增量，不原地改。
 - `agent/checkpointer.py` 把 LangGraph 的检查点落到项目自己的仓储层，所以一次运行可以在进程重启后继续，
   被人审批打断的流程也能从 `human_approval` 恢复而不是从头再来。
-- `agent/budget.py` 给每次运行设 token / 工具调用 / 墙钟预算，越界即停并记明原因，不让一次异常调查拖垮服务。
+- `agent/budget.py` 给每次运行设 token / 工具调用 / 墙钟预算，越界即停并记明原因。
 
 ---
 
@@ -68,17 +75,14 @@ OpsPilot 把这段流程交给一个**状态机驱动的 Agent**，并且要求�
 | `destructive` | 2 | `rollback_deployment` `restart_postgres` |
 | `write_external` | 2 | `switch_payment_provider` `create_github_issue` |
 
-权限分四档而不是两档，是因为「改自己的基础设施」和「动外部支付通道」要走的审批和审计路径不一样——
-一个可以自动执行，另一个必须有凭据和外部留痕。`rollback_deployment` 也算 `destructive`：
-回滚会改变线上流量走向，它需要真正的回滚点，而不只是「再部署一次」。
+权限分四档而不是两档，是因为「改自己的基础设施」和「动外部支付通道」要走的审批和审计路径不一样。
+`rollback_deployment` 也算 `destructive`：回滚会改变线上流量走向，它需要真正的回滚点，而不只是「再部署一次」。
 
-每个 `ToolSpec` 还声明：`input_model` / `output_model`（pydantic 双向校验）、`timeout_s`、`max_retries`、
-`risk_level`、可预期的 `error_types`、所属 `mcp_server`。
-
-几个刻意的设计：
+每个 `ToolSpec` 还声明 `input_model` / `output_model`（pydantic 双向校验）、`timeout_s`、`max_retries`、
+`risk_level`、可预期的 `error_types`、所属 `mcp_server`。几个刻意的设计：
 
 - **超时是每个工具的属性，不是全局常量。** 查日志 5 秒、重启服务 30 秒，用同一个数字要么误杀要么白等。
-- **幂等键。** `tools/executor.py` 带请求指纹，重复调用返回首次结果而不是再重启一次服务（`tests/test_tool_idempotency.py`）。
+- **幂等键。** `tools/executor.py` 带请求指纹，重复调用返回首次结果而不是再重启一次服务。
 - **钩子。** `tools/hooks.py` 在调用前后插审计和指标，写操作调用点无法绕过。
 - **MCP。** 工具通过 MCP 协议暴露，Agent 侧只认 spec，换后端不用改节点代码。
 
@@ -92,12 +96,12 @@ OpsPilot 把这段流程交给一个**状态机驱动的 Agent**，并且要求�
 |---|---|---|
 | `low` | 单实例重启、临时扩容 | 自动执行 |
 | `medium` | 滚动重启、配置热更新、清缓存 | 自动执行，留审计 |
-| `high` | 回滚部署、切换支付通道 | 挂起等人工批准（LangGraph `interrupt`），拒绝即终止 |
-| `critical` | 数据变更、删除类动作 | 直接拦下，标记失败，不进入审批队列 |
+| `high` | 回滚部署、切换支付通道 | 挂起等人工批准，拒绝即终止 |
+| `critical` | 数据变更、删除类动作 | 直接拦下，不进入审批队列 |
 
 执行完必须验证：`verification` 回查指标，没回基线就走 `rollback`。
 评测里 `effective_action_rate` 和 `environment_fixed_rate` 分开统计，就是为了区分
-「动作返回成功」和「环境真的被修好了」——很多恢复系统把两者混为一谈。
+「动作返回成功」和「环境真的被修好了」。
 
 **诊断的诚实度是单独一项指标。** `diagnosis_honesty.false_diagnosis_rate` 统计「自信地给出了错误根因」，
 `recovery.success_rate` 统计「宣称成功但环境仍然坏着」。这两项比根因准确率更能说明系统能不能信。
@@ -108,13 +112,13 @@ OpsPilot 把这段流程交给一个**状态机驱动的 Agent**，并且要求�
 
 模型走 provider 抽象（`agent/llm.py`），两个实现：
 
-- `deterministic` — 规则引擎，不需要任何外部依赖，跑测试和评估时用。
+- `deterministic` — 规则引擎，不需要外部依赖，跑测试和评估时用。
 - `openai_compatible` — 任何 OpenAI 兼容端点，通过 `OPENAI_BASE_URL` / `OPENAI_MODEL` / `OPENAI_API_KEY` 配置。
 
-`get_llm()` 返回进程级单例，运行记录里的 `reasoning_mode` 如实反映当前用的是哪一个，
-不是写死的常量——**运行元数据说谎比没有元数据更糟**。
+`get_llm()` 返回进程级单例，运行记录里的 `reasoning_mode` 如实反映当前用的是哪一个。
+判断模型是否真被调用不能看这个字段，要看 `usage.tokens`。
 
-提示词上的两条硬规矩：
+提示词上的三条硬规矩：
 
 1. **要求 JSON 就必须写明 JSON 的 schema。** 含糊地说「优化一下推理过程」，模型会回一段散文，
    解析失败、输出被丢弃，而 token 已经扣了。现在提示词显式规定「只回 JSON 数组、每项一个 `reasoning` 键、
@@ -123,9 +127,8 @@ OpsPilot 把这段流程交给一个**状态机驱动的 Agent**，并且要求�
 2. **证据不足允许弃权。** `root_cause_diagnosis` 可以产出 `UNKNOWN`，这条路径计入 `escalated`，
    不算失败也不算成功。
 3. **输出语言在提示词里锁死。** 界面是中文的，提示词不写死语言，模型就会按自己的语料习惯回英文句子，
-   于是「中文界面里夹一段英文根因」——比整站英文更难读，因为它看起来像 bug。
-   `hypothesis_generation` 和 `postmortem` 的 system prompt 都显式写了「只用中文作答」，
-   并且限定「不要 markdown 围栏、不要任何说明文字」，把语言和结构一起约束掉。
+   于是「中文界面里夹一段英文根因」。`hypothesis_generation` 和 `postmortem` 的 system prompt
+   都显式写了「只用中文作答」，并限定「不要 markdown 围栏、不要任何说明文字」。
 
 ---
 
@@ -137,18 +140,18 @@ OpsPilot 把这段流程交给一个**状态机驱动的 Agent**，并且要求�
 cd evals && python cli.py
 ```
 
-最近一次结果（`evals/reports/`，也是前端「评估」页读的那份）：
+最近一次结果（也是前端「评估」页读的那份）：
 
 | 指标 | 值 |
 |---|---|
 | 场景数 / 错误数 | 12 / 0 |
 | 根因准确率 | **1.00** |
-| 诊断类别准确率 | **1.00**（7 个类别全对：capacity / cascading / database / deployment / memory / redis / third_party） |
+| 诊断类别准确率 | **1.00**（7 个类别全对） |
 | 工具选择准确率 | **1.00** |
 | 恢复成功率 | **1.00**（`effective_action_rate` 1.00，`rollback_rate` 0.00） |
 | 验证准确率 | **1.00**（12 条计分，0 次「宣称成功但环境未恢复」） |
-| 误诊断率 | **0.00**（12 次全部给出结论，0 次自信地错） |
-| 证据召回 / 利用率 / 可追溯 | 0.701 / 0.292 / 0.332 |
+| 误诊断率 | **0.00** |
+| 证据召回 / 利用率 / 可追溯 | 0.826 / 0.292 / 0.332 |
 | 平均步数 / 平均 stage 数 | 18.92 / 14.0 |
 | 平均重新规划轮数 | 4.92（12/12 次都重规划过） |
 | 工具调用总数 | 162（平均 13.5，失败 0 次） |
@@ -156,61 +159,49 @@ cd evals && python cli.py
 | Trace | 12 次单一 root，0 个悬空 parent，平均 126 个 span，深度 5 |
 
 根因、工具选择、恢复、验证四项是 1.00，说明在已定义的场景上闭环是稳的。
-**证据利用率只有 0.29 才是真问题**：Agent 采到的证据里，有七成没被写进最终诊断的引用里。
-这是下一步要改的地方——不是"低分"，是"还没查明白"。
+**证据利用率只有 0.29 才是真问题**：Agent 采到的证据里有七成没被写进最终诊断的引用里。
 
----
-
-## 可观测性
-
-- **指标**（`core/observability.py`）：`agent_runs_total` / `agent_success_total` / `agent_failure_total` /
-  `active_incidents` / `tool_calls_total` / `tool_failures_total` / `agent_duration_seconds` /
-  `recovery_success_total` / `recovery_failure_total` / `verification_success_total` /
-  `verification_failure_total`。`GET /api/v1/metrics` 直接输出 Prometheus 文本格式，`infra/prometheus/prometheus.yml` 已配好抓取。
-- **链路**（`core/tracing.py`）：每次运行一棵 trace，节点、工具调用、模型调用都是 span，
-  带 `run_id` / `stage` / `tool_name` / `model` 属性。评测里的 `trace_integrity` 断言每个 span 都能上溯到单一 root——
-  这不是顺手做的检查，是因为一开始真有悬空 parent，图上多出几个孤岛却没人发现。
-- **结构化日志**：`core/logging.py` 输出 JSON event，`log_event("llm.unusable_reply", ...)` 这类事件让
-  「扣了钱没拿到结果」这种事在日志里能被数出来。
+![评估页](docs/images/evaluations.png)
 
 ---
 
 ## 前端
 
-React 19 + TypeScript + Vite，9 个页面（指挥中心 / 故障 / 服务拓扑 / Agent 运行 / 审批 / 运维手册 / 评估 / 可观测性 / 故障详情）。
+React 19 + TypeScript + Vite，9 个页面。
+
+![故障列表](docs/images/incidents.png)
+
+![Agent 运行](docs/images/agents.png)
 
 - **SSE 事件流**。`GET /api/v1/agent/runs/{id}/stream` 从 `seq 0` 回放落库的完整事件日志，然后转到实时跟随。
   断线重连带 `Last-Event-ID`，服务端从游标续传，所以断连不会在时间线上留一个洞。
   已结束的运行照样能看完整历史——回放读的是数据库，不是内存里的环形缓冲。
 - **时间线有两个页签且都只说真话**。「步骤」来自节点执行记录（含每次工具调用的耗时和结果），
   「事件」来自 SSE 事件日志。没有一份数据是从运行快照反推出来的——反推出来的时间线无法展示
-  重新规划、被否掉的假设或回滚，而这三样恰好是证明 Agent 在思考而不是在背稿的地方。
+  重新规划、被否掉的假设或回滚，而这三样恰好是能看出 Agent 在思考而不是在背稿的地方。
 - **拓扑图**用 dagre 做分层布局，节点颜色只编码健康度；健康度未知就画成灰色，不画成绿色。
 - **文案分层**：接口里的枚举值、工具名、指标名、服务名、厂商名一律保持英文原样
-  （`ROOT_CAUSE_CONFIRMED`、`latency_p95`、`acme-pay`），因为它们要么参与匹配、要么是别人系统的名字，
-  翻一次就会有两处各自为政的真话。给用户看的句子则全部走中文词表：后端 `domain/enums.py` 的
-  `zh_incident_status()` / `zh_risk()` / `zh_outcome()`，前端 `lib/labels.ts` 与 `i18n.ts`。
-  同一份词表只放一处——两个页面各自翻译同一个枚举，是两处迟早会分歧的地方。
+  （`ROOT_CAUSE_CONFIRMED`、`latency_p95`、`acme-pay`），因为它们要么参与匹配、要么是别人系统的名字。
+  给用户看的句子则全部走中文词表：后端 `domain/enums.py` 的 `zh_incident_status()` / `zh_risk()` /
+  `zh_outcome()`，前端 `lib/labels.ts` 与 `i18n.ts`。同一份词表只放一处。
 - **框架自己的英文也要收**：被拒的请求默认返回 pydantic 的 `Input should be a valid UUID...`，
-  而 `api/client.ts` 有一段专门把这些 `msg` 拼起来渲染的分支——也就是说这句话有通路到屏幕上，
-  只是 SPA 自己不会走那条路。"不常出现"正是一句英文能在中文界面里活下来的方式。
+  而 `api/client.ts` 有一段专门把这些 `msg` 拼起来渲染的分支——也就是说这句话有通路到屏幕上。
   现在 `main.py` 注册了 `RequestValidationError` 处理器：`detail` 换成中文句子，
   结构化的 `type`/`location` 原样留在 `errors` 里——那是定位字段的依据，翻译它等于删掉信息。
-- **主题与交互**：设计 token 集中在 `styles/tokens.css`，命令面板（⌘K）、抽屉、Toast、下拉都走 `ui/` 下的统一实现，
-  页面不自己手搓浮层。
 
-### 视觉体系：为什么是暗色打头
+### 视觉体系
 
-整套样式是单向驱动的——`index.css` 依次导入 `tokens → base → shell → primitives → patterns → pages`，
-所有颜色只来自 CSS 变量，没有任何 TSX 里写死的色值。所以换主题、改配色都不需要碰组件逻辑。
+样式是单向驱动的：`index.css` 依次导入 `tokens → base → shell → primitives → patterns → pages`，
+所有颜色只来自 CSS 变量，组件里没有写死的色值。
 
-**深色是默认，不是深色优先的偏好。** 这是 3am 被读的事故控制台：深色仪表地 + 高亮状态色 +
-发丝结构线，辉光只给 live 数据用。浅色是一次点击可切的变体（顶栏右侧日月图标），不是二等公民。
+**深色是默认。** 这是 3am 被读的事故控制台。浅色是一次点击可切的变体（顶栏日月图标），不是二等公民。
+
+![浅色主题](docs/images/dashboard-light.png)
 
 暗底下区分层级靠**三件事协作**，不是只靠阴影——近黑底上阴影几乎不可见，只用阴影做层级是深色 UI 发闷的根因：
 实心 surface 的一档亮度差 + 带强调色相的发丝边 + 1px 顶部高光（`--sheen`）。
 
-两条贯穿全站的语义色，是这个设计里唯一"装饰性"的决定，但它承担了实际功能：
+两条贯穿全站的语义色承担实际功能，不是装饰：
 
 - **operator 蓝 `#2563eb` = 人点的**（按钮、可点链接、选中前的态）
 - **machine 青 `#22d3ee` = Agent 做的**（徽章、实时状态、导航激活态、机器产生的数据）
@@ -219,14 +210,13 @@ React 19 + TypeScript + Vite，9 个页面（指挥中心 / 故障 / 服务拓�
 命令面板当前项、Agent 阶段图统一用青色，而不是各自用蓝色。
 
 **记忆点只有一个**：顶栏底边那道 7 秒循环的「脉冲地平线」扫描线。它是整个产品里唯一允许动的 chrome 元素——
-再多就会从"这是活的"变成"这里在动"，而后者不传递信息。`prefers-reduced-motion: reduce` 时它停成一道静态微光。
+再多就会从「这是活的」变成「这里在动」，而后者不传递信息。`prefers-reduced-motion: reduce` 时它停成一道静态微光。
 
 对比度不是估的，是量出来的。`scripts/ui_probe.py` 用真 Chrome 把 20 组关键前景/背景组合的
 `getComputedStyle` 结果读回来算 WCAG 比值（走多层 alpha 合成，不是取令牌字面值），
 五路由 × 三档视口 × **深浅两个主题**跑下来各 20/20 全部达标。深色最低一项是
 `--muted-foreground` 在 `--surface-inset` 上的 4.85:1，浅色最低 4.57:1。
-亮填充按钮（青 / 绿 / 红）配白字只有 1.8–2.8:1，所以它们统一用近黑字 `--text-on-bright`（6.8–10.5:1），
-蓝色是例外（白字 5.1:1 本来就够）。
+亮填充按钮（青 / 绿 / 红）配白字只有 1.8–2.8:1，所以它们统一用近黑字 `--text-on-bright`（6.8–10.5:1）。
 
 ---
 
@@ -245,13 +235,12 @@ deploy/
 ```
 
 `opspilot.db` 是**空表 + 完整 schema**，并在头部写入本次构建的时间戳。首屏那一条故障由
-`OPSPILOT_DEMO_SEED` 在启动时按场景定义生成，文案跟着 `opspilot_simulator.scenarios` 走。
-启动时会先核对那个戳：托管平台的上传是覆盖式的，SQLite 的 `-wal` 会让上一版的数据库接管新文件，
-而两者的 schema 完全相同、`integrity_check` 也都是 `ok`——只有戳能分辨。
-不匹配就把 `.db` 连同 `-wal`/`-shm` 一起删掉重建（库是可再生的），然后把戳补写回去。
+`OPSPILOT_DEMO_SEED` 在启动时按场景定义生成。启动时先核对那个戳：托管平台的上传是覆盖式的，
+SQLite 的 `-wal` 会让上一版的数据库接管新文件，而两者的 schema 完全相同、`integrity_check` 也都是 `ok`
+——只有戳能分辨。不匹配就把 `.db` 连同 `-wal`/`-shm` 一起删掉重建，然后补写戳。
 
 `serve.py` 用一个 FastAPI 进程同时提供 API、SSE、模拟器和 SPA（catch-all 回落到 `index.html`）。
-`OPSPILOT_EMBED_SIMULATOR=true` 会把故障模拟器挂到 `/__sim` 并把基础设施 provider 指回自己，
+`OPSPILOT_EMBED_SIMULATOR=true` 会把故障模拟器挂到 `/__sim` 并把 provider 指回自己，
 所以托管环境不需要第二个进程。
 
 ```bash
@@ -259,10 +248,9 @@ python scripts/build_deploy.py     # 需要先跑过前端 build
 cd deploy && python serve.py
 ```
 
-> 托管平台会把入口猜成 `python main.py`。显式指定 `startCmd="python serve.py"`、
-> `installCmd="pip install -r requirements.txt"`、`port=8000` 可以少试一次。
-
-`.env` 不进仓库。密钥通过环境变量或构建时从当前 shell 透传进 `deploy/.env`，`deploy/` 整个目录都在 `.gitignore` 里。
+`build_deploy.py` 不替你跑前端 build，而是校验 `dist/` 比所有前端源文件都新，否则直接拒绝。
+一份陈旧的产物是一份完全合法的产物：服务端跑得对、仓库里代码是对的，只有浏览器里还是旧字符串，
+没有任何一步会报错。
 
 ---
 
@@ -283,10 +271,7 @@ npm install
 npm run dev                                           # http://localhost:5173
 ```
 
-开发模式下前后端分离（Vite 5173，后端 8000，CORS 已配）。
-单端口模式由 `scripts/build_deploy.py` 负责——它**不**替你跑前端 build，而是要求你已经跑过：
-先校验 `dist/` 比所有前端源文件都新（否则直接拒绝，见踩坑 #15），
-再把 `dist/` 拷成后端认的 `webroot/`，输出一个可以直接 `python serve.py` 的目录：
+开发模式下前后端分离（Vite 5173，后端 8000，CORS 已配）。单端口模式由 `scripts/build_deploy.py` 负责：
 
 ```bash
 cd apps/frontend && npm run build
@@ -307,9 +292,6 @@ cp .env.example .env
 # OPENAI_BASE_URL=https://...   OPENAI_MODEL=<模型名>   OPENAI_API_KEY=<key>
 ```
 
-`Settings` 的 `env_file=".env"` 由 `python-dotenv` 提供，`requirements.txt` 里是显式依赖——
-它曾经是隐式的，本地能跑、干净环境起不来。
-
 ---
 
 ## 测试
@@ -321,52 +303,46 @@ cd apps/frontend && npx tsc -b && npx oxlint      # 类型 + lint
 cd evals && python cli.py                         # 12 个场景的端到端评估
 ```
 
-后端测试覆盖的是**失败路径**，不是快乐路径：`test_failure_recovery_paths.py`（工具失败、超时、级联失败）、
+后端测试覆盖的是**失败路径**：`test_failure_recovery_paths.py`（工具失败、超时、级联失败）、
 `test_recovery_rollback.py`（恢复不生效时的回退）、`test_tool_idempotency.py`（重复调用不重复生效）、
 `test_tracing.py`（span 血缘完整）、`test_agent_timeline.py`（时间线事件契约）、
 `test_incident_lifecycle.py`（状态机合法迁移）。
 
-另外四组守的是"不报错但结果不对"的那类问题，所以单独列出来：
-`test_status_labels.py` 断言每个线上枚举值都有中文标签（查表漏掉一个的形态是英文词漏进中文句子，
-不抛异常）；`test_deploy_database.py` 断言部署库只带 schema、且 `-wal` 残留组合不出"能打开但没表"的库；
-`test_shipped_database.py` 断言启动时能认出"这不是本次发布带的数据库"并重建，
-以及删不掉时不要因此起不来；`test_validation_errors.py` 断言被拒绝的请求不会把 pydantic 的英文
-原样送到浏览器，同时保留机器可读的字段定位。
+另外几组守的是「不报错但结果不对」的那类问题：`test_status_labels.py` 断言每个线上枚举值都有中文标签；
+`test_deploy_database.py` 断言部署库只带 schema；`test_shipped_database.py` 断言启动时能认出
+「这不是本次发布带的数据库」并重建；`test_validation_errors.py` 断言被拒绝的请求不会把 pydantic 的英文
+原样送到浏览器；`test_prose_containers.py` 用 AST 扫描所有 f-string，拦住中文句子里的 Python repr。
 
-**前端另有一个真浏览器探针**，因为上面所有检查都看不见三类问题：色对但层不对（前景在浅一档的
-surface 上掉到 4.41:1）、选择器从未命中（类名拼错，激活态从来没存在过）、窄屏溢出。
+### 前端验证
+
+静态检查看不见三类问题：色对但层不对（前景在浅一档的 surface 上掉到 4.41:1）、
+选择器从未命中（类名拼错，激活态从来没存在过）、窄屏溢出。所以有两个真浏览器脚本：
 
 ```bash
-# 1) Chrome 必须与探针在同一个 shell 会话里，否则会被回收
+# ui_probe：对比度 + 溢出，每页三档视口，深浅两个主题
+# readme_shots：README 配图，等到页面数据落地再截
 chrome.exe --headless=new --remote-debugging-port=9222 --remote-allow-origins=* \
   --user-data-dir=.tmp/chrome about:blank &
 
-# 2) MSYS_NO_PATHCONV 是必须的，否则 Git Bash 会把 URL 里的 // 当成盘符路径改写
-# 3) --both 两个主题都跑。别只跑默认的那个
 MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' python scripts/ui_probe.py \
   http://127.0.0.1:5175 .tmp/shots / /incidents /evaluations --both
 ```
 
-它把每页截三档视口（1440 / 768 / 375），并把 20 组关键前景/背景的 WCAG 比值读回来算——
-比值取自 `getComputedStyle` 并**向上遍历到第一个不透明底色**，所以浮在 `--surface-inset` 上的
-元素量的是合成后的实际值，不是令牌字面值。最后打印选择器命中率，命中率过低时显式警告
-（第一版探针 20 项只命中 2 项却照样报 `failures: 0`，那个 0 什么都不能证明）。
-
-主题由 `Page.addScriptToEvaluateOnNewDocument` 写进 localStorage 后**再断言一次**
-`document.documentElement.dataset.theme` —— 因为探针原本继承环境里已有的 localStorage，
-于是"验浅色主题"实际量的是深色那一套，而浅色就这么带着 6 类不达标元素（最低 2.77:1）发布出去了。
-两个主题现在都是 20/20 覆盖、0 失败。
+两个细节让它的结果可信：比值取自 `getComputedStyle` 并**向上遍历到第一个不透明底色**，
+所以浮在 `--surface-inset` 上的元素量的是合成后的实际值；主题写进 localStorage 之后**再断言一次**
+`document.documentElement.dataset.theme`，不匹配直接抛错——因为探针原本继承环境里已有的 localStorage，
+「验浅色主题」实际量的是深色那一套。
 
 ---
 
-## 工程踩坑记录
+## 工程记录
 
 这一节留在这里是因为它们是真实发生过的，而且每一个都只在特定环境才暴露。
 
 **1. 「部署跑不起来」和「本地跑得起来」是两件事。**
 干净 venv 只装 `requirements.txt` 时，SQLAlchemy 的 async 引擎在 import 阶段就报 `No module named 'greenlet'`——
 传递依赖在本地 .venv 里被别的包带进来了。修法是把 `sqlalchemy[asyncio]` 写清楚，而不是往环境里补一个包。
-判定"能不能部署"的标准因此改成：全新 venv + 模拟沙箱的浅路径，跑一遍。
+判定「能不能部署」的标准因此改成：全新 venv 跑一遍。
 
 **2. 路径硬编码在 import 阶段爆炸。**
 `_RUNBOOK_ROOT = parents[5] / "runbooks"` 把六层目录结构写死了。沙箱里的布局少一层，
@@ -380,75 +356,54 @@ MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' python scripts/ui_probe.py \
 
 **4. 本机代理会劫持回环调用。**
 `httpx` 默认 `trust_env=True`，会去读 `http_proxy`。在带透明代理的机器上，后端对自己 `/__sim` 的调用
-被送给代理，代理回 404。同一个 URL `curl` 返回 200、`httpx` 返回 404，看着像见了鬼。
-修法是加 `trust_env` 参数，并用 `_targets_this_host()` 判定目标是否本机（IPv4/IPv6 回环 + 反转解析 localhost），
-本机就绕开代理；调外部模型不受影响。
+被送给代理，代理回 404。同一个 URL `curl` 返回 200、`httpx` 返回 404。
+修法是加 `trust_env` 参数，并用 `_targets_this_host()` 判定目标是否本机，本机就绕开代理；调外部模型不受影响。
 
 **5. 被扣了 token 却没拿到结果，而且没人知道。**
 提示词只说「refine these hypotheses' reasoning」，没说格式。模型回了一段散文，JSON 解析返回 `None`，
-代码 `if isinstance(parsed, list)` 直接跳过——**token 扣了，输出静默丢弃，日志里一个字都没有**。
+代码 `if isinstance(parsed, list)` 直接跳过——token 扣了，输出静默丢弃，日志里一个字都没有。
 两处都要改：提示词显式写明 schema，以及「扣了 token 但解析失败」必须记事件。
 
 **6. 元数据说谎比没有元数据更糟。**
 `reasoning_mode` 只在创建运行时写了一次，之后没人更新，所以用了模型的运行也对外宣称 `deterministic`。
-改成从 `get_llm().name` 推导。判断模型是否真被调用也不能看这个字段，要看 `usage.tokens`。
+改成从 `get_llm().name` 推导。
 
 **7. 声明了但从未注册的东西。**
 `domain/errors.py` 的注释写着「API 层是唯一把 AppError 转成 HTTP 响应的地方」，
 但全项目没有任何 `add_exception_handler`。于是所有领域错误都漏成空 body 的 500，
-调用方无法区分「这个事件已经在跑了」和「服务坏了」。注册一个 handler 之后，
+调用方无法区分「这个事件已经在跑了」和「服务坏了」。注册 handler 之后，
 重复启动返回 409 `{"code":"CONFLICT"}`，不存在的事件返回 404。
 
 **8. 改写日志文本会让信号抽取静默失效。**
-`agent/investigation.py` 的 `_LOG_PATTERNS` 是靠**子串匹配日志正文**来点亮信号的
-（`"queuepool"` → 连接池饱和、`"outofmemoryerror"` → OOM）。把模拟器日志翻成中文，
-匹配会全部落空，而失败形态是「证据变少、置信度变低」——不报错、不抛异常，只是诊断质量
-悄悄退化。所以模式表做成双语的：中文新词在前、英文旧词兜底。
-另一个坑是中文词必须是**短语**：`"缓存"` 会被健康日志里的「缓存命中率 0.91」点亮，
-必须写成 `"缓存读取失败"`；同理 `"连接池"`、`"堆空间"`、`"锁等待"`。
-这类改动只能靠评测集回归来守——`expected_evidence` 的召回率是唯一能看见它的指标。
+`agent/investigation.py` 的 `_LOG_PATTERNS` 靠**子串匹配日志正文**来点亮信号
+（`"queuepool"` → 连接池饱和、`"outofmemoryerror"` → OOM）。把模拟器日志翻成中文，匹配会全部落空，
+而失败形态是「证据变少、置信度变低」——不报错、不抛异常，只是诊断质量悄悄退化。
+所以模式表做成双语的：中文新词在前、英文旧词兜底。
+中文词还必须是**短语**：`"缓存"` 会被健康日志里的「缓存命中率 0.91」点亮，必须写成 `"缓存读取失败"`。
 
-复查时发现同一类问题还有第二种形态，而且它躲在**评测夹具**里：场景自己声明了症状
-（「渠道返回 503」「GC 停顿越来越长」「缓存连接被拒绝」），但模拟器的日志正文里没有这些术语。
-agent 查日志时读的是**告警服务**，看到的是下游视角的**传播日志**，例如「上游支付渠道返回 5xx」——
-既没说是谁，也没说状态码。于是 rubric 在考一个语料里根本不存在的词。
+改中文化之后评测集还暴露了第二层：场景自己声明了症状（「渠道返回 503」），
+但模拟器的日志正文里没有这些术语。Agent 查日志时读的是**告警服务**，看到的是下游视角的**传播日志**，
+既没说是谁也没说状态码——于是 rubric 在考一个语料里根本不存在的词。
+更要命的是同一行传播日志被两个故障共用：渠道**故障**（503）和渠道**超时**（504）走同一个分支。
+改成按依赖的 `latency_p95` 分支，各自说出真实症状与厂商名。
 
-更要命的是同一行传播日志被两个故障共用：渠道**故障**（503）和渠道**超时**（504）走同一个分支，
-所以超时场景也会打印「返回 5xx」。改成按依赖的 `latency_p95` 分支，各自说出真实症状与厂商名：
-
-```
-外部支付渠道 acme-pay 返回 503 — 上游链路失败
-外部支付渠道 acme-pay 调用超时（504 Gateway Timeout）：上游调用已等待 8200ms
-```
-
-顺带补上「堆内存不足 — GC 停顿 2.1s 仍无法回收」（原句只说「堆空间不足」，
-而 `GC 停顿` 那行是 WARN，`query_logs` 默认只取 ERROR，永远不会被采到）。
-
-证据召回率的完整轨迹是 **70.1% → 65.3% → 67.4% → 82.6%**：70.1% 是英文期基线，
+证据召回率的轨迹是 **70.1% → 65.3% → 67.4% → 82.6%**：70.1% 是英文期基线，
 中文化第一版掉到 65.3%（翻译日志正文打坏了信号匹配），修掉 redis / outage 回到 67.4%，
-按延迟分支拆开传播日志后到 **82.6%**。12 个场景**无一项低于**英文期基线，4 项反超
-（`payment-provider-outage` 0.5→1.0、`payment-third-party-timeout` 0.5→1.0、
-`checkout-memory-leak` 0.75→1.0、`gateway-dependency-cascade` 0.75→1.0）。
+按延迟分支拆开传播日志后到 82.6%。12 个场景无一项低于英文期基线，4 项反超。
 根因判定、工具选择、恢复、验证仍全部 100%，误诊率仍为 0。
 
-**教训**：评判「指标有没有回退」必须和**改动前的基线**比。我一开始只看「指标全绿」，
-而绿是相对于上一次运行——那一次已经在英文期之后了，回退被自己人掩盖了。中间那两个
-数字（65.3%、67.4%）留着不删，是因为它们才是这件事的证据：光看首尾你会以为翻译一遍
-就把分数抬上去了，实际中间先砸了一个坑。
+**教训**：评判「指标有没有回退」必须和**改动前的基线**比。只看「指标全绿」是不够的，
+绿是相对于上一次运行而言的。中间那两个数字（65.3%、67.4%）留着不删，因为它们才是这件事的证据。
 
-剩下 17.4% 的缺口也查清了，是**能力边界**而不是文案问题：两个日志探针
-（`error_signature`、`dependency_logs`）把 `level="ERROR"` 写死了——标签就叫「读取服务当前
-输出的错误特征」，这是有意的——而容量类故障的诊断术语（`CPU 饱和 … 请求队列深度上升`、
-`检测到慢查询`）都在 **WARN** 行。所以 agent 能正确判出 `capacity` 类别，却拿不到
-「饱和」「队列」这两个词。要补就得让容量域的探针也读 WARN，那会改变 agent 看到的语料，
-得重跑整套评测确认没有引入噪声——所以留着，等有明确需求时再动。
+剩下 17.4% 的缺口是**能力边界**而不是文案问题：两个日志探针把 `level="ERROR"` 写死了，
+而容量类故障的诊断术语（`CPU 饱和 … 请求队列深度上升`）都在 WARN 行。
+所以 agent 能正确判出 `capacity` 类别，却拿不到「饱和」「队列」这两个词。
 
 **9. 重建部署包会静默吞掉凭据。**
-`build_deploy.py` 先 `rmtree` 掉整个 `deploy/`，再重新生成 `.env`，而 `.env` 只从**当前 shell**
-的环境变量取值。Key 平时只存在于 `deploy/.env`（该目录被 gitignore，这是刻意的），
+`build_deploy.py` 先 `rmtree` 掉整个 `deploy/` 再重新生成 `.env`，而 `.env` 只从**当前 shell** 的
+环境变量取值。Key 平时只存在于 `deploy/.env`（该目录被 gitignore，这是刻意的），
 于是「换台机器重建一次」就足以让线上实例丢掉模型 Key——症状是 agent 悄悄退化成模板输出，
-`usage.tokens` 恒为 0，不报任何错。改成删除前先读旧 `.env`，按「shell 优先、旧值兜底」合并，
-并在构建输出里区分来源。
+`usage.tokens` 恒为 0，不报任何错。改成删除前先读旧 `.env`，按「shell 优先、旧值兜底」合并。
 
 **10. 服务端的控制帧违反了前端的类型契约。**
 SSE 的 `stream.opened` / `stream.closed` 是传输控制帧（不落库、所以没有 `seq`），
@@ -456,147 +411,88 @@ SSE 的 `stream.opened` / `stream.closed` 是传输控制帧（不落库、所�
 但它们被登记进了前端的事件类型表，于是被当成普通事件派发到时间线上，
 `Object.entries(undefined)` 直接把「事件」页签打崩。
 **TypeScript 的类型是编译期断言，网线上的数据在运行时没有任何保证。**
-修法是在生产端补齐信封（`control_payload()`），而不是在消费端到处 `?? {}`；
-消费端只保留一处网络值信任边界。补了回归测试，并验证了该测试能拦住旧实现。
+修法是在生产端补齐信封（`control_payload()`），而不是在消费端到处 `?? {}`。
 
 **11. 一个只在别人的浏览器里复现的渲染崩溃。**
-「未能在 '节点' 上执行 'insertBefore'：新节点要插入的节点不是该节点的子节点」——
-本地用 CDP 压测 32 次路由切换 + 浮层反复开关，一次都没复现。
-
+「未能在 '节点' 上执行 'insertBefore'」——本地用 CDP 压测 32 次路由切换 + 浮层反复开关，一次都没复现。
 两个原因叠在一起：
 
 - `index.html` 写着 `lang="en"`，界面却是中文。浏览器认为这是一个英文页面，
   如果用户对英文开过自动翻译，它就会**替 React 改写文本节点**（把每段文字包进 `<font>`）。
   React 手里握着的是那些已经被移出文档的文本节点引用，下一次 commit 就必然报这个错。
   这个失败只在「浏览器正在翻译」时出现，所以干净的测试 profile 永远看不到。
-  修法是把语言声明改对（`lang="zh-CN"`），并显式声明 `translate="no"` + `<meta name="google" content="notranslate">`。
+  修法是把语言声明改对（`lang="zh-CN"`），并显式声明 `translate="no"`。
 - 恢复路径本身是死的。原来的自愈逻辑监听 `window.onerror`，
   但只要路由上有 `errorElement`，React 就会把 commit 阶段的错误交给错误边界，**根本不会发到 window**。
-  于是错误页面一直挂着，用户只能手动刷新——这才是「老是出现」的真正来源。
-  现在错误边界自己触发重建，并且有跨刷新持久的修复预算：连续失效就停在一个纯 DOM 写的页面上说明原因，而不是无限重建循环。
-
-顺带修掉的还有：软重建会把旧的浮层（`.scrim`、`.toast-host`）留在 `<body>` 里，
-一个孤儿遮罩层盖在刚修好的界面上——所以浮层现在统一挂到受管的 `#overlay-root`，重建时整块换掉。
-CDP 验证：路由扫荡 8 个页面无异常、端口探针记录 0 次 DOM 不变量违规、
-真实 Agent 运行的事件页签正常渲染 67 行、重建后 `<body>` 子节点数不增长。
+  于是错误页面一直挂着，用户只能手动刷新。现在错误边界自己触发重建，
+  并且有跨刷新持久的修复预算：连续失效就停在一个纯 DOM 写的页面上说明原因，而不是无限重建循环。
 
 **12. 构建产物把开发库一起带上线，还顺手关掉了首屏种子。**
-`build_deploy.py` 原本是把 `apps/backend/opspilot.db` 原样拷进部署包，那是**开发库**——
-里面躺着本地跑出来的 4 条故障记录，连标题带时间戳一起被发布出去。
-更隐蔽的是它的副作用：`main.py` 的 `_seed_demo_incidents()` 守卫是 `count(incidents) == 0`，
-表非空就直接 `return`，于是这个「让新实例不至于空着首屏」的种子从来没执行过。
-表现是线上首屏是 4 条没人认识的旧故障，而不是按场景定义生成的那一条。
-改成只带 schema：`snapshot_sqlite()` 读一份自洽副本，`reset_sqlite()` 清空所有表（`VACUUM` 顺带收回页），
-首屏交还给种子逻辑。
+`build_deploy.py` 原本把 `apps/backend/opspilot.db` 原样拷进部署包——那是**开发库**，
+里面躺着本地跑出来的故障记录。更隐蔽的是它的副作用：`_seed_demo_incidents()` 的守卫是
+`count(incidents) == 0`，表非空就直接 return，于是「让新实例不至于空着首屏」的种子从来没执行过。
+改成只带 schema：`snapshot_sqlite()` 读一份自洽副本，`reset_sqlite()` 清空所有表，首屏交还给种子逻辑。
 
 同一个函数上还叠着一个更安静的坑：`shutil.copy2` 只拷 `.db`，而 SQLite 把已提交但未 checkpoint
-的事务放在 `-wal` 里；目标目录若还残留上一轮构建的 `-wal`，就组合出一个"看着正常"的库。
-实测这个组合的失败形态是：**库能打开、`PRAGMA integrity_check` 返回 `ok`、但表整个不见了**
-（`no such table: incidents`）。所以构建闸门不能只看 pragma，`check_sqlite()` 现在会另外断言 schema 存在——
-一个没有表的库不算通过检查。`tests/test_deploy_database.py` 把这三种形态都固化了（8 个用例），
-其中「旧实现会红」是实测过的，不是推的。
+的事务放在 `-wal` 里；目标目录若还残留上一轮构建的 `-wal`，就组合出一个「看着正常」的库。
+实测这个组合的失败形态是：**库能打开、`PRAGMA integrity_check` 返回 `ok`、但表整个不见了**。
+所以 `check_sqlite()` 现在会另外断言 schema 存在——一个没有表的库不算通过检查。
 
-**13. 托管平台上传是"覆盖"，不是"替换"，于是线上跑的其实是上一版的数据库。**
-这是最花时间的一个，因为它同时伪装成两种完全不同的现象。
-
-线上要更新，平台是把新文件写到旧文件上。而 `db/session.py` 每个连接都执行
-`PRAGMA journal_mode=WAL`，所以**上一版留下的 `-wal`/`-shm` 会原地不动地留在那里**。
-SQLite 的 WAL 里带着 page 1 的副本，于是它堂而皇之地接管了新上传的主文件。实测（本次部署包 + 上一版的 WAL）：
+**13. 托管平台上传是「覆盖」，不是「替换」。**
+平台把新文件写到旧文件上，而 `db/session.py` 每个连接都执行 `PRAGMA journal_mode=WAL`，
+所以**上一版留下的 `-wal`/`-shm` 会原地不动地留在那里**。SQLite 的 WAL 里带着 page 1 的副本，
+于是它堂而皇之地接管了新上传的主文件。实测（本次部署包 + 上一版的 WAL）：
 
 ```
 integrity_check : ok
 user_version    : 1600000000      ← 上一版的构建戳
-incidents       : ['版本发布后支付授权开始报错', '缓存集群整体不可达']   ← 上一版的数据，共 2 条
+incidents       : ['版本发布后支付授权开始报错', '缓存集群整体不可达']   ← 上一版的数据
 ```
 
-我这次上传的是一个 0 行、23 表的新库——**它被完全忽略了**。没有报错、没有告警，
-`PRAGMA integrity_check` 说一切正常。之前几轮"重新发布"能"成功"，靠的就是这个：
-线上一直在跑更早的数据库，所以无论我改了多少文案，页面上的英文都没变过。
-同一机制的另一面是启动直接崩：上一版的 WAL 若是在写入中途被 kill 掉的（torn），
-`create_all` 的第一次反射就抛 `sqlite3.DatabaseError`，服务根本起不来。
-
+上传的是一个 0 行、23 表的新库，**它被完全忽略了**。没有报错、没有告警，`integrity_check` 说一切正常。
 判据不能是文件内容——同一份 schema 的旧库和健康库长得一模一样。所以构建时给库盖一个戳：
-`build_deploy.py` 写 `PRAGMA user_version = <构建时间戳>` 并把同一个值写进 `.env` 的
-`OPSPILOT_BUILD_STAMP`；启动时对比，不一致就说明这个文件不是本次发布带的。
+`build_deploy.py` 写 `PRAGMA user_version = <构建时间戳>` 并把同一个值写进 `.env` 的 `OPSPILOT_BUILD_STAMP`；
+启动时对比，不一致就说明这个文件不是本次发布带的。
 
-```
-[opspilot] database: opspilot.db was unusable (build stamp mismatch
-  (file says 1600000000, this release ships 1790854896) — a previous release's
-  database is still in place) — deleted, schema will be rebuilt
-```
-
-三个细节是必须的，少一个就会变成新 bug：
-
-- **`-wal` 和 `-shm` 要一起删**。只删主文件的话，`create_all` 把表建进新文件，
-  旁边的旧 WAL 再覆盖一次——同一个故障推迟一个版本复发。
-- **重建之后要把戳补写回去**。否则下一次启动看到戳是 0，判定"不是我的库"，
-  再删一次——一次性的修复变成了每次重启都清空数据。
-- **删不掉不能导致启动失败**。只读挂载、权限位、别的进程占着文件，这些都会让 unlink 抛错；
-  而起不来是唯一没有恢复路径的结果。现在删失败只记一行、继续启动。
-
-复现是照着沙箱行为搭的：先用旧戳跑起一个实例、注入一个场景（得到「缓存集群整体不可达」），
-用 `/F` 杀掉以留下 WAL，再把新构建的主文件覆盖上去、旧 sidecar 原样放回。
-启动前 2 条旧故障 + 旧戳，启动后 1 条中文种子 + 新戳。
-`tests/test_shipped_database.py` 覆盖了戳不匹配、sidecar 连带删除、删失败不致命这几条。
+三个细节是必须的，少一个就会变成新 bug：`-wal` 和 `-shm` 要一起删（只删主文件的话旧 WAL 会再覆盖一次）；
+重建之后要把戳补写回去（否则下次启动看到戳是 0，再删一次，一次性修复变成每次重启都清空数据）；
+删不掉不能导致启动失败（只读挂载、权限位、别的进程占着文件都会让 unlink 抛错，
+而起不来是唯一没有恢复路径的结果）。
 
 **14. 中文句子里的 Python repr。**
-
-`f"必须是 {sorted(VALID_SEVERITIES)} 之一。"` 是我写中文文案时最顺手的写法，
-它渲染出来是：
+`f"必须是 {sorted(VALID_SEVERITIES)} 之一。"` 渲染出来是：
 
 ```
 severity 取值 'foo' 不合法，必须是 ['critical', 'high', 'low'] 之一。
 ```
 
-诊断没错，句子是坏的。值本身是 wire 词、必须保持原样（调用方要照着发），
-坏的是**表示法**——方括号、引号、逗号全带进来了。同一批代码里我扫出 9 处，
-分布在线索推理（`所需信号 ['deployment_recent'] 已经出现`）、校验错误、
-部署状态三块；它们都在操作员会读到的路径上。
-
+诊断没错，句子是坏的。值本身是 wire 词、必须保持原样，坏的是**表示法**。同一批代码里扫出 9 处。
 修法是一行 `join_values()`：`critical、high、low`。
 
-值得记的是**这一处是靠端到端 dump 抓到的，不是靠静态扫描**——因为它语法完全合法，
-lint 和类型检查都不会响。端到端那次 dump 里 `reasoning_summary` 结尾挂着
-`| 被 ['deployment_recent'] 证实`，和中文句子并排放在一起，一眼就不对。
-
+这一处是靠端到端 dump 抓到的，不是靠静态扫描——因为它语法完全合法，lint 和类型检查都不会响。
 所以补了一条 AST 扫描测试（`tests/test_prose_containers.py`）：遍历所有 f-string，
 凡是直接插值 `sorted()/list()/set()/dict()` 或 `.keys()/.items()/.values()` 的都判失败。
-用 AST 而不是正则，是因为 `f"{sorted(x)[0]}"`（插值单个元素）完全合法，
-正则分不出来。扫描器自己也有一条自检，会先用一份人造的泄漏代码确认它真能报错——
-否则这条测试可能只是永远为真。
+用 AST 而不是正则，是因为 `f"{sorted(x)[0]}"`（插值单个元素）完全合法，正则分不出来。
+扫描器自己也有一条自检，会先用一份人造的泄漏代码确认它真能报错。
 
 **15. 源码改了，`dist/` 没重建，部署包照样打出来了。**
-
-这个比 #13 更安静。`build_deploy.py` 只检查 `dist/index.html` **是否存在**，
-而一份陈旧的产物是一份**完全合法**的产物：服务端跑得对、仓库里代码是对的，
-只有浏览器里还是旧字符串。没有任何一步会报错。
-
-实际发生的是：`api/client.ts` 加了一个分支，让 404 显示后端的 `message`
-（原来会显示 `fetch` 的 HTTP 状态行「API 404 Not Found」，比服务端说的还差）。
-部署包却是从一个比这次修改**早一小时**的 `dist/` 打出来的。修复在仓库里、
-在服务端里、就是不在屏幕上。靠端到端 dump 才发现——那种事找到一次是本事，
-每次都靠它不是。
-
-所以构建时加了一道新鲜度闸门：比较 `dist/index.html` 与 `src/`、`index.html`、
-`package.json`、vite / tsconfig 的时间戳，任何源文件更新就直接拒绝构建。
+`build_deploy.py` 只检查 `dist/index.html` **是否存在**，而一份陈旧的产物是一份**完全合法**的产物。
+实际发生的是：`api/client.ts` 加了一个 404 分支，部署包却是从一个比这次修改**早一小时**的 `dist/`
+打出来的。修复在仓库里、在服务端里、就是不在屏幕上。
+所以构建时加了一道新鲜度闸门：比较 `dist/index.html` 与 `src/`、`index.html`、`package.json`、
+vite / tsconfig 的时间戳，任何源文件更新就直接拒绝构建。
 
 ```
 error: frontend bundle is stale — src/api/client.ts is newer than dist/index.html (56s).
 Run `npm run build` in apps/frontend, then rebuild the deploy unit.
 ```
 
-时间戳是这里唯一可用的判据（没有 build manifest），但够用：
-`vite build` 先读 `src/` 再写 `dist/`，所以源文件比产物新就意味着产物早于这次改动。
-`tests/test_build_gates.py` 覆盖了通过、拦下、点名到具体文件、以及不该误报的几种
-（前端的 README/Dockerfile、`src/` 下万一出现的 `node_modules`）。
+时间戳是这里唯一可用的判据（没有 build manifest），但够用：`vite build` 先读 `src/` 再写 `dist/`。
 
 **16. 在 bundle 里搜到字符串，不等于那行代码会执行。**
-
-重建之后我以为错误路径已经全中文了——`grep` 一下产物，`HTTP_STATUS_ZH` 在里面，
-十二个状态码一个不少。但 `ApiError.detail` 是个 getter，它有三跳：
-`detail` → `message`（AppError 信封）→ 兜底。搜字符串只能证明**词存在**，
-证明不了**哪一跳在跑**；而当时的兜底跳是 `return this.message`，
-也就是 `fetch` 的 `API 500 Internal Server Error`。
+`grep` 一下产物，`HTTP_STATUS_ZH` 十二个状态码一个不少。但 `ApiError.detail` 是个 getter，它有三跳：
+`detail` → `message`（AppError 信封）→ 兜底。搜字符串只能证明**词存在**，证明不了**哪一跳在跑**；
+而当时的兜底跳是 `return this.message`，也就是 `fetch` 的 `API 500 Internal Server Error`。
 
 所以改成直接执行产物里的那个类：
 
@@ -607,109 +503,60 @@ new ApiError('API 500 Internal Server Error', 500, 'boom', url).detail
 ```
 
 不依赖浏览器，但真的跑了要上线的那些字节。六个 payload 形状里第五个当场失败——
-反代的错误页、纯文本 500、被截断的流都会走到那一跳，所以它不是假想路径。
-修法是状态码查表给中文原因、并保留数字状态码（HTTP/2 干脆没有 reason phrase，
-`statusText` 本来就不值得透传）。
+反代的错误页、纯文本 500、被截断的流都会走到那一跳。
 
-这里还有一次自摆乌龙值得记：检查脚本第一版把**正确答案**判成失败——
-`status 0`（连不上后端）的 message 本身就是最终文案，
-却被"结果等于 statusText 就报错"这条规则误伤。断言写错方向，
-和评测里"夹具本身缺关键词"是同一类错误：**验证代码也是代码，也得被验证**。
-现在它改成只在 statusText 本身是英文时才报警。
+验证代码本身也会写错：检查脚本第一版把**正确答案**判成失败——`status 0`（连不上后端）的 message
+本身就是最终文案，却被「结果等于 statusText 就报错」这条规则误伤。
+断言写错方向，和评测里「夹具本身缺关键词」是同一类错误：**验证代码也是代码，也得被验证。**
 
 **17. 「重连中」永远不会结束——三个缺陷叠在同一个徽标上。**
 
-用户报的现象是一句话：「怎么又要重连」。截图是一条**已经解决**的故障，`Agent 调查过程`
-面板上挂着「重连中」。这个徽标背后其实是三个各自独立的缺陷，任何一个都能让它永不停。
-
-*第一层是客户端从不收尾。* 服务端对已经跑完的 run 是这么处理的：回放完整个事件日志，
-发一帧 `stream.closed` 并带上 `reason: "terminal"`，然后**直接把 HTTP 响应关掉**（实测 1.4 秒内
-收尾）。但 `EventSource` 规范里区分不了「服务端有意结束」和「链路断了」——两者都只是 TCP 关闭，
-它一律按 `retry` 间隔（约 3.6s）重连。重连带着 `Last-Event-ID` 回去，服务端于是**把整份日志
-再重放一遍**，再关，再重连。消息量随重连次数线性放大，而徽标一直写着「重连中」。
-
-实测复现：拿 Node 内置的 `EventSource`（Undici 实现，遵循 WHATWG，重连语义和浏览器一致，
-需要 `--experimental-eventsource`）连线上一条已终态的 run，**12 秒内数到 4 次
-`stream.opened`**。
+*第一层是客户端从不收尾。* 服务端对已跑完的 run 回放完整个事件日志，发一帧 `stream.closed` 并带上
+`reason: "terminal"`，然后直接把 HTTP 响应关掉。但 `EventSource` 规范里区分不了「服务端有意结束」
+和「链路断了」——两者都只是 TCP 关闭，它一律按 `retry` 间隔（约 3.6s）重连。
+重连带着 `Last-Event-ID` 回去，服务端于是**把整份日志再重放一遍**，再关，再重连。
+实测：拿 Node 内置的 `EventSource` 连一条已终态的 run，**12 秒内数到 4 次 `stream.opened`**。
 
 修法是听服务端把话说完：监听到 `stream.closed` 且 `reason === "terminal"` 就主动 `close()`。
-关键是不能一刀切——`reason === "idle_timeout"` 是**相反**的情况，那时 run 可能还活着、
-只是这条连接没了，必须继续重连。服务端既然说了原因，就按原因分支。
+关键是不能一刀切——`reason === "idle_timeout"` 是**相反**的情况，那时 run 可能还活着，必须继续重连。
+另外加了上限 `MAX_RECONNECT_ATTEMPTS = 5`，超了就进终态 `unreachable`，文案「连接中断」，红点**停止闪烁**
+——一个还在闪的点读起来是「系统在努力」，而事实是**对面根本没人应**。
 
-另外加了个上限 `MAX_RECONNECT_ATTEMPTS = 5`（约 15 秒），超了就进终态 `unreachable`，
-文案「连接中断」，红点**停止闪烁**——一个还在闪的点读起来是「系统在努力」，而事实是
-**对面根本没人应**。规范不会给你这个能力，浏览器把"一直重试"写死了，只能自己数。
-
-*第二层是进程重启留下的孤儿 run。* 数据库跨进程活着，run 不活。服务重启后，一个停在
-`running` 的 run 永远不会有人推进它：首屏永远显示调查中，页面永远轮询，流只能回放不能前进——
-于是又回到第一层的无限重连。加了一个启动对账 `_reconcile_orphaned_runs()`：进程刚起来时，
-任何非终态的 run 必然属于已经消失的进程，`pending`/`running` 直接终止（写中文 error、
-补一条 `agent.failed` 事件、关联故障转 FAILED）。
-**`waiting_approval` 刻意保留**——那是 LangGraph interrupt 的 checkpoint，躺在同一个库里，
-重启后批准它还能继续真实干活，把它一起杀掉等于把可恢复的工作扔掉。
-对账写成幂等的（第二次跑返回空），且任何异常都只记日志、不阻断启动。
-这里有个前提写在 docstring 里：`serve.py` 跑的是单 uvicorn worker，所以"非终态即孤儿"成立；
-多 worker 就得引入 lease/heartbeat 才能这么判。
+*第二层是进程重启留下的孤儿 run。* 数据库跨进程活着，run 不活。服务重启后，一个停在 `running` 的 run
+永远没人推进它：首屏永远显示调查中，页面永远轮询，流只能回放不能前进。加了启动对账
+`_reconcile_orphaned_runs()`：进程刚起来时，任何非终态的 run 必然属于已经消失的进程。
+**`waiting_approval` 刻意保留**——那是 LangGraph interrupt 的 checkpoint，重启后批准它还能继续真实干活，
+把它一起杀掉等于把可恢复的工作扔掉。
 
 *第三层是前端的状态判据和服务端不一致。* 服务端的 `_TERMINAL_RUN_STATUSES` 是
-`{completed, failed, cancelled}`（`services/agent_stream.py`），前端 `isRunLive` 只排除了前两个。
-于是 `cancelled` 的 run 在前端读作「还活着」——页面继续轮询一个不会再变的 run，
-同时挂着一条一连上就被服务端关掉的流。改成两边共用同一份词表。
+`{completed, failed, cancelled}`，前端 `isRunLive` 只排除了前两个。于是 `cancelled` 的 run
+在前端读作「还活着」——页面继续轮询一个不会再变的 run。改成两边共用同一份词表。
 
-验证这次没走静态检查，而是**真的跑了要上线的那些字节**。`dist/` 里的 SSE chunk 没法直接
-import——它静态依赖 app 入口，而入口在模块顶层就 `mount()`，需要整套 DOM。所以用 Vite 的
-**库模式**另打一个 harness（同一份 `src/api/sse.ts`、同一条工具链），再写两个用例：
-一条连线上真实存在过的流，断言 `stream.opened === 1`（修复前是 4）；另一条把 `EventSource`
-换成"每 20ms 触发一次 `onerror`"的桩，断言最终收敛到 `unreachable` 且真的调了 `close()`——
-**计数器是真实代码里的那个，不是测试里另写一遍的**。
+**18. 类名拼错，在 CSS 里是静默的。**
+BEM 风格的 `tab-active`（标签加修饰类）和状态类的 `.tab.active` 永远不会同时命中——
+下划线一次都没渲染过，而样式表不报错、构建不报错、lint 不报错，只有真浏览器里那个元素
+一直是默认态才能看出来。同一类形态还有：同一个类在两个文件里各定义一次（后导入的赢，
+先导入的早就是死 CSS）、以及宽表格没包在可横向滚动的容器里，所以只有它在窄屏撑破页面。
 
-顺带记两个环境坑：`.tmp/` 下的 vite 配置文件不能 `import { defineConfig } from 'vite'`
-（从那里向上找不到 `node_modules`，配置加载阶段就 `ERR_MODULE_NOT_FOUND`；`defineConfig`
-只是类型助手，导出普通对象等价）；Windows 上 Node 动态 import 必须转成 `file://` URL，
-裸盘符路径报 `ERR_UNSUPPORTED_ESM_URL_SCHEME`。
-
-**18. 一个类名拼错，整条交互的激活态从来没存在过。**
-`EvaluationsPage` 的「离线 / 在线」切换用的是 `className={\`tab${cond ? ' tab-active' : ''}\`}`——
-BEM 风格，带连字符。而 CSS 里写的是 `.tab.active`，后代选择器。前者是标签加修饰类，后者是状态类，
-**这两个选择器永远不会同时命中**。那个下划线从来没渲染过，切换时唯一的视觉反馈是文字颜色变了。
-
-这不是配色问题也不是重构问题，是一个功能压根没接上。修的方式是让 CSS 认 BEM 拼法，
-并且把「哪种拼法是真的」写进注释——因为下一个人会以为 `.tab.active` 也是活的。
-
-同一轮里还有两个同类的"没生效"：**`.hl` 在两个文件里各定义了一次**，`timeline.css` 把它做成带背景的
-chip，`agent.css` 把它做成纯文字色，而 `agent.css` 导入更靠后——chip 版本早就是死 CSS 了。
-**`.metric-card-primary` / `.metric-card-agent` 有定义、无调用方**。以及
-`ActivityFeed` 的表格是全站四张表里唯一没包 `.table-wrap` 的，所以只有它会在 375px 下把页面撑破。
-
-这三个凑在一起说明一件事：**类名拼写错误在 CSS 里是静默的**。少一个连字符、多一个连字符、
-写成状态类而不是修饰类，样式表不报错、构建不报错、lint 不报错，只有真浏览器里那个元素
-一直是默认态才能看出来。所以才有 `scripts/ui_probe.py`——它的职责不是"检查样式对不对"，
-而是"让没有生效的东西暴露出来"。
+`scripts/ui_probe.py` 的职责不是「检查样式对不对」，而是「让没有生效的东西暴露出来」。
 
 **19. 选对了色，但选错了层，就等于没生效。**
-`--muted-foreground` 定的是 `#7386a6`，在 `--surface` 上 5.06:1，完全达标。但它最常出现的地方
-是 `.badge-neutral`、`.kv` 行这些**躺在 `--surface-inset`（更亮的深色）上**的元素——
-那里的实测值是 4.41:1，差 0.09 就掉到 AA 下面。
+`--muted-foreground` 在 `--surface` 上 5.06:1 完全达标，但它最常出现的地方是
+`.badge-neutral`、`.kv` 行这些**躺在 `--surface-inset`（更亮的深色）上**的元素——
+那里的实测值是 4.41:1，差 0.09 就掉到 AA 下面。按「最深的底」验颜色会漏掉所有浮在中间层的表面，
+所以探针遍历 DOM 向上找到第一个不透明背景再算合成后的比值。
 
-按"最深的底"去验颜色，会漏掉所有浮在中间层的表面。所以探针不是读令牌字面值，而是遍历 DOM
-向上找到第一个不透明背景再算合成后的比值。改完是 `#7a8db0`：同色相挪到刚好过线（4.85:1），
-且仍明显暗于上一级 `--muted`（5.57:1），层级关系没被压平。注释里写了"要调这个令牌就重新量
-`--surface-inset`，不是 `--surface`"。
+同样的错：侧栏玻璃写成字面量 `rgb(18 26 43 / 0.92)` 而不是 `var(--surface-glass)`，
+切到浅色主题时侧栏仍然是近黑的，而导航文字按浅色主题正确解析成深墨色——深底深字，大约 1.6:1。
+辉光层同理：`rgb(37 99 235 / 0.17)` 在近黑底上是氛围，在白底上是污渍，
+所以拆成 `--bloom-primary` / `--bloom-agent` 两个令牌。
 
-同样的错还有一处更明显的：侧栏玻璃写的是字面量 `rgb(18 26 43 / 0.92)`，而不是
-`var(--surface-glass)`。于是切到浅色主题时侧栏**仍然是近黑的**，而导航项文字按浅色主题正确地
-解析成了深墨色——深底深字，大约 1.6:1，整条侧栏不可读。辉光层同理：`rgb(37 99 235 / 0.17)`
-在近黑底上是氛围，在白底上是污渍，所以拆成 `--bloom-primary` / `--bloom-agent` 两个令牌，
-浅色下降到 0.06 / 0.05。
-
-**结论不是"要更小心"，而是"要对着渲染结果量"**：令牌化的价值恰恰在于它能被机械验证——
+**结论不是「要更小心」，而是「要对着渲染结果量」**：令牌化的价值恰恰在于它能被机械验证——
 `grep` 一遍硬编码色值就能确认没有主题泄漏，而对比度和布局交给真浏览器。
 
-这里还藏着本轮最贵的一个错，而且它的形态是**"看起来验过了"**：
-
-探针原本不指定主题，继承环境里已有的 localStorage。而深色是默认主题，所以前面几轮跑出来的
-`failures: 0` 全都量的是深色——**浅色主题一次都没被量过**。直到有一次为了截图手动把主题切到浅色，
-探针顺手量到了它，26 项失败里每一项都是浅色色值：
+还有一个形态是「看起来验过了」：探针不指定主题时会继承环境里已有的 localStorage。
+而深色是默认主题，于是所有 `failures: 0` **全都量的是深色**，另一个主题一次都没被量过。
+它带着 6 类不达标元素发布出去了，最低的一项是 2.77:1：
 
 | 元素 | 修正前 | 修正后 |
 |---|---|---|
@@ -719,24 +566,21 @@ chip，`agent.css` 把它做成纯文字色，而 `agent.css` 导入更靠后—
 | `--success` 在自己的 `-soft` 底 | 3.58:1 | 5.21:1 |
 | `--critical` 在自己的 `-soft` 底 | 4.41:1 | 4.71:1 |
 
-根因是这些值当初是"在白底上看着对"选的，而徽章实际坐在自己的 `-soft` 淡色底上——
-差之毫厘。`--muted-foreground: #8593ab` 更是直接把暗色主题的值搬了过来。
-
+根因是这些值当初是「在白底上看着对」选的，而徽章实际坐在自己的 `-soft` 淡色底上。
 所以探针现在做两件事：写完 localStorage 之后**断言一次** `document.documentElement.dataset.theme`
 （不匹配就直接抛错，而不是继续跑出一份漂亮的报告），以及默认 `--both` 把两个主题都跑。
-**一个"全绿"结果如果没有说明它覆盖了哪些维度，就不是证据，是运气。**
+**一个「全绿」结果如果没有说明它覆盖了哪些维度，就不是证据，是运气。**
 
-顺带记两个跑真浏览器验证时的环境坑，都伪装成"工具坏了"：
+顺带记两个跑真浏览器验证时的环境坑，都伪装成「工具坏了」：
 
 - **Git Bash 会把命令行里的 URL 改写掉。** `python probe.py "http://127.0.0.1:5175"` 传进 Python 的
   实际是 `http://127.0.0.1:5175C:/Users/.../PortableGit/1.2.0/`——MSYS 路径转换把 `//` 之后的部分
-  当成了盘符路径。前缀变量只去掉一个还不够，`//` 剩下的那半仍然被拼上去。加
-  `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` 才是干净的。
+  当成了盘符路径。加 `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` 才是干净的。
   它的表现是 Chrome 报 `Cannot navigate to invalid URL`，而那个 URL 打印出来完全正常。
 - **`/json/screenshot` 不存在。** Chrome 的 CDP HTTP 接口只覆盖 `/json/*` 的目标管理，
   截图、设视口、等事件都得走 WebSocket。而且 `Page.navigate` 是发完就返回的，
-  固定 `sleep` 拍到的可能是白屏——这里改成等 `Page.loadEventFired`，再轮询 `document.fonts.ready`
-  加两帧。慢的原因每次都不一样，定值等待就是赌。
+  固定 `sleep` 拍到的可能是白屏——要等 `Page.loadEventFired`，再轮询 `document.fonts.ready`。
+  慢的原因每次都不一样，定值等待就是赌。
 
 ---
 
@@ -771,6 +615,9 @@ OpsPilot/
 ├── simulator/                   # 独立模拟器（12 个场景）
 ├── infra/                       # prometheus / otel 配置
 ├── scripts/build_deploy.py      # 单端口部署单元
+├── scripts/ui_probe.py          # 真浏览器对比度 / 溢出探针
+├── scripts/readme_shots.py      # README 配图
+├── docs/images/                 # README 截图
 ├── docker-compose.yml           # 10 个服务的完整栈
 └── .github/workflows/           # CI
 ```

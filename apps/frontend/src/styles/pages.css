@@ -154,6 +154,63 @@
   display: none;
 }
 
+/* React Flow ships its own stylesheet with hardcoded light values, and this
+   project never imports it — so every unstyled library surface renders as a
+   white block on a near-black canvas. Both the zoom buttons and the minimap
+   needed overriding; the minimap additionally ships a light "mask" that has
+   to be repainted or it reads as a second, brighter panel. */
+.topo-canvas .react-flow__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  background-image: var(--sheen);
+  box-shadow: var(--shadow-sm);
+}
+
+.topo-canvas .react-flow__controls-button {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground-secondary);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.topo-canvas .react-flow__controls-button:last-child {
+  border-bottom: 0;
+}
+
+.topo-canvas .react-flow__controls-button:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+
+/* The library draws the glyphs with a hardcoded SVG fill, so `color` alone
+   leaves a near-invisible icon on a dark control. */
+.topo-canvas .react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+.topo-canvas .react-flow__minimap {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.topo-canvas .react-flow__minimap-mask {
+  fill: rgb(7 10 18 / 0.72);
+  stroke: var(--agent);
+  stroke-width: 2;
+}
+
 .topo-fit {
   position: absolute;
   top: var(--space-3);
