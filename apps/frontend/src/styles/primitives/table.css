@@ -1,11 +1,36 @@
 /* =============================================================================
    Primitives — DataTable / FilterBar / Tabs / Pagination
+   -----------------------------------------------------------------------------
+   A console table is read two ways at once: scanned vertically (which row is
+   bad?) and read horizontally (what happened to *this* row?). Both need help.
+
+   Vertical scan  → severity colours, tabular figures, a 1px hover lift.
+   Horizontal read → the first cell is the row's identity, so it is the only
+                     cell promoted to full --foreground; everything after it
+                     steps down to secondary. Without that step the whole row
+                     shouts and nothing is findable.
    ========================================================================== */
 
 /* --- Table ---------------------------------------------------------------- */
 .table-wrap {
   width: 100%;
   overflow-x: auto;
+  /* Scroll shadows: the table is usually wider than a 1440 viewport on the
+     incident list, and a hard cut-off column reads as "no more data" when it
+     actually means "scroll". Fading the edge says the latter. */
+  background:
+    linear-gradient(90deg, var(--surface) 30%, transparent) left / 40px 100%
+      no-repeat,
+    linear-gradient(90deg, transparent, var(--surface) 70%) right / 40px 100%
+      no-repeat,
+    radial-gradient(
+      farthest-side at 0 50%,
+      rgb(0 0 0 / 0.32),
+      transparent
+    ) left / 14px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.32), transparent)
+      right / 14px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
 }
 
 .data-table {
@@ -15,20 +40,26 @@
   font-size: var(--text-base);
 }
 
+/* Header — a recessed well with a lit lower edge. Sticky, so it also carries a
+   contact shadow: without it, rows sliding underneath look like they pass
+   *behind* nothing. */
 .data-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
   padding: var(--space-2) var(--space-4);
-  background: var(--surface-sunken);
-  border-bottom: 1px solid var(--border);
+  background-color: var(--surface-sunken);
+  background-image: var(--sheen);
+  border-bottom: 1px solid var(--control-border);
   color: var(--muted);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   text-align: left;
   white-space: nowrap;
+  box-shadow: 0 8px 14px -10px rgb(0 0 0 / 0.7);
 }
 
 .data-table tbody td {
@@ -38,20 +69,46 @@
   vertical-align: middle;
 }
 
+/* The row's identity cell. Everything else is context, so it steps down. */
+.data-table tbody td:first-child {
+  color: var(--foreground);
+  font-weight: var(--weight-medium);
+}
+
 .data-table tbody tr {
   transition: background-color var(--dur-fast) var(--ease-out);
 }
 
+/* Hover *lifts* on a dark ground. Darkening the row (what this used to do)
+   reads as "disabled" rather than "here". */
 .data-table tbody tr:hover {
-  background: var(--surface-sunken);
+  background: var(--surface-hover);
+}
+
+/* A 2px cyan edge in the left gutter, drawn only on hover: it says "this whole
+   row is the target" without shifting a single pixel of layout. */
+.data-table tbody tr.row-clickable:hover td:first-child {
+  box-shadow: inset 2px 0 0 var(--agent);
 }
 
 .data-table tbody tr.row-clickable {
   cursor: pointer;
 }
 
+/* Selected row uses the *machine* hue, not the operator blue. The selected row
+   is the one the console is currently working — an agent-facing concept — and
+   keeping it cyan also means a blue chip inside that row still means "a human
+   clicked this". */
 .data-table tbody tr.row-selected {
-  background: var(--primary-soft);
+  background: var(--agent-soft);
+}
+
+.data-table tbody tr.row-selected td {
+  border-bottom-color: var(--agent-border);
+}
+
+.data-table tbody tr.row-selected td:first-child {
+  box-shadow: inset 2px 0 0 var(--agent);
 }
 
 .data-table tbody tr:last-child td {
@@ -63,6 +120,9 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
+  /* Plex Mono's sidebearing is a full stroke width, so figures read as a
+     ladder only if the column is not also carrying weight. */
+  letter-spacing: var(--tracking-tight);
 }
 
 .data-table .col-actions {
@@ -84,9 +144,9 @@
   gap: var(--space-1);
   height: 28px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
   color: var(--muted);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -94,24 +154,40 @@
   transition:
     background-color var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .filter-chip:hover {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
   color: var(--foreground-secondary);
+  background: var(--surface-hover);
 }
 
+.filter-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Active filter = cyan, matching the sidebar's active item. One "you are here"
+   language across the whole shell; blue-on-blue everywhere was reading as two
+   unrelated products. */
 .filter-chip.active {
-  background: var(--primary-soft);
-  border-color: var(--primary-border);
-  color: var(--primary);
+  background: var(--agent-soft);
+  border-color: var(--agent-border);
+  color: var(--agent);
 }
 
 .filter-chip-count {
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
-  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.filter-chip.active .filter-chip-count {
+  color: var(--agent);
+  opacity: 0.8;
 }
 
 /* --- Tabs ----------------------------------------------------------------- */
@@ -138,11 +214,24 @@
   color: var(--foreground-secondary);
 }
 
-.tab.active {
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* The active state is `.tab-active`, not `.tab.active`: EvaluationsPage builds
+   it BEM-style (`tab${cond ? ' tab-active' : ''}`), and the descendant selector
+   that used to be here matched nothing — the tab underline on the offline/live
+   switch had never rendered. Both spellings are kept so a call site using
+   either convention works, but the BEM one is the real one. */
+.tab.active,
+.tab-active {
   color: var(--foreground);
 }
 
-.tab.active::after {
+.tab.active::after,
+.tab-active::after {
   content: '';
   position: absolute;
   left: var(--space-2);
@@ -150,7 +239,8 @@
   bottom: -1px;
   height: 2px;
   border-radius: var(--radius-full);
-  background: var(--primary);
+  background: var(--agent);
+  box-shadow: 0 0 10px 0 var(--agent-border);
 }
 
 /* --- Pagination ----------------------------------------------------------- */
@@ -160,6 +250,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
   font-size: var(--text-sm);
   color: var(--muted);
 }

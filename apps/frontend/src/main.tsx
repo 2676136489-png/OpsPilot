@@ -1,3 +1,15 @@
+// Self-hosted so the console renders identically with no network: a webfont
+// from a CDN is a blank flash here whenever that CDN is slow or blocked, and
+// the numbers this product is about are the first thing that must not shift.
+// Latin subsets only — CJK falls through to the system face, which is both
+// faster and better hinted than anything we would ship.
+import '@fontsource/ibm-plex-sans/latin-400.css'
+import '@fontsource/ibm-plex-sans/latin-500.css'
+import '@fontsource/ibm-plex-sans/latin-600.css'
+import '@fontsource/ibm-plex-mono/latin-400.css'
+import '@fontsource/ibm-plex-mono/latin-500.css'
+import '@fontsource/ibm-plex-mono/latin-600.css'
+
 import { StrictMode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import App from './App.tsx'
@@ -9,17 +21,11 @@ import {
   registerRemount,
 } from './lib/remount'
 import { resetPortalRoot } from './lib/portal'
+import { applyInitialTheme } from './lib/theme'
 import './index.css'
 
 // Theme is applied before first paint so there is no flash of the wrong palette.
-const stored = (() => {
-  try {
-    return window.localStorage.getItem('opspilot.theme')
-  } catch {
-    return null
-  }
-})()
-document.documentElement.dataset.theme = stored === 'dark' ? 'dark' : 'light'
+applyInitialTheme()
 
 let root: Root | null = null
 
@@ -76,19 +82,26 @@ function renderFallback(reason: string | null) {
   )
   const container = document.createElement('div')
   container.id = 'root'
+  // Hard-coded to the console's own dark palette: this page renders with no
+  // stylesheet, so if it used a light ground it would be the one screen in the
+  // product that looks like it belongs to something else.
   container.style.cssText =
-    'padding:40px;max-width:720px;margin:0 auto;font:14px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif'
+    'padding:48px;max-width:720px;margin:0 auto;min-height:100vh;box-sizing:border-box;' +
+    'background:#070a12;color:#e6edf9;' +
+    'font:14px/1.7 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI","Noto Sans SC",sans-serif'
 
   const h = document.createElement('h1')
   h.textContent = '界面无法稳定渲染'
-  h.style.cssText = 'font-size:20px;margin:0 0 12px'
+  h.style.cssText =
+    'font-size:22px;margin:0 0 14px;font-weight:600;letter-spacing:-0.02em;color:#e6edf9'
 
   const p1 = document.createElement('p')
   p1.textContent =
     '页面 DOM 与 React 视图连续多次失去同步，已停止自动重建，以免反复覆盖真正的故障。'
+  p1.style.cssText = 'color:#b8c6de;margin:0'
 
   const p2 = document.createElement('p')
-  p2.style.cssText = 'color:#b45309;margin-top:12px'
+  p2.style.cssText = 'color:#fbbf24;margin-top:14px'
   p2.textContent = reason
     ? `检测到外部改动：${reason}。请关闭该页面的浏览器翻译后重新加载。`
     : '若浏览器装有会改写页面内容的扩展（翻译、阅读模式、取词插件），请在本站点停用后重新加载。'
@@ -96,7 +109,8 @@ function renderFallback(reason: string | null) {
   const btn = document.createElement('button')
   btn.textContent = '重新加载'
   btn.style.cssText =
-    'margin-top:20px;padding:8px 18px;border-radius:8px;border:1px solid #d4d4d8;background:#fafafa;cursor:pointer'
+    'margin-top:24px;padding:9px 20px;border-radius:6px;border:1px solid #3a4864;' +
+    'background:#172033;color:#e6edf9;cursor:pointer;font:inherit'
   btn.addEventListener('click', () => window.location.reload())
 
   container.append(h, p1, p2, btn)

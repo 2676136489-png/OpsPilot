@@ -1,7 +1,13 @@
 /* =============================================================================
-   Primitives — Overlays: Drawer / Modal / Dropdown / Tooltip / Toast
-   All of these mount into portals and animate via Motion; these rules only
-   describe static structure so Motion can own the transition.
+   Primitives — Overlays: Drawer / Modal / Dropdown / Tooltip / Toast / Palette
+   -----------------------------------------------------------------------------
+   These mount into portals and animate via Motion; these rules only describe
+   static structure so Motion can own the transition.
+
+   Overlays are the one place where the console is allowed to be theatrical:
+   a scrim that dims the whole app, a drawer that slides a lit edge across the
+   screen, a command palette that reads as a search field for the entire
+   product. All of it is structure — no ornament that isn't carrying meaning.
    ========================================================================== */
 
 /* --- Scrim ---------------------------------------------------------------- */
@@ -10,7 +16,11 @@
   inset: 0;
   background: var(--overlay);
   z-index: var(--z-drawer);
-  backdrop-filter: blur(1.5px);
+  /* A heavier blur than the shell uses. The scrim's job is to push the app
+     back a full depth step, and on a near-black ground 1.5px does not read as
+     separation — you can still follow the grid behind it and lose your place
+     when the drawer closes. */
+  backdrop-filter: blur(6px) saturate(0.7);
 }
 
 .scrim-modal {
@@ -27,16 +37,26 @@
   display: flex;
   flex-direction: column;
   width: min(560px, 92vw);
-  background: var(--surface-elevated);
-  border-left: 1px solid var(--border);
-  box-shadow: var(--shadow-xl);
+  background-color: var(--surface-elevated);
+  background-image: var(--sheen);
+  border-left: 1px solid var(--border-strong);
+  /* Directional shadow plus a 1px bloom on the leading edge. The drawer is a
+     plane in front of the app; the edge has to look lit, not just darker. */
+  box-shadow:
+    var(--shadow-xl),
+    1px 0 0 0 rgb(125 211 252 / 0.06),
+    -24px 0 60px -30px rgb(37 99 235 / 0.35);
 }
 
 .drawer-left {
   right: auto;
   left: 0;
   border-left: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--border-strong);
+  box-shadow:
+    var(--shadow-xl),
+    -1px 0 0 0 rgb(125 211 252 / 0.06),
+    24px 0 60px -30px rgb(37 99 235 / 0.35);
 }
 
 .drawer-header {
@@ -53,8 +73,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
 }
 
 .drawer-body {
@@ -84,8 +106,9 @@
   flex-direction: column;
   width: min(520px, 92vw);
   max-height: 86vh;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
+  background-color: var(--surface-elevated);
+  background-image: var(--sheen);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
   overflow: hidden;
@@ -133,8 +156,9 @@
   max-height: 340px;
   overflow-y: auto;
   padding: var(--space-1);
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
+  background-color: var(--surface-elevated);
+  background-image: var(--sheen);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
 }
@@ -146,8 +170,9 @@
 
 .dropdown-label {
   padding: var(--space-2) var(--space-3) var(--space-1);
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted-foreground);
@@ -193,8 +218,12 @@
   z-index: var(--z-toast);
   max-width: 260px;
   padding: var(--space-2) var(--space-3);
+  /* Inverted: light ink on the dark ground. A tooltip that is merely lighter
+     than its surroundings disappears the moment it overlaps a bright surface,
+     and in this product the brightest things are the severity badges. */
   background: var(--foreground);
   color: var(--background);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   line-height: var(--leading-snug);
@@ -216,12 +245,16 @@
 }
 
 .toast {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
+  background-color: var(--surface-elevated);
+  background-image: var(--sheen);
+  border: 1px solid var(--border-strong);
+  /* The tone rail is a 3px inset on the leading edge rather than a real
+     border, so the rounded corners stay clean on all four sides. */
   border-left: 3px solid var(--muted);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -233,6 +266,7 @@
 }
 .toast-critical {
   border-left-color: var(--critical);
+  box-shadow: var(--shadow-lg), 0 0 18px -8px var(--critical);
 }
 .toast-warning {
   border-left-color: var(--warning);
@@ -242,6 +276,7 @@
 }
 .toast-agent {
   border-left-color: var(--agent);
+  box-shadow: var(--shadow-lg), 0 0 18px -8px var(--agent);
 }
 
 .toast-content {
@@ -274,6 +309,7 @@
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 .toast-close:hover {
@@ -281,9 +317,14 @@
   color: var(--foreground);
 }
 
-/* --- Command palette ------------------------------------------------------ */
+/* --- Command palette ------------------------------------------------------
+   The palette is a search field for the whole product, so it is built to look
+   like an instrument input rather than a modal: mono placeholder, cyan caret,
+   and a keyboard-driven active row that matches the sidebar's active state.
+   -------------------------------------------------------------------------- */
 .palette-scrim {
   z-index: var(--z-palette);
+  backdrop-filter: blur(10px) saturate(0.6);
 }
 
 .palette {
@@ -296,10 +337,14 @@
   flex-direction: column;
   width: min(620px, 92vw);
   max-height: 62vh;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
+  background-color: var(--surface-elevated);
+  background-image: var(--sheen);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
+  box-shadow:
+    var(--shadow-xl),
+    0 0 0 1px rgb(37 99 235 / 0.18),
+    0 0 60px -24px rgb(37 99 235 / 0.55);
   overflow: hidden;
 }
 
@@ -307,9 +352,12 @@
   width: 100%;
   padding: var(--space-4);
   border: 0;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border);
   background: transparent;
+  font-family: var(--font-mono);
   font-size: var(--text-lg);
+  letter-spacing: var(--tracking-tight);
+  caret-color: var(--agent);
   outline: none;
 }
 
@@ -336,11 +384,17 @@
   font-size: var(--text-base);
   text-align: left;
   cursor: pointer;
+  transition:
+    background-color var(--dur-instant) var(--ease-out),
+    color var(--dur-instant) var(--ease-out);
 }
 
+/* Keyboard-driven selection, so it uses the same cyan as every other
+   "currently active" surface in the shell. */
 .palette-item.active {
-  background: var(--primary-soft);
-  color: var(--primary);
+  background: var(--agent-soft);
+  color: var(--agent);
+  box-shadow: inset 2px 0 0 var(--agent);
 }
 
 .palette-item-hint {
@@ -352,7 +406,9 @@
 
 .palette-group {
   padding: var(--space-2) var(--space-3) var(--space-1);
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted-foreground);

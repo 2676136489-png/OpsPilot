@@ -1,13 +1,22 @@
 /* =============================================================================
    Primitives — Skeleton / EmptyState / Spinner / Alert / ConfidenceMeter
+   -----------------------------------------------------------------------------
+   Loading and empty states are where a console is judged hardest, because
+   that is what the operator stares at for the two seconds before real data
+   arrives. They are built from the same vocabulary as everything else: a
+   recessed well, a moving highlight, machine-hue motion.
    ========================================================================== */
 
 /* --- Skeleton ------------------------------------------------------------- */
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: var(--surface-inset);
+  /* Sunken rather than raised: a placeholder is an absence, and an inset
+     surface says that without a word. */
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.3);
 }
 
 .skeleton::after {
@@ -15,20 +24,26 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
+  /* Cyan, not white. The sweep is the only thing moving, and a neutral white
+     band on a dark ground is the one place a loading state can be mistaken for
+     a highlight someone left in the design. Tinting it cyan ties the wait to
+     the machine-hue language used for live state. */
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(255 255 255 / 0.5),
+    rgb(125 211 252 / 0.07),
     transparent
   );
   animation: skeleton-sweep 1.4s var(--ease-in-out) infinite;
 }
 
-[data-theme='dark'] .skeleton::after {
+/* On a light ground the same 7% cyan is invisible, so the sweep needs a
+   slightly higher alpha and no tint. */
+[data-theme='light'] .skeleton::after {
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(255 255 255 / 0.06),
+    rgb(255 255 255 / 0.7),
     transparent
   );
 }
@@ -36,6 +51,9 @@
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after {
     animation: none;
+    /* Hold the band still rather than dropping it: a static highlight still
+       communicates "content-shaped", an invisible one just looks broken. */
+    opacity: 0.5;
   }
 }
 
@@ -65,8 +83,10 @@
 .spinner {
   width: 16px;
   height: 16px;
+  /* Two-tone track: a flat grey ring with a coloured cap reads as a loading
+     state in every screenshot test ever written. */
   border: 2px solid var(--border-strong);
-  border-top-color: var(--primary);
+  border-top-color: var(--agent);
   border-radius: var(--radius-full);
   animation: btn-spin 0.7s linear infinite;
   flex: none;
@@ -90,6 +110,7 @@
 
 /* --- EmptyState ----------------------------------------------------------- */
 .empty-state {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -99,6 +120,31 @@
   text-align: center;
   color: var(--muted);
   font-size: var(--text-base);
+}
+
+/* A hairline horizon behind the empty state: the one place in the product
+   where emptiness is the *message*, so it gets the same grid the rest of the
+   chrome implies. Drawn as a border on a full-width pseudo-element so it stops
+   at the panel edges instead of bleeding into the gutter. */
+.empty-state::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--grid-line-strong) 30%,
+    var(--grid-line-strong) 70%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.empty-state > * {
+  position: relative;
 }
 
 .empty-state-compact {
@@ -111,8 +157,10 @@
   justify-content: center;
   width: 40px;
   height: 40px;
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-lg);
   background: var(--surface-inset);
+  background-image: var(--sheen);
   color: var(--muted-foreground);
   margin-bottom: var(--space-1);
 }
@@ -134,38 +182,76 @@
   color: var(--critical);
 }
 
+.empty-state-critical .empty-state-icon {
+  border-color: var(--critical-border);
+  background-color: var(--critical-soft);
+  color: var(--critical);
+}
+
 /* --- Alert ---------------------------------------------------------------- */
 .alert {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-md);
   background: var(--surface-inset);
+  background-image: var(--sheen);
   font-size: var(--text-base);
   line-height: var(--leading-snug);
 }
 
+/* A 2px rail in the left gutter instead of a thicker border: the alert keeps
+   the same box size as the neutral one, so a page that swaps neutral → critical
+   does not reflow. */
+.alert::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  width: 2px;
+  border-radius: var(--radius-full);
+  background: var(--control-border);
+}
+
 .alert-critical {
-  background: var(--critical-soft);
+  background-color: var(--critical-soft);
   border-color: var(--critical-border);
   color: var(--critical);
 }
+.alert-critical::before {
+  background: var(--critical);
+  box-shadow: 0 0 10px 0 var(--critical-border);
+}
+
 .alert-warning {
-  background: var(--warning-soft);
+  background-color: var(--warning-soft);
   border-color: var(--warning-border);
   color: var(--warning);
 }
+.alert-warning::before {
+  background: var(--warning);
+}
+
 .alert-success {
-  background: var(--success-soft);
+  background-color: var(--success-soft);
   border-color: var(--success-border);
   color: var(--success);
 }
+.alert-success::before {
+  background: var(--success);
+}
+
 .alert-info {
-  background: var(--info-soft);
+  background-color: var(--info-soft);
   border-color: var(--info-border);
   color: var(--info);
+}
+.alert-info::before {
+  background: var(--info);
 }
 
 .alert-title {
@@ -197,7 +283,10 @@
   position: relative;
   height: 6px;
   border-radius: var(--radius-full);
-  background: var(--surface-inset);
+  /* Recessed track with an inner shadow, so the fill looks like it is sitting
+     *inside* the bar rather than painted on top of it. */
+  background: var(--surface-sunken);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.45);
   overflow: hidden;
 }
 
@@ -205,20 +294,27 @@
   height: 100%;
   border-radius: var(--radius-full);
   background: var(--primary);
+  /* Leading edge highlight: at 0.91 the bar's right tip is the exact number
+     the operator is looking for, and a flat fill gives them no landmark. */
+  box-shadow: 0 0 10px -2px var(--primary);
   transition: width var(--dur-slower) var(--ease-out);
 }
 
 .meter-fill-agent {
   background: var(--agent);
+  box-shadow: 0 0 10px -2px var(--agent);
 }
 .meter-fill-success {
   background: var(--success);
+  box-shadow: 0 0 10px -2px var(--success);
 }
 .meter-fill-warning {
   background: var(--warning);
+  box-shadow: 0 0 10px -2px var(--warning);
 }
 .meter-fill-critical {
   background: var(--critical);
+  box-shadow: 0 0 10px -2px var(--critical);
 }
 
 .meter-label {
@@ -232,7 +328,7 @@
 .meter-value {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   color: var(--foreground);
 }
 
@@ -240,7 +336,8 @@
 .progress {
   height: 4px;
   border-radius: var(--radius-full);
-  background: var(--surface-inset);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.45);
   overflow: hidden;
 }
 
@@ -248,5 +345,6 @@
   height: 100%;
   background: var(--primary);
   border-radius: var(--radius-full);
+  box-shadow: 0 0 10px -2px var(--primary);
   transition: width var(--dur-base) var(--ease-out);
 }

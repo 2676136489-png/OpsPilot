@@ -1,5 +1,12 @@
 /* =============================================================================
    Patterns — Topology canvas (React Flow overrides + node styling)
+   -----------------------------------------------------------------------------
+   The topology view is the only page that draws its own background, so it has
+   to agree with the body atmosphere rather than sit on top of it: the canvas
+   surface is a recessed well, the grid inside it is one step tighter than the
+   page grid, and health is encoded on a *left rail* rather than as a fill —
+   because at 176px wide, tinting the whole node would make the name unreadable
+   exactly when it matters most (a node that is turning red).
    ========================================================================== */
 
 .topology-canvas {
@@ -7,7 +14,9 @@
   width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  /* Recessed: a canvas is a window into the graph, i.e. below the page plane. */
+  background: var(--surface-sunken);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.35);
   overflow: hidden;
 }
 
@@ -26,7 +35,7 @@
   padding: var(--space-2) var(--space-3);
   background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
   backdrop-filter: blur(8px);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   font-size: var(--text-xs);
@@ -40,83 +49,11 @@
   white-space: nowrap;
 }
 
-/* --- Service node --------------------------------------------------------- */
-.topo-node {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  width: 176px;
-  padding: var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition:
-    border-color var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-base) var(--ease-out);
-}
-
-.topo-node-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.topo-node-name {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--foreground);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.topo-node-kind {
-  font-size: var(--text-2xs);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-}
-
-.topo-node-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px var(--space-2);
-  font-size: var(--text-xs);
-  font-family: var(--font-mono);
-  color: var(--muted);
-}
-
-.topo-node-stat {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-1);
-}
-
-/* Health encodes onto the node's left rail + border tint */
-.topo-node-healthy {
-  border-left: 3px solid var(--health-healthy);
-}
-.topo-node-degraded {
-  border-left: 3px solid var(--health-degraded);
-}
-.topo-node-critical,
-.topo-node-down {
-  border-left: 3px solid var(--health-critical);
-}
-.topo-node-unknown {
-  border-left: 3px solid var(--health-unknown);
-}
-
-/* Investigating — the node the agent is currently working on */
-.topo-node-investigating {
-  border-color: var(--agent);
-  border-left: 3px solid var(--health-investigating);
-  box-shadow: var(--shadow-md), 0 0 0 3px var(--agent-soft);
-}
+/* --- Service node ---------------------------------------------------------
+   The node itself is styled in `styles/pages.css` (`.topo-node` is used by
+   exactly one component, `TopologyPage`). What belongs here is the React Flow
+   surface around it, since those classes are library-owned and need
+   overriding wherever React Flow is mounted. */
 
 /* --- React Flow surface overrides ----------------------------------------- */
 .react-flow__attribution {
@@ -124,25 +61,28 @@
 }
 
 .react-flow__edge-path {
-  stroke: var(--border-strong);
+  stroke: var(--topo-edge);
   stroke-width: 1.4;
 }
 
+/* The edge carrying traffic during an active investigation. Widened plus a
+   glow, because an animated dash alone disappears at this stroke width. */
 .react-flow__edge.edge-active .react-flow__edge-path {
   stroke: var(--agent);
   stroke-width: 1.8;
+  filter: drop-shadow(0 0 3px var(--agent-border));
 }
 
 .react-flow__handle {
   width: 5px;
   height: 5px;
-  background: var(--border-strong);
+  background: var(--topo-edge);
   border: 0;
 }
 
 .react-flow__controls {
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
@@ -153,10 +93,14 @@
   color: var(--foreground-secondary);
   width: 26px;
   height: 26px;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .react-flow__controls-button:hover {
   background: var(--surface-inset);
+  color: var(--foreground);
 }
 
 .react-flow__controls-button svg {
@@ -170,5 +114,5 @@
 }
 
 .react-flow__background {
-  color: var(--border);
+  color: var(--grid-line-strong);
 }

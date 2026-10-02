@@ -199,6 +199,35 @@ React 19 + TypeScript + Vite，9 个页面（指挥中心 / 故障 / 服务拓�
 - **主题与交互**：设计 token 集中在 `styles/tokens.css`，命令面板（⌘K）、抽屉、Toast、下拉都走 `ui/` 下的统一实现，
   页面不自己手搓浮层。
 
+### 视觉体系：为什么是暗色打头
+
+整套样式是单向驱动的——`index.css` 依次导入 `tokens → base → shell → primitives → patterns → pages`，
+所有颜色只来自 CSS 变量，没有任何 TSX 里写死的色值。所以换主题、改配色都不需要碰组件逻辑。
+
+**深色是默认，不是深色优先的偏好。** 这是 3am 被读的事故控制台：深色仪表地 + 高亮状态色 +
+发丝结构线，辉光只给 live 数据用。浅色是一次点击可切的变体（顶栏右侧日月图标），不是二等公民。
+
+暗底下区分层级靠**三件事协作**，不是只靠阴影——近黑底上阴影几乎不可见，只用阴影做层级是深色 UI 发闷的根因：
+实心 surface 的一档亮度差 + 带强调色相的发丝边 + 1px 顶部高光（`--sheen`）。
+
+两条贯穿全站的语义色，是这个设计里唯一"装饰性"的决定，但它承担了实际功能：
+
+- **operator 蓝 `#2563eb` = 人点的**（按钮、可点链接、选中前的态）
+- **machine 青 `#22d3ee` = Agent 做的**（徽章、实时状态、导航激活态、机器产生的数据）
+
+有了这条分界，扫一眼就知道某个色块是人做的还是机器做的。所以侧栏激活项、表格选中行、
+命令面板当前项、Agent 阶段图统一用青色，而不是各自用蓝色。
+
+**记忆点只有一个**：顶栏底边那道 7 秒循环的「脉冲地平线」扫描线。它是整个产品里唯一允许动的 chrome 元素——
+再多就会从"这是活的"变成"这里在动"，而后者不传递信息。`prefers-reduced-motion: reduce` 时它停成一道静态微光。
+
+对比度不是估的，是量出来的。`scripts/ui_probe.py` 用真 Chrome 把 20 组关键前景/背景组合的
+`getComputedStyle` 结果读回来算 WCAG 比值（走多层 alpha 合成，不是取令牌字面值），
+五路由 × 三档视口 × **深浅两个主题**跑下来各 20/20 全部达标。深色最低一项是
+`--muted-foreground` 在 `--surface-inset` 上的 4.85:1，浅色最低 4.57:1。
+亮填充按钮（青 / 绿 / 红）配白字只有 1.8–2.8:1，所以它们统一用近黑字 `--text-on-bright`（6.8–10.5:1），
+蓝色是例外（白字 5.1:1 本来就够）。
+
 ---
 
 ## 部署：单端口托管
@@ -287,7 +316,7 @@ cp .env.example .env
 
 ```bash
 cd apps/backend
-PYTHONPATH=src python -m pytest tests -q          # 128 passed
+PYTHONPATH=src python -m pytest tests -q          # 135 passed
 cd apps/frontend && npx tsc -b && npx oxlint      # 类型 + lint
 cd evals && python cli.py                         # 12 个场景的端到端评估
 ```
@@ -303,6 +332,30 @@ cd evals && python cli.py                         # 12 个场景的端到端评�
 `test_shipped_database.py` 断言启动时能认出"这不是本次发布带的数据库"并重建，
 以及删不掉时不要因此起不来；`test_validation_errors.py` 断言被拒绝的请求不会把 pydantic 的英文
 原样送到浏览器，同时保留机器可读的字段定位。
+
+**前端另有一个真浏览器探针**，因为上面所有检查都看不见三类问题：色对但层不对（前景在浅一档的
+surface 上掉到 4.41:1）、选择器从未命中（类名拼错，激活态从来没存在过）、窄屏溢出。
+
+```bash
+# 1) Chrome 必须与探针在同一个 shell 会话里，否则会被回收
+chrome.exe --headless=new --remote-debugging-port=9222 --remote-allow-origins=* \
+  --user-data-dir=.tmp/chrome about:blank &
+
+# 2) MSYS_NO_PATHCONV 是必须的，否则 Git Bash 会把 URL 里的 // 当成盘符路径改写
+# 3) --both 两个主题都跑。别只跑默认的那个
+MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' python scripts/ui_probe.py \
+  http://127.0.0.1:5175 .tmp/shots / /incidents /evaluations --both
+```
+
+它把每页截三档视口（1440 / 768 / 375），并把 20 组关键前景/背景的 WCAG 比值读回来算——
+比值取自 `getComputedStyle` 并**向上遍历到第一个不透明底色**，所以浮在 `--surface-inset` 上的
+元素量的是合成后的实际值，不是令牌字面值。最后打印选择器命中率，命中率过低时显式警告
+（第一版探针 20 项只命中 2 项却照样报 `failures: 0`，那个 0 什么都不能证明）。
+
+主题由 `Page.addScriptToEvaluateOnNewDocument` 写进 localStorage 后**再断言一次**
+`document.documentElement.dataset.theme` —— 因为探针原本继承环境里已有的 localStorage，
+于是"验浅色主题"实际量的是深色那一套，而浅色就这么带着 6 类不达标元素（最低 2.77:1）发布出去了。
+两个主题现在都是 20/20 覆盖、0 失败。
 
 ---
 
@@ -614,6 +667,76 @@ import——它静态依赖 app 入口，而入口在模块顶层就 `mount()`�
 （从那里向上找不到 `node_modules`，配置加载阶段就 `ERR_MODULE_NOT_FOUND`；`defineConfig`
 只是类型助手，导出普通对象等价）；Windows 上 Node 动态 import 必须转成 `file://` URL，
 裸盘符路径报 `ERR_UNSUPPORTED_ESM_URL_SCHEME`。
+
+**18. 一个类名拼错，整条交互的激活态从来没存在过。**
+`EvaluationsPage` 的「离线 / 在线」切换用的是 `className={\`tab${cond ? ' tab-active' : ''}\`}`——
+BEM 风格，带连字符。而 CSS 里写的是 `.tab.active`，后代选择器。前者是标签加修饰类，后者是状态类，
+**这两个选择器永远不会同时命中**。那个下划线从来没渲染过，切换时唯一的视觉反馈是文字颜色变了。
+
+这不是配色问题也不是重构问题，是一个功能压根没接上。修的方式是让 CSS 认 BEM 拼法，
+并且把「哪种拼法是真的」写进注释——因为下一个人会以为 `.tab.active` 也是活的。
+
+同一轮里还有两个同类的"没生效"：**`.hl` 在两个文件里各定义了一次**，`timeline.css` 把它做成带背景的
+chip，`agent.css` 把它做成纯文字色，而 `agent.css` 导入更靠后——chip 版本早就是死 CSS 了。
+**`.metric-card-primary` / `.metric-card-agent` 有定义、无调用方**。以及
+`ActivityFeed` 的表格是全站四张表里唯一没包 `.table-wrap` 的，所以只有它会在 375px 下把页面撑破。
+
+这三个凑在一起说明一件事：**类名拼写错误在 CSS 里是静默的**。少一个连字符、多一个连字符、
+写成状态类而不是修饰类，样式表不报错、构建不报错、lint 不报错，只有真浏览器里那个元素
+一直是默认态才能看出来。所以才有 `scripts/ui_probe.py`——它的职责不是"检查样式对不对"，
+而是"让没有生效的东西暴露出来"。
+
+**19. 选对了色，但选错了层，就等于没生效。**
+`--muted-foreground` 定的是 `#7386a6`，在 `--surface` 上 5.06:1，完全达标。但它最常出现的地方
+是 `.badge-neutral`、`.kv` 行这些**躺在 `--surface-inset`（更亮的深色）上**的元素——
+那里的实测值是 4.41:1，差 0.09 就掉到 AA 下面。
+
+按"最深的底"去验颜色，会漏掉所有浮在中间层的表面。所以探针不是读令牌字面值，而是遍历 DOM
+向上找到第一个不透明背景再算合成后的比值。改完是 `#7a8db0`：同色相挪到刚好过线（4.85:1），
+且仍明显暗于上一级 `--muted`（5.57:1），层级关系没被压平。注释里写了"要调这个令牌就重新量
+`--surface-inset`，不是 `--surface`"。
+
+同样的错还有一处更明显的：侧栏玻璃写的是字面量 `rgb(18 26 43 / 0.92)`，而不是
+`var(--surface-glass)`。于是切到浅色主题时侧栏**仍然是近黑的**，而导航项文字按浅色主题正确地
+解析成了深墨色——深底深字，大约 1.6:1，整条侧栏不可读。辉光层同理：`rgb(37 99 235 / 0.17)`
+在近黑底上是氛围，在白底上是污渍，所以拆成 `--bloom-primary` / `--bloom-agent` 两个令牌，
+浅色下降到 0.06 / 0.05。
+
+**结论不是"要更小心"，而是"要对着渲染结果量"**：令牌化的价值恰恰在于它能被机械验证——
+`grep` 一遍硬编码色值就能确认没有主题泄漏，而对比度和布局交给真浏览器。
+
+这里还藏着本轮最贵的一个错，而且它的形态是**"看起来验过了"**：
+
+探针原本不指定主题，继承环境里已有的 localStorage。而深色是默认主题，所以前面几轮跑出来的
+`failures: 0` 全都量的是深色——**浅色主题一次都没被量过**。直到有一次为了截图手动把主题切到浅色，
+探针顺手量到了它，26 项失败里每一项都是浅色色值：
+
+| 元素 | 修正前 | 修正后 |
+|---|---|---|
+| `--muted-foreground` 在 `--surface-inset` | 2.77:1 | 4.57:1 |
+| `--muted-foreground` 在白底 | 3.11:1 | 5.13:1 |
+| `--sev-high` 在自己的 `-soft` 底 | 3.35:1 | 4.88:1 |
+| `--success` 在自己的 `-soft` 底 | 3.58:1 | 5.21:1 |
+| `--critical` 在自己的 `-soft` 底 | 4.41:1 | 4.71:1 |
+
+根因是这些值当初是"在白底上看着对"选的，而徽章实际坐在自己的 `-soft` 淡色底上——
+差之毫厘。`--muted-foreground: #8593ab` 更是直接把暗色主题的值搬了过来。
+
+所以探针现在做两件事：写完 localStorage 之后**断言一次** `document.documentElement.dataset.theme`
+（不匹配就直接抛错，而不是继续跑出一份漂亮的报告），以及默认 `--both` 把两个主题都跑。
+**一个"全绿"结果如果没有说明它覆盖了哪些维度，就不是证据，是运气。**
+
+顺带记两个跑真浏览器验证时的环境坑，都伪装成"工具坏了"：
+
+- **Git Bash 会把命令行里的 URL 改写掉。** `python probe.py "http://127.0.0.1:5175"` 传进 Python 的
+  实际是 `http://127.0.0.1:5175C:/Users/.../PortableGit/1.2.0/`——MSYS 路径转换把 `//` 之后的部分
+  当成了盘符路径。前缀变量只去掉一个还不够，`//` 剩下的那半仍然被拼上去。加
+  `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'` 才是干净的。
+  它的表现是 Chrome 报 `Cannot navigate to invalid URL`，而那个 URL 打印出来完全正常。
+- **`/json/screenshot` 不存在。** Chrome 的 CDP HTTP 接口只覆盖 `/json/*` 的目标管理，
+  截图、设视口、等事件都得走 WebSocket。而且 `Page.navigate` 是发完就返回的，
+  固定 `sleep` 拍到的可能是白屏——这里改成等 `Page.loadEventFired`，再轮询 `document.fonts.ready`
+  加两帧。慢的原因每次都不一样，定值等待就是赌。
 
 ---
 

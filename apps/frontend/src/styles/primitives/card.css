@@ -1,16 +1,24 @@
 /* =============================================================================
    Primitives — Card / Panel / Section / Divider
+
+   On a near-black ground, `box-shadow` alone does almost nothing: there is no
+   light to occlude. Depth here comes from three cooperating parts — a solid
+   surface one step above the ground, a hairline tinted with the accent hue,
+   and a 1px top highlight (`--sheen`) that reads as a lit edge. Drop any one
+   and the panel flattens into the page.
    ========================================================================== */
 
 .card {
-  background: var(--surface);
+  position: relative;
+  background-color: var(--surface);
+  background-image: var(--sheen);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xs);
 }
 
 .card-elevated {
-  background: var(--surface-elevated);
+  background-color: var(--surface-elevated);
   box-shadow: var(--shadow-md);
 }
 
@@ -19,22 +27,35 @@
   transition:
     border-color var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+    transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
 }
 
+/* A 1px lift, not a shadow swap. On dark surfaces a shadow reads as dirt;
+   moving the card toward the viewer by a pixel and letting the border brighten
+   is what actually looks like "this is clickable". */
 .card-interactive:hover {
-  border-color: var(--border-strong);
+  border-color: var(--agent-border);
+  background-color: var(--surface-elevated);
   box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.card-interactive:active {
+  transform: translateY(0);
 }
 
 .card-interactive:focus-visible {
   box-shadow: var(--ring);
   border-color: var(--primary);
+  transform: translateY(-1px);
 }
 
 /* --- Panel: card with a structured header / body -------------------------- */
 .panel {
-  background: var(--surface);
+  position: relative;
+  background-color: var(--surface);
+  background-image: var(--sheen);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xs);
@@ -47,22 +68,44 @@
 .panel-header {
   display: flex;
   align-items: center;
+  /* Wrapping, not nowrap. This row holds a title, a count and a button group;
+     below ~480px there is not enough width for one line, and a flex row that
+     cannot wrap squeezes its children to min-content instead — which for CJK
+     means one glyph per line. The header was rendering 故障列表 / 4 条 / 状态 as
+     three vertical columns. Wrapping drops the actions onto their own line,
+     which is what a 375px screen should have done from the start. */
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 44px;
+  gap: var(--space-2) var(--space-3);
+  min-height: 46px;
   padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface);
+  /* A shade above the panel body so the header reads as a distinct band even
+     where the two surfaces are only a few lumens apart. */
+  background: var(--surface-elevated);
 }
 
 .panel-title {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
   color: var(--foreground);
   letter-spacing: var(--tracking-tight);
+}
+
+/* A 2px cyan tick ahead of the title: the same "this is live/machine" signal
+   the sidebar uses, kept identical so the language stays consistent. */
+.panel-title::before {
+  content: '';
+  width: 2px;
+  height: 13px;
+  border-radius: var(--radius-full);
+  background: var(--agent);
+  box-shadow: 0 0 8px 0 rgb(34 211 238 / 0.6);
+  flex: none;
 }
 
 .panel-subtitle {
@@ -71,11 +114,16 @@
   font-weight: var(--weight-normal);
 }
 
+/* Wraps, and may shrink. With `flex: none` this box refused to shrink at all,
+   so on a 375px screen the filter row inside it pushed the panel 500px past
+   the viewport instead of wrapping — a header action group is not a fixed-size
+   element. */
 .panel-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  flex: none;
+  min-width: 0;
 }
 
 .panel-body {
@@ -152,4 +200,16 @@
   bottom: 0;
   width: 3px;
   background: var(--rail-color, var(--border-strong));
+  /* The rail is the card's state made physical. A bloom lets it be found in a
+     dense list without reading the text — which is the entire point of having
+     a rail instead of a coloured border. */
+  box-shadow: 0 0 12px 0 var(--rail-color, var(--border-strong));
+}
+
+/* --- Section ------------------------------------------------------------- */
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
 }

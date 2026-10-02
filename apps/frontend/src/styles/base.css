@@ -14,17 +14,68 @@ body,
   height: 100%;
 }
 
+/*
+ * The document ground.
+ *
+ * A flat fill is what makes a dark console look like an unfinished dark mode.
+ * Five layers go down instead, in this order:
+ *
+ *   1. grain          — 3% fractal noise, baked opacity. Kills banding in the
+ *                       large dark gradients; without it a 1600px gradient
+ *                       shows visible steps on 8-bit panels.
+ *   2. hairline grid  — 40px lattice at 5% white-blue. Reads as an instrument
+ *                       surface, and gives the eye something to align numbers
+ *                       against while scanning a table.
+ *   3. + 4. glows     — one brand-blue, one machine-cyan, both anchored above
+ *                       the fold so the "horizon" sits behind the top bar.
+ *   5. base colour.
+ *
+ * `background-attachment: fixed` keeps the lattice still while content scrolls;
+ * without it the grid slides with the page and the whole thing reads as a
+ * texture accident rather than a designed surface.
+ */
 body {
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   color: var(--foreground);
-  background: var(--background);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'cv05' 1;
+  background-color: var(--background);
+  /* Five layers, cheapest first. The two radial blooms and the noise strength
+     are tokens because they are *tinted for the ground*: the same 17%-alpha
+     brand blue that reads as a glow on near-black reads as a blue stain on
+     white, and the same 3.5% white noise that adds grain to a dark panel is
+     invisible — and wrong — on a light one. The grid lines are already
+     theme-aware via --grid-line. */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(
+      0deg,
+      var(--grid-line) 0 1px,
+      transparent 1px 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--grid-line) 0 1px,
+      transparent 1px 40px
+    ),
+    radial-gradient(72rem 46rem at 14% -10%, var(--bloom-primary), transparent 62%),
+    radial-gradient(64rem 42rem at 96% 2%, var(--bloom-agent), transparent 60%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/*
+ * The lattice deliberately stays *under* the panels rather than being masked
+ * out. Every panel, card and table carries an opaque `--surface`, so the grid
+ * shows through exactly where it is useful — the gutters between blocks — and
+ * disappears where reading happens. Masking the shell instead would erase the
+ * one place the texture does any work.
+ */
 
 h1,
 h2,
@@ -38,17 +89,29 @@ blockquote {
   margin: 0;
 }
 
+/*
+ * Headings pull the display tracking. Negative tracking is what stops a
+ * technical face from looking loose at large sizes — at 26px the default
+ * sidebearing leaves visible gaps between glyphs that the same text at 13px
+ * does not have.
+ */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
 h1 {
   font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--tracking-display);
   line-height: var(--leading-tight);
 }
 
 h2 {
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--tracking-display);
   line-height: var(--leading-tight);
 }
 
@@ -96,10 +159,14 @@ samp {
 }
 
 /* -----------------------------------------------------------------------------
-   Focus — visible, consistent, never removed
+   Focus — a lit cyan ring, never removed.
+
+   Cyan rather than the brand blue: on a near-black ground blue at 2px reads as
+   "slightly brighter", while cyan is unmistakable. The 2px offset keeps the ring
+   off the element's own edge so it survives on top of a filled button too.
    -------------------------------------------------------------------------- */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent-ai);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
@@ -110,11 +177,11 @@ samp {
 }
 
 /* -----------------------------------------------------------------------------
-   Scrollbars
+   Scrollbars — thin, and only visible against their own track
    -------------------------------------------------------------------------- */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-color: var(--control-border) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -127,23 +194,28 @@ samp {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
+  background: var(--control-border);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: var(--radius-full);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  background: var(--agent);
   background-clip: content-box;
 }
 
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* -----------------------------------------------------------------------------
-   Selection
+   Selection — cyan wash, dark text. The inverse pair keeps the selected text
+   above 4.5:1 instead of inheriting a low-contrast light-on-accent.
    -------------------------------------------------------------------------- */
 ::selection {
-  background: var(--primary-soft);
-  color: var(--foreground);
+  background: var(--agent);
+  color: #04121a;
 }
 
 /* -----------------------------------------------------------------------------

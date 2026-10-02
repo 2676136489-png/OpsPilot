@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMatches } from 'react-router-dom'
 import { Icon } from '../ui/Icon'
+import { currentTheme, setTheme, type Theme } from '../lib/theme'
 
 interface RouteHandle {
   crumb?: string
@@ -39,10 +40,50 @@ export function TopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
             <span>K</span>
           </kbd>
         </button>
+        <ThemeToggle />
         <span className="env-badge">模拟环境</span>
         <Clock />
       </div>
     </header>
+  )
+}
+
+/**
+ * Theme switch.
+ *
+ * The palette lives on `<html data-theme>`, so this writes one attribute and
+ * lets CSS do the rest — no re-render, no context, and every component picks up
+ * the change because they all read the same custom properties.
+ */
+function ThemeToggle() {
+  const [theme, setLocal] = useState<Theme>(() => currentTheme())
+
+  const toggle = useCallback(() => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+    setLocal(theme === 'dark' ? 'light' : 'dark')
+  }, [theme])
+
+  // Another tab changing the theme is a real thing: an operator with the
+  // console open in two windows should not have one of them silently stale.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'opspilot.theme') setLocal(currentTheme())
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
+  const next = theme === 'dark' ? '浅色' : '深色'
+
+  return (
+    <button
+      className="theme-toggle"
+      onClick={toggle}
+      title={`切换到${next}主题`}
+      aria-label={`切换到${next}主题`}
+    >
+      <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={14} />
+    </button>
   )
 }
 

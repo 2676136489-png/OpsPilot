@@ -6,7 +6,9 @@
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   min-height: 100vh;
-  background: var(--background);
+  /* Transparent on purpose: the ground's lattice and glow live on <body>, and an
+     opaque shell would erase both. Only the chrome below is filled. */
+  background: transparent;
   transition: grid-template-columns var(--dur-base) var(--ease-out);
 }
 
@@ -25,8 +27,23 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3) var(--space-2);
-  background: var(--surface);
+  /* Glass, not a solid fill: the blue glow anchored at 14% -10% on <body> has to
+     bleed through the chrome, which is what stops the left rail from reading as
+     a separate grey object pasted onto the page.
+
+     Built from --surface-glass* rather than literal rgba() dark blues. With
+     literals the sidebar stayed near-black in the light theme, and every
+     navigation label — which correctly resolves to a dark ink for a light
+     ground — landed on a dark panel at roughly 1.6:1. Tinting through tokens
+     is what makes the rail follow the theme. */
+  background: linear-gradient(
+    180deg,
+    var(--surface-glass) 0%,
+    var(--surface-glass-strong) 100%
+  );
+  backdrop-filter: blur(18px) saturate(1.4);
   border-right: 1px solid var(--border);
+  box-shadow: 1px 0 0 rgb(130 170 255 / 0.04), 24px 0 60px -40px rgb(0 0 0 / 0.9);
   overflow: hidden;
   z-index: var(--z-sticky);
 }
@@ -41,19 +58,22 @@
   flex: none;
 }
 
+/* The mark is the one place both brand hues meet: blue-to-cyan on a dark chip,
+   with a bloom around it. It is the only element allowed to carry both. */
 .brand-mark {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   flex: none;
   border-radius: var(--radius-md);
-  background: var(--foreground);
-  color: var(--background);
+  background: linear-gradient(140deg, var(--primary) 0%, var(--agent) 100%);
+  color: #04121a;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   letter-spacing: -0.02em;
+  box-shadow: 0 0 0 1px rgb(130 200 255 / 0.22), 0 0 18px -4px rgb(34 211 238 / 0.55);
 }
 
 .brand-text {
@@ -88,13 +108,25 @@
 }
 
 .sidebar-group-label {
-  padding: var(--space-3) var(--space-3) var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3) var(--space-2);
   font-size: var(--text-2xs);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted-foreground);
   white-space: nowrap;
+}
+
+/* A 3px rule after the label, so the group reads as a titled section rather
+   than as a run of indented words. */
+.sidebar-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 .nav-item {
@@ -102,7 +134,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  height: 34px;
+  height: 36px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-md);
   color: var(--foreground-secondary);
@@ -111,7 +143,8 @@
   white-space: nowrap;
   transition:
     background-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .nav-item:hover {
@@ -121,8 +154,9 @@
 }
 
 .nav-item.active {
-  background: var(--surface-inset);
+  background: linear-gradient(90deg, rgb(34 211 238 / 0.14) 0%, rgb(34 211 238 / 0.03) 100%);
   color: var(--foreground);
+  box-shadow: inset 0 0 0 1px rgb(34 211 238 / 0.18);
 }
 
 .nav-item.active::before {
@@ -131,10 +165,13 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 2.5px;
-  height: 16px;
+  width: 3px;
+  height: 18px;
   border-radius: var(--radius-full);
-  background: var(--primary);
+  background: var(--agent);
+  /* The rail is the "you are here" signal; a bloom makes it findable at a glance
+     in a 236px column of 11 similar rows. */
+  box-shadow: 0 0 10px 0 rgb(34 211 238 / 0.75);
 }
 
 .nav-item-icon {
@@ -187,8 +224,10 @@
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-3);
-  height: 26px;
+  height: 28px;
   font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  letter-spacing: var(--tracking-wide);
   color: var(--muted);
   white-space: nowrap;
 }
@@ -221,6 +260,13 @@
   min-height: 100vh;
 }
 
+/* -----------------------------------------------------------------------------
+   Top bar — glass, with a scan line along its lower edge.
+
+   That scan is the product's one piece of deliberate motion. It reads as a
+   live link to the agent runtime, which is the thing an operator glances up to
+   check, and it is the only element in the chrome allowed to move.
+   -------------------------------------------------------------------------- */
 .topbar {
   position: sticky;
   top: 0;
@@ -230,9 +276,48 @@
   gap: var(--space-3);
   height: var(--topbar-height);
   padding: 0 var(--space-5);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  backdrop-filter: blur(12px) saturate(1.6);
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px) saturate(1.6);
   border-bottom: 1px solid var(--border);
+}
+
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(125 211 252 / 0.85) 42%,
+    rgb(47 109 240 / 0.85) 54%,
+    transparent 100%
+  );
+  background-size: 240% 100%;
+  background-repeat: no-repeat;
+  animation: horizon-scan 7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes horizon-scan {
+  from {
+    background-position: -70% 0;
+  }
+  to {
+    background-position: 170% 0;
+  }
+}
+
+/* The scan is decoration; under reduced motion it is removed rather than
+   frozen, because a stalled gradient sitting on the primary edge reads as a
+   rendering artefact instead of as "motion was turned off". */
+@media (prefers-reduced-motion: reduce) {
+  .topbar::after {
+    animation: none;
+    background: linear-gradient(90deg, transparent, rgb(125 211 252 / 0.4), transparent);
+  }
 }
 
 .topbar-left {
@@ -277,23 +362,26 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  height: 30px;
-  padding: 0 var(--space-3);
-  min-width: 200px;
-  border: 1px solid var(--border);
+  height: 32px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  min-width: 220px;
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-md);
-  background: var(--surface-sunken);
+  background: var(--surface-inset);
   color: var(--muted);
   font-size: var(--text-sm);
   cursor: pointer;
   transition:
     border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out);
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .topbar-search:hover {
-  border-color: var(--border-strong);
-  background: var(--surface);
+  border-color: var(--agent-border);
+  background: var(--surface-hover);
+  color: var(--foreground-secondary);
+  box-shadow: 0 0 0 3px rgb(34 211 238 / 0.08);
 }
 
 .kbd {
@@ -301,29 +389,74 @@
   align-items: center;
   gap: 2px;
   margin-left: auto;
-  padding: 1px 5px;
+  padding: 2px 6px;
   border: 1px solid var(--border);
-  border-bottom-width: 2px;
+  border-bottom-color: var(--border-strong);
   border-radius: var(--radius-xs);
-  background: var(--surface);
+  background: var(--surface-sunken);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .env-badge {
   display: inline-flex;
   align-items: center;
-  height: 22px;
+  gap: var(--space-2);
+  height: 24px;
   padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
   background: var(--warning-soft);
   border: 1px solid var(--warning-border);
   color: var(--warning);
   font-size: var(--text-2xs);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
+}
+
+/* A 5px dot, because "this is a simulated environment" is the one label on
+   screen that must never be missed, and an unadorned pill reads as decoration. */
+.env-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--warning);
+  box-shadow: 0 0 8px 0 rgb(251 191 36 / 0.8);
+}
+
+/* --- Theme toggle ---------------------------------------------------------- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.theme-toggle:hover {
+  border-color: var(--agent-border);
+  color: var(--agent);
+  box-shadow: 0 0 0 3px rgb(34 211 238 / 0.1);
+}
+
+.theme-toggle svg {
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(22deg);
 }
 
 .topbar-clock {
@@ -336,11 +469,29 @@
 
 /* -----------------------------------------------------------------------------
    Content region
-   -------------------------------------------------------------------------- */
+
+   The atmosphere layers (grid, brand bloom) are painted on <body>, so without
+   a ground of their own they show through wherever the content column is
+   short — on a 4-row incident table the entire lower half of the screen became
+   visible graph paper, which reads as an unfinished page rather than as depth.
+
+   The scrim below is transparent at the very top and bottom, so the grid still
+   bleeds through the gutters above the first panel and below the last one, and
+   along the sidebar seam. In the middle, where a page's content actually sits,
+   the ground goes solid. That is the whole intent: the grid is supposed to be
+   visible only where nothing is.
+   ----------------------------------------------------------------------------- */
 .content {
   flex: 1;
   min-width: 0;
   padding: var(--space-5);
+  background: linear-gradient(
+    180deg,
+    transparent 0,
+    var(--background) 96px,
+    var(--background) calc(100% - 96px),
+    transparent 100%
+  );
 }
 
 .content-inner {
@@ -388,9 +539,10 @@
 }
 
 .page-title {
-  font-size: var(--text-xl);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--tracking-display);
   line-height: var(--leading-tight);
 }
 

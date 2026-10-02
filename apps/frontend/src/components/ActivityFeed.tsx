@@ -158,8 +158,14 @@ export function ActivityFeed() {
           ))}
         </div>
       ) : allRuns.length > 0 ? (
-        <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
-          <table className="data-table">
+        // .table-wrap is what lets a wide table scroll instead of pushing the
+        // page sideways. Every other .data-table in the app sits inside one;
+        // this one did not, so on a 375px screen the run/incident/status/time
+        // columns overflowed the viewport. The padding lives on a wrapper
+        // because .table-wrap paints edge shadows and must sit flush.
+        <div className="activity-table-pad">
+          <div className="table-wrap">
+            <table className="data-table">
             <thead>
               <tr>
                 <th style={{ width: 80 }}>运行</th>
@@ -187,6 +193,7 @@ export function ActivityFeed() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <EmptyState
