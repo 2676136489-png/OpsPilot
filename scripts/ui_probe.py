@@ -115,22 +115,25 @@ CONTRAST_JS = r"""
 OVERFLOW_JS = r"""
 (() => {
   const de = document.documentElement
-  const scrollable = (el) => {
+  // `hidden` and `clip` count as containing, not just the scrollable pair.
+  // A service card wider than its panel is clipped by that panel and does not
+  // move the document; React Flow pans its own viewport for the same reason.
+  // Treating only auto/scroll as containing flagged both as page overflow.
+  const contained = (el) => {
     for (let n = el.parentElement; n; n = n.parentElement) {
       const ox = getComputedStyle(n).overflowX
-      if (ox === 'auto' || ox === 'scroll') return true
+      if (ox === 'auto' || ox === 'scroll' || ox === 'hidden' || ox === 'clip') return true
     }
     return false
   }
+  // Only elements that actually stick out past the viewport. The authoritative
+  // signal is the document pair below; this list says *where* to look.
   const bad = []
   for (const el of document.querySelectorAll('body *')) {
     const r = el.getBoundingClientRect()
     if (r.width === 0 || r.height === 0) continue
     if (r.right <= de.clientWidth + 1) continue
-    // A wide table inside .table-wrap is the intended behaviour — the wrapper
-    // scrolls. Counting it as page overflow reported three false BADs on a
-    // build whose document scrollWidth equalled clientWidth everywhere.
-    if (scrollable(el)) continue
+    if (contained(el)) continue
     bad.push({
       tag: el.tagName,
       cls: (el.className || '').toString().slice(0, 50),
@@ -138,7 +141,15 @@ OVERFLOW_JS = r"""
     })
     if (bad.length > 6) break
   }
-  return { docWidth: de.clientWidth, scrollWidth: de.scrollWidth, overflowing: bad }
+  return {
+    docWidth: de.clientWidth,
+    scrollWidth: de.scrollWidth,
+    // A wide table inside .table-wrap is the intended behaviour — the wrapper
+    // scrolls. Counting it as page overflow reported three false BADs on a
+    // build whose document scrollWidth equalled clientWidth everywhere.
+    overflowing: bad,
+    documentOverflows: de.scrollWidth > de.clientWidth + 1,
+  }
 })()
 """
 
@@ -346,11 +357,15 @@ async def run(base: str, out_dir: str, routes: list[str], theme: str) -> int:
             if not isinstance(o, dict) or "__error" in o:
                 print(f"  ??  {route:14s} {label:8s} {o}")
                 continue
-            bad = o.get("overflowing") or []
-            ok = not bad and o["scrollWidth"] <= o["docWidth"] + 1
+            # The document pair decides. An element wider than the viewport is
+            # only a defect when nothing above it clips or scrolls — otherwise
+            # it is a wide table in a scroll wrapper, or a card in a panel, and
+            # both are the intended layout.
+            doc_bad = o.get("documentOverflows", o["scrollWidth"] > o["docWidth"] + 1)
+            ok = not doc_bad
             print(f"  {'OK  ' if ok else 'BAD '}{route:14s} {label:8s} "
                   f"doc={o['docWidth']} scroll={o['scrollWidth']}"
-                  + (f"  {bad[:2]}" if bad else ""))
+                  + (f"  {o.get('overflowing', [])[:2]}" if not ok else ""))
     print(f"\ncontrast failures [{theme}]: {fails}")
     # A run where most selectors missed still prints "0 failures", which reads
     # as a pass. Make the miss rate impossible to overlook.
