@@ -24,7 +24,7 @@ export function IncidentTable({
     e.stopPropagation()
     try {
       const run = await api.agent.startInvestigation(incident.id, incident.scenario ?? undefined)
-      toast.success('已启动 AI 调查', `运行 ${run.id.slice(0, 8)}`)
+      toast.success('已启动调查', `运行 ${run.id.slice(0, 8)}`)
       navigate(`/incidents/${incident.id}`)
     } catch (err) {
       toast.error('启动调查失败', err instanceof Error ? err.message : String(err))
@@ -70,7 +70,7 @@ export function IncidentTable({
                 <button
                   className="btn btn-sm btn-agent"
                   onClick={(e) => investigate(inc, e)}
-                  title="启动 AI 调查"
+                  title="启动调查"
                   style={{ padding: '0 8px' }}
                 >
                   <Icon name="cpu" size={13} />

@@ -22,6 +22,8 @@
 @import './styles/patterns/timeline.css';
 @import './styles/patterns/topology.css';
 @import './styles/patterns/agent.css';
+@import './styles/patterns/gallery.css';
+@import './styles/patterns/capability.css';
 
 /* Page layouts — structures used by a single route */
 @import './styles/pages.css';

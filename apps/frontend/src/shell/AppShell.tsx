@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useLocation, useOutlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { CommandPalette } from './CommandPalette'
+
+// Three.js is only needed for the atmosphere. Splitting it out keeps the
+// console's entry chunk small; the field fades in once its chunk arrives.
+const NoiseField = lazy(() =>
+  import('../three/NoiseField').then((module) => ({ default: module.NoiseField })),
+)
 
 const COLLAPSE_KEY = 'opspilot.sidebar.collapsed'
 
@@ -43,8 +49,13 @@ export function AppShell() {
   }, [])
 
   return (
-    <div className="app-shell" data-collapsed={collapsed}>
-      <Sidebar collapsed={collapsed} onToggle={toggle} />
+    <>
+      <Suspense fallback={null}>
+        <NoiseField />
+      </Suspense>
+
+      <div className="app-shell" data-collapsed={collapsed}>
+        <Sidebar collapsed={collapsed} onToggle={toggle} />
 
       <div className="main-column">
         <TopBar onOpenPalette={() => setPaletteOpen(true)} />
@@ -74,7 +85,10 @@ export function AppShell() {
         </main>
       </div>
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
-    </div>
+        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      </div>
+
+      <div className="grain-overlay" aria-hidden="true" />
+    </>
   )
 }

@@ -9,23 +9,23 @@
 
 ## 现象
 
-Redis 宕机或无法访问的明确迹象：
+识别信号：
 
 - 日志出现 `redis.exceptions.ConnectionError: Error 111 connecting to redis.internal:6379. Connection refused.`
 - 日志反复出现 `Connection refused after N retries`
 - Prometheus 的 `redis_connected` 指标从 1 掉到 0
-- 缓存命中率从正常区间（80-95%）暴跌到接近 0
-- 应用流量落到数据库，引发次生负载飙升
-- 因为走了数据库兜底路径，P95 延迟涨 5-10 倍
+- 缓存命中率由 80%–95% 降至接近 0
+- 应用流量回退至数据库，导致数据库负载上升
+- 数据库兜底路径使 P95 延迟上升 5–10 倍
 - Redis 客户端一侧可能触发熔断器
 
 ## 根因模式
 
 Redis 故障通常源自：
 
-1. **Pod 崩溃 / OOM kill** —— Redis 内存上限太低，淘汰策略失效，被内核 OOM killer 杀掉进程
+1. **Pod 崩溃 / OOM** —— Redis 内存上限过低、淘汰策略失效，进程被内核 OOM killer 终止
 2. **网络分区** —— K8s 节点级网络策略变更或 DNS 故障，导致 Redis 服务不可达
-3. **误操作引发的坏部署** —— 配置变更（例如把 maxmemory 从 4gb 降到 256mb）导致不稳定
+3. **异常发布** —— 配置变更（例如将 maxmemory 从 4gb 降至 256mb）导致服务不稳定
 4. **故障转移进行中** —— Redis Sentinel 或 Cluster 正在提升副本；存在短暂不可用窗口
 5. **磁盘写满** —— 数据目录磁盘写满后，AOF/RDB 持久化失败
 
@@ -38,7 +38,7 @@ redis-cli -h redis.internal -p 6379 ping
 # 预期：PONG
 ```
 
-如果返回 `Connection refused`：Redis 进程已挂。如果超时：网络问题。
+返回 `Connection refused` 表示 Redis 进程已终止；请求超时表示网络连通性异常。
 
 ### 第 2 步 —— 检查 Redis Pod 健康状态
 
@@ -47,7 +47,7 @@ kubectl get pods -l app=redis -n infra
 kubectl describe pod <redis-pod> -n infra
 ```
 
-重点看有没有 OOMKilled、CrashLoopBackOff 或调度问题。
+重点检查 OOMKilled、CrashLoopBackOff 与调度状态。
 
 ### 第 3 步 —— 重启或扩容 Redis
 
@@ -55,7 +55,7 @@ kubectl describe pod <redis-pod> -n infra
 # 单实例 Redis 的情况
 kubectl rollout restart deployment/redis -n infra
 
-# Sentinel/Cluster 的情况 —— 需要时手动提升副本
+# Sentinel/Cluster 环境：必要时手动提升副本
 redis-cli -h redis-sentinel sentinel failover mymaster
 ```
 
@@ -69,11 +69,11 @@ redis-cli -h redis.internal CONFIG GET maxmemory
 
 检查 `redis_connected` 指标回到 1，缓存命中率回升。
 
-### 第 5 步 —— 事后加固
+### 第 5 步 —— 后续加固
 
-- 设置合适的 `maxmemory-policy allkeys-lru` 防止 OOM
-- 配置健康检查：`kubectl edit deployment redis` —— 加上就绪探针
-- 用 3 个副本搭建 Redis Sentinel，实现自动故障转移
+- 设置合适的 `maxmemory-policy allkeys-lru`，避免 OOM
+- 配置健康检查：`kubectl edit deployment redis`，补充就绪探针
+- 部署 3 个副本的 Redis Sentinel，实现自动故障转移
 - 监控 Redis 数据目录的磁盘使用，在 80% 时告警
 
 ## 验证

@@ -44,8 +44,8 @@
      plane in front of the app; the edge has to look lit, not just darker. */
   box-shadow:
     var(--shadow-xl),
-    1px 0 0 0 rgb(125 211 252 / 0.06),
-    -24px 0 60px -30px rgb(37 99 235 / 0.35);
+    1px 0 0 0 rgb(255 255 255 / 0.06),
+    -24px 0 60px -30px rgb(127 214 230 / 0.22);
 }
 
 .drawer-left {
@@ -55,8 +55,8 @@
   border-right: 1px solid var(--border-strong);
   box-shadow:
     var(--shadow-xl),
-    -1px 0 0 0 rgb(125 211 252 / 0.06),
-    24px 0 60px -30px rgb(37 99 235 / 0.35);
+    -1px 0 0 0 rgb(255 255 255 / 0.06),
+    24px 0 60px -30px rgb(127 214 230 / 0.22);
 }
 
 .drawer-header {
@@ -343,8 +343,8 @@
   border-radius: var(--radius-xl);
   box-shadow:
     var(--shadow-xl),
-    0 0 0 1px rgb(37 99 235 / 0.18),
-    0 0 60px -24px rgb(37 99 235 / 0.55);
+    0 0 0 1px rgb(255 255 255 / 0.16),
+    0 0 60px -24px rgb(255 255 255 / 0.28);
   overflow: hidden;
 }
 

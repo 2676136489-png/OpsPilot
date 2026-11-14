@@ -55,7 +55,7 @@ export function AgentsPage() {
     <>
       <PageHeader
         title="Agent 运行"
-        description="编排层的运行视图：吞吐、成功率、恢复验证率与逐次运行的状态。"
+        description="Agent 运行监控：吞吐、成功率、恢复验证率与运行状态。"
         actions={
           <>
             <LiveDot state={active > 0 ? 'live' : 'closed'} label={active > 0 ? `${active} 个运行中` : '空闲'} />
@@ -144,7 +144,7 @@ export function AgentsPage() {
           <EmptyState
             icon={<Icon name="cpu" size={20} />}
             title={filter === 'all' ? '暂无 Agent 运行' : '没有匹配的运行'}
-            hint="在故障详情页点击「AI 调查」即可创建一次运行。"
+            hint="在故障详情页启动调查后，运行记录会显示在这里。"
             action={
               <Link to="/incidents">
                 <Button size="sm" variant="agent">前往故障列表</Button>
@@ -226,7 +226,7 @@ export function AgentsPage() {
       </Panel>
 
       {stats && (
-        <Panel title="恢复漏斗" subtitle="一次运行从诊断到验证通过的收敛情况">
+        <Panel title="恢复转化" subtitle="从恢复执行到验证通过的运行分布">
           <MetricStrip
             items={[
               { label: '尝试恢复', value: stats.recovery_attempted },

@@ -8,6 +8,7 @@
 
 export type IconName =
   | 'grid'
+  | 'layers'
   | 'alert'
   | 'topology'
   | 'cpu'
@@ -27,11 +28,10 @@ export type IconName =
   | 'refresh'
   | 'external'
   | 'dot'
-  | 'sun'
-  | 'moon'
 
 const PATHS: Record<IconName, string> = {
   grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
+  layers: 'M12 3.5 21 8l-9 4.5L3 8zM3 12l9 4.5 9-4.5M3 16l9 4.5 9-4.5',
   alert: 'M12 3.5 21.5 20h-19zM12 9.5v5M12 17.5h.01',
   topology:
     'M6 7.5h12M6 7.5v9M18 7.5v9M6 16.5h12M12 7.5v9M3.5 5.5h5v4h-5zM3.5 14.5h5v4h-5zM15.5 5.5h5v4h-5zM15.5 14.5h5v4h-5z',
@@ -52,8 +52,6 @@ const PATHS: Record<IconName, string> = {
   refresh: 'M20 12a8 8 0 1 1-2.4-5.7M20 3.5V8h-4.5',
   external: 'M14 4.5h5.5V10M19 5 11 13M17.5 14v5a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 19V8.5A1.5 1.5 0 0 1 5.5 7H10',
   dot: 'M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z',
-  sun: 'M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2.5v2M12 19.5v2M4.5 12h-2M21.5 12h-2M6.1 6.1 4.7 4.7M19.3 19.3l-1.4-1.4M17.9 6.1l1.4-1.4M4.7 19.3l1.4-1.4',
-  moon: 'M20.5 14.8A8.7 8.7 0 0 1 9.2 3.5a8.7 8.7 0 1 0 11.3 11.3z',
 }
 
 export function Icon({

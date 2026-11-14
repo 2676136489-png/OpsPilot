@@ -10,6 +10,21 @@
    drift is invisible until two pages disagree.
    ========================================================================== */
 
+/* --- Command center: incident + service columns ------------------------- */
+
+.command-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .command-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* --- Incident detail: three-column command view ------------------------- */
 
 .incident-grid {
@@ -206,7 +221,7 @@
 }
 
 .topo-canvas .react-flow__minimap-mask {
-  fill: rgb(7 10 18 / 0.72);
+  fill: rgb(0 0 0 / 0.78);
   stroke: var(--agent);
   stroke-width: 2;
 }
@@ -296,11 +311,41 @@
 
 /* --- Evaluations -------------------------------------------------------- */
 
-.eval-grid {
+/*
+ * The report is one panel with internal hairlines, not a field of nested
+ * cards. A 1px grid gap over the border colour draws every divider at once,
+ * which keeps the DOM flat and stops a 100% row from fighting a badge for the
+ * same column.
+ */
+.eval-overview,
+.eval-breakdowns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+}
+
+.eval-block {
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--surface);
+}
+
+.eval-block-head {
   margin-bottom: var(--space-4);
+}
+
+.eval-block-title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--foreground);
+}
+
+.eval-block-description {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--muted);
 }
 
 .breakdown-list {
@@ -311,20 +356,20 @@
 
 .breakdown-row {
   display: grid;
-  grid-template-columns: minmax(90px, 150px) minmax(0, 1fr) 52px auto;
+  grid-template-columns: minmax(0, 1fr) minmax(56px, 96px) 44px;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .breakdown-label {
   font-size: var(--text-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: var(--leading-snug);
+  overflow-wrap: anywhere;
 }
 
 .breakdown-bar {
-  min-width: 60px;
+  min-width: 0;
 }
 
 .breakdown-score {
@@ -379,6 +424,24 @@
 .def-desc {
   color: var(--foreground-secondary);
   overflow-wrap: anywhere;
+}
+
+@media (max-width: 1180px) {
+  .eval-overview,
+  .eval-breakdowns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .eval-overview,
+  .eval-breakdowns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .eval-block {
+    padding: var(--space-4);
+  }
 }
 
 /* --- Health / metrics lists ---------------------------------------------

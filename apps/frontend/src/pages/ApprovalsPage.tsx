@@ -106,7 +106,7 @@ export function ApprovalsPage() {
     <>
       <PageHeader
         title="审批队列"
-        description="所有会改动生产环境的恢复操作都必须在这里获得人工批准后才会执行。"
+        description="涉及生产环境变更的恢复操作需经人工审批后执行。"
         actions={
           <>
             <LiveDot state={pending.length > 0 ? 'live' : 'closed'} label={`${pending.length} 待处理`} />
@@ -134,7 +134,7 @@ export function ApprovalsPage() {
           <EmptyState
             icon={<Icon name="check" size={22} />}
             title="暂无待处理审批"
-            hint="当 Agent 完成诊断并生成恢复方案后，需要签核的操作会出现在这里。"
+            hint="Agent 完成诊断并生成恢复方案后，需要审批的操作会显示在这里。"
             action={
               <Link to="/incidents">
                 <Button size="sm">前往故障列表</Button>
@@ -219,7 +219,7 @@ export function ApprovalsPage() {
                     </ol>
                     {run.recovery_plan.verification_criteria?.length ? (
                       <div className="inspection-block">
-                        <div className="caps-label">通过标准 · 执行后必须逐条满足</div>
+                        <div className="caps-label">通过标准 · 执行后需逐项满足</div>
                         <ul className="check-list">
                           {run.recovery_plan.verification_criteria.map((c, i) => (
                             <li key={i} className="muted">

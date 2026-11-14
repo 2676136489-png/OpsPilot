@@ -42,6 +42,12 @@ const EvaluationsPage = lazy(() =>
 const ObservabilityPage = lazy(() =>
   import('./pages/ObservabilityPage').then((m) => ({ default: m.ObservabilityPage })),
 )
+const CapabilitiesPage = lazy(() =>
+  import('./pages/CapabilitiesPage').then((m) => ({ default: m.CapabilitiesPage })),
+)
+const CapabilityDetailPage = lazy(() =>
+  import('./pages/CapabilityDetailPage').then((m) => ({ default: m.CapabilityDetailPage })),
+)
 
 /** Wrap a lazy page so every route shares one loading treatment. */
 function page(Component: ComponentType) {
@@ -71,6 +77,12 @@ export const router = createBrowserRouter([
       { path: 'runbooks', element: page(RunbooksPage), handle: { crumb: '运维手册' } },
       { path: 'evaluations', element: page(EvaluationsPage), handle: { crumb: '评估' } },
       { path: 'observability', element: page(ObservabilityPage), handle: { crumb: '可观测性' } },
+      { path: 'capabilities', element: page(CapabilitiesPage), handle: { crumb: '能力目录' } },
+      {
+        path: 'capabilities/:slug',
+        element: page(CapabilityDetailPage),
+        handle: { crumb: '能力详情' },
+      },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

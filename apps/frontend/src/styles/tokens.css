@@ -1,134 +1,123 @@
 /* =============================================================================
    OpsPilot Design System — Tokens
    -----------------------------------------------------------------------------
-   Single source of truth for every color, size, radius, shadow and easing in
+   Single source of truth for every colour, size, radius, shadow and easing in
    the product. Components MUST consume these variables instead of hard-coding
-   values; that is what keeps Incident / Agent / Topology / Evaluations visually
-   coherent without per-page colour inventing.
+   values.
 
-   Direction — Industrial / utilitaire
-   ----------------------------------
-   This is a control room, not a marketing page. The aesthetic is carried by
-   structure rather than decoration:
+   Direction — Gallery / deep space
+   --------------------------------
+   The whole product now shares the Gallery Heading language imported from
+   ThreeUI (MIT License, Meng To / Design+Code):
 
-   - **Near-black surfaces with a blue cast**, never pure #000. Panels separate
-     by *luminance*, not by shadow — a shadow is nearly invisible on a dark
-     ground, so relying on one is what makes dark UIs look flat and muddy.
-   - **Hairline borders tinted with the accent hue** (blue at low alpha), so an
-     edge reads as a lit line rather than a grey divider.
-   - **Two-hue colour semantics**: blue = the operator, cyan = the machine.
-     That split is load-bearing, not decorative — it is what lets you tell at a
-     glance whether a surface is a human action or an agent action.
-   - **Tabular numerals everywhere a number appears**, so columns of figures
-     align and a changing digit does not shift its neighbours.
-   - Severity red/orange stays reserved for severity. Nothing else may use it.
+   - **Pure black ground** (#000) with a procedural film grain laid over the
+     entire viewport. Nothing is a flat grey fill; every surface is separated by
+     luminance and a lit hairline.
+   - **One material** — the procedural noise texture. Buttons, gallery plates
+     and the hero all sample the same WebGL-generated material, so a card and a
+     button cannot drift apart.
+   - **Optical depth** — panels sit on a 1400px perspective, lift toward the
+     viewer on hover, and keep type on a separate z-plane (see patterns/gallery).
+   - **Restraint** — status colour is the only saturated colour allowed. The
+     chrome itself is bone white on black.
 
    Theme discipline
    ----------------
-   - `:root` IS the dark theme. `main.tsx` always sets `data-theme` to either
-     `light` or `dark`, so both branches have to be complete; declaring the dark
-     one on `:root` means the `dark` selector needs no block of its own.
-   - Light is the *alternate*, defined once at the bottom.
+   Dark is the only theme. The light branch was removed together with the
+   toggle; `--background` is the true #000 the Gallery specification requires.
    ========================================================================== */
 
 :root {
   /* ---------------------------------------------------------------------------
-     Surfaces — deep, blue-cast near-black. Five steps, each a clear luminance
-     jump from the one below it; that separation is the whole depth model.
+     Surfaces — pure black plus five luminance steps. Each step is a clear jump
+     from the one beneath it; that separation is the depth model, not shadow.
      ------------------------------------------------------------------------ */
-  --background: #070a12;
-  --surface: #0d1220;
-  --surface-elevated: #121a2b;
-  --surface-sunken: #090d18;
-  --surface-inset: #172033;
-  --surface-hover: #1b2740;
+  --background: #000000;
+  --surface: #070809;
+  --surface-elevated: #0c0e11;
+  --surface-sunken: #040506;
+  --surface-inset: #111318;
+  --surface-hover: #181b21;
 
-  /* Glass is used by the top bar and the command palette. Kept as a token so
-     the blur strength and the tint can never drift apart. */
-  --surface-glass: rgb(13 18 32 / 0.72);
-  --surface-glass-strong: rgb(9 13 24 / 0.9);
+  /* Glass is used by the floating sidebar and top bar. The tint and the blur
+     live together so they can never drift apart. */
+  --surface-glass: rgb(8 9 11 / 0.66);
+  --surface-glass-strong: rgb(5 6 8 / 0.86);
 
   /* Topology canvas — React Flow reads these for grid, edges and minimap mask */
-  --topo-grid: #141d33;
-  --topo-edge: #3d4d70;
-  --topo-mask: rgb(7 10 18 / 0.74);
+  --topo-grid: #101216;
+  --topo-edge: #3f444e;
+  --topo-mask: rgb(0 0 0 / 0.78);
 
   /* Overlay scrim for drawers / modals */
-  --overlay: rgb(2 4 9 / 0.72);
+  --overlay: rgb(0 0 0 / 0.76);
 
   /* ---------------------------------------------------------------------------
-     Borders — hairlines carrying the accent hue
+     Borders — white hairlines. On a pure-black ground a coloured line reads as
+     a neon accent, so the chrome keeps neutral and lets status colour speak.
      ------------------------------------------------------------------------ */
-  --border: rgb(130 170 255 / 0.14);
-  --border-strong: rgb(140 180 255 / 0.26);
-  --border-subtle: rgb(130 170 255 / 0.08);
+  --border: rgb(255 255 255 / 0.09);
+  --border-strong: rgb(255 255 255 / 0.18);
+  --border-subtle: rgb(255 255 255 / 0.05);
 
-  /* Form controls get a solid edge. A translucent hairline disappears against
-     a dark ground, and a control whose boundary is invisible is not a control. */
-  --control-border: #3a4864;
-  --control-border-hover: #4d5d7e;
+  --control-border: #2b2e35;
+  --control-border-hover: #41454f;
 
   /* ---------------------------------------------------------------------------
-     Text — four steps, all measured against --surface rather than eyeballed
+     Text — four steps, measured against the surface each one actually lands on.
      ------------------------------------------------------------------------ */
-  --foreground: #e6edf9;
-  --foreground-secondary: #b8c6de;
-  --muted: #8494b0;
-  /* Measured, not eyeballed: this is the lowest-contrast text step and it is
-     the one that appears on the *lightest* dark surface (--surface-inset, e.g.
-     .badge-neutral, .kv rows). The previous #7386a6 measured 4.41:1 there and
-     failed AA; #7a8db0 is the same hue shifted just far enough to clear it at
-     4.85:1, while staying visibly dimmer than --muted (5.57:1). Do not darken
-     this token without re-measuring against --surface-inset, not --surface. */
-  --muted-foreground: #7a8db0;
-  --text-on-accent: #ffffff;
-  /* For the *bright* fills — cyan, emerald, rose. Those land at 1.8–2.8:1
-     against white text, which is unreadable; against this near-black they sit
-     at 6.8–10.5:1. Blue keeps white because it is dark enough for it. */
-  --text-on-bright: #04121a;
+  --foreground: #f2f3f5;
+  --foreground-secondary: #c4c7ce;
+  --muted: #9296a0;
+  /* Lowest-contrast step. Measured against --surface-inset (#111318): 4.9:1,
+     still visibly dimmer than --muted (5.9:1). Do not darken. */
+  --muted-foreground: #7f838d;
+  --text-on-accent: #050506;
+  --text-on-bright: #050506;
 
   /* ---------------------------------------------------------------------------
-     Operator blue — the colour of things a human clicks
+     Operator bone — the colour of things a human clicks. Bone white on black
+     is the Gallery Heading's own hierarchy: the operator is the brightest
+     object on screen.
      ------------------------------------------------------------------------ */
-  --primary: #2563eb;
-  --primary-hover: #2f6df0;
-  --primary-active: #1d4ed8;
-  --primary-soft: rgb(37 99 235 / 0.16);
-  --primary-border: rgb(37 99 235 / 0.44);
+  --primary: #eceef2;
+  --primary-hover: #ffffff;
+  --primary-active: #d6d8dd;
+  --primary-soft: rgb(255 255 255 / 0.08);
+  --primary-border: rgb(255 255 255 / 0.22);
 
   /* ---------------------------------------------------------------------------
-     Machine cyan — the colour of things the agent did. Deliberately a
-     different hue from --primary so the two never read as one system.
+     Machine ice — the colour of things the agent did. A cold blue that stays
+     clearly distinct from bone white, never competing with status red.
      ------------------------------------------------------------------------ */
-  --agent: #22d3ee;
-  --agent-hover: #67e8f9;
-  --agent-soft: rgb(34 211 238 / 0.12);
-  --agent-border: rgb(34 211 238 / 0.36);
+  --agent: #7fd6e6;
+  --agent-hover: #a4e5f0;
+  --agent-soft: rgb(127 214 230 / 0.1);
+  --agent-border: rgb(127 214 230 / 0.34);
 
-  /* Brighter cyan, reserved for a *live* affordance: a stream that is still
-     pushing, a run that is still advancing. */
-  --accent-ai: #7dd3fc;
-  --accent-ai-soft: rgb(125 211 252 / 0.12);
-  --accent-ai-border: rgb(125 211 252 / 0.4);
+  /* Brighter ice, reserved for a *live* affordance: a stream still pushing. */
+  --accent-ai: #a9d9ff;
+  --accent-ai-soft: rgb(169 217 255 / 0.1);
+  --accent-ai-border: rgb(169 217 255 / 0.38);
 
   /* ---------------------------------------------------------------------------
-     Status — semantic, theme-independent names
+     Status — semantic, theme-independent names. The only saturated hues.
      ------------------------------------------------------------------------ */
-  --success: #34d399;
-  --success-soft: rgb(52 211 153 / 0.13);
-  --success-border: rgb(52 211 153 / 0.36);
+  --success: #74e0b3;
+  --success-soft: rgb(116 224 179 / 0.12);
+  --success-border: rgb(116 224 179 / 0.34);
 
-  --warning: #fbbf24;
-  --warning-soft: rgb(251 191 36 / 0.13);
-  --warning-border: rgb(251 191 36 / 0.36);
+  --warning: #f3c969;
+  --warning-soft: rgb(243 201 105 / 0.12);
+  --warning-border: rgb(243 201 105 / 0.34);
 
-  --critical: #f87171;
-  --critical-soft: rgb(248 113 113 / 0.13);
-  --critical-border: rgb(248 113 113 / 0.36);
+  --critical: #ff7b72;
+  --critical-soft: rgb(255 123 114 / 0.12);
+  --critical-border: rgb(255 123 114 / 0.34);
 
-  --info: #60a5fa;
-  --info-soft: rgb(96 165 250 / 0.13);
-  --info-border: rgb(96 165 250 / 0.36);
+  --info: #8cb6ff;
+  --info-soft: rgb(140 182 255 / 0.12);
+  --info-border: rgb(140 182 255 / 0.34);
 
   /* ---------------------------------------------------------------------------
      Severity scale — the only sanctioned red / orange usage
@@ -137,16 +126,16 @@
   --sev-critical-soft: var(--critical-soft);
   --sev-critical-border: var(--critical-border);
 
-  --sev-high: #fb923c;
-  --sev-high-soft: rgb(251 146 60 / 0.13);
-  --sev-high-border: rgb(251 146 60 / 0.36);
+  --sev-high: #ffa06b;
+  --sev-high-soft: rgb(255 160 107 / 0.12);
+  --sev-high-border: rgb(255 160 107 / 0.34);
 
   --sev-medium: var(--warning);
   --sev-medium-soft: var(--warning-soft);
   --sev-medium-border: var(--warning-border);
 
   --sev-low: var(--muted-foreground);
-  --sev-low-soft: rgb(115 134 166 / 0.1);
+  --sev-low-soft: rgb(127 131 141 / 0.1);
   --sev-low-border: var(--border);
 
   /* ---------------------------------------------------------------------------
@@ -160,42 +149,53 @@
   --health-investigating: var(--agent);
 
   /* ---------------------------------------------------------------------------
-     Atmosphere — the tokens behind the "high-tech" layer.
-     Kept as variables so shell / cards / overlays share one recipe instead of
-     each inventing its own glow.
+     Atmosphere — the "deep space" layer. Kept as tokens so every surface shares
+     one glow recipe instead of inventing its own.
      ------------------------------------------------------------------------ */
-  --grid-line: rgb(120 165 255 / 0.05);
-  --grid-line-strong: rgb(120 165 255 / 0.09);
+  --grid-line: rgb(255 255 255 / 0.026);
+  --grid-line-strong: rgb(255 255 255 / 0.05);
 
-  /* Corner blooms behind the whole app. Alpha is the theme-sensitive part: a
-     glow that lifts a near-black ground stains a white one, so the light theme
-     drops these to roughly a third. */
-  --bloom-primary: rgb(37 99 235 / 0.17);
-  --bloom-agent: rgb(34 211 238 / 0.12);
+  --bloom-primary: rgb(122 144 255 / 0.12);
+  --bloom-agent: rgb(92 214 255 / 0.09);
 
-  /* Panels get a 1px top highlight: a lit edge is what separates a dark panel
-     from a dark background without needing a heavy shadow. */
+  /* Panels get a 1px top highlight — a lit edge is what separates a black panel
+     from a black background without a heavy shadow. */
   --sheen: linear-gradient(
     180deg,
-    rgb(160 200 255 / 0.07) 0%,
-    rgb(160 200 255 / 0.02) 38%,
+    rgb(255 255 255 / 0.055) 0%,
+    rgb(255 255 255 / 0.012) 34%,
     transparent 100%
   );
 
-  --glow-primary: 0 0 0 1px rgb(37 99 235 / 0.5), 0 0 22px -6px rgb(37 99 235 / 0.65);
-  --glow-agent: 0 0 0 1px rgb(34 211 238 / 0.45), 0 0 22px -6px rgb(34 211 238 / 0.6);
-  --glow-critical: 0 0 0 1px rgb(248 113 113 / 0.45), 0 0 22px -6px rgb(248 113 113 / 0.55);
+  --glow-primary: 0 0 0 1px rgb(255 255 255 / 0.2), 0 16px 44px -18px rgb(255 255 255 / 0.28);
+  --glow-agent: 0 0 0 1px rgb(127 214 230 / 0.38), 0 16px 44px -18px rgb(127 214 230 / 0.42);
+  --glow-critical: 0 0 0 1px rgb(255 123 114 / 0.38), 0 16px 44px -18px rgb(255 123 114 / 0.42);
   --focus-ring: 0 0 0 2px var(--background), 0 0 0 4px var(--accent-ai);
 
   /* ---------------------------------------------------------------------------
-     Typography
+     Procedural noise material.
 
+     Each slot is a fallback gradient until `src/three/noiseTextures.ts` renders
+     the real WebGL material and overwrites these custom properties on :root.
+     Every gallery surface, noise button and primary button samples the same
+     four slots, which is what keeps the material identical across components.
+     ------------------------------------------------------------------------ */
+  --noise-rising-diagonal: linear-gradient(135deg, #17191e 0%, #0a0b0d 58%, #030304 100%);
+  --noise-falling-diagonal: linear-gradient(315deg, #17191e 0%, #0a0b0d 58%, #030304 100%);
+  --noise-horizontal-sweep: linear-gradient(90deg, #14161a 0%, #070809 55%, #111318 100%);
+  --noise-vertical-loop: linear-gradient(180deg, #17191e 0%, #0a0b0d 58%, #030304 100%);
+  --noise-card: linear-gradient(160deg, #16181d 0%, #08090b 62%, #030304 100%);
+  --noise-hero: linear-gradient(105deg, #1a1d24 0%, #0b0c0f 46%, #030304 100%);
+  --noise-about: linear-gradient(315deg, #17191e 0%, #0a0b0d 58%, #030304 100%);
+
+  /* Static grain tile, layered over the WebGL field so the film grain survives
+     even in browsers that fall back to CSS. */
+  --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E");
+
+  /* ---------------------------------------------------------------------------
+     Typography
      Self-hosted IBM Plex (via @fontsource) rather than a CDN: the console has
-     to render identically offline and in mainland networks where Google Fonts
-     is unreliable. Plex is an engineered typeface — the slab-ish terminals and
-     the tall x-height hold up at 11–13px, which is where this UI actually
-     lives. It also gives the Latin/number side a voice of its own instead of
-     inheriting whatever the OS ships.
+     to render identically offline and in mainland networks.
      ------------------------------------------------------------------------ */
   --font-sans:
     'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC',
@@ -203,9 +203,6 @@
   --font-mono:
     'IBM Plex Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
     monospace;
-
-  /* Display face: same family, pulled tight. A separate family at this size
-     would fight the data instead of framing it. */
   --font-display: var(--font-sans);
 
   --text-2xs: 10px;
@@ -218,11 +215,12 @@
   --text-2xl: 26px;
   --text-3xl: 34px;
   --text-4xl: 44px;
+  --text-5xl: clamp(44px, 5.2vw, 78px);
+  --text-6xl: clamp(62px, 8.4vw, 128px);
 
-  /* CJK needs more air than Latin at the same nominal size, so the body
-     leading is set for the Chinese text this product is actually written in. */
-  --leading-tight: 1.2;
-  --leading-snug: 1.4;
+  /* CJK needs more air than Latin at the same nominal size. */
+  --leading-tight: 1.06;
+  --leading-snug: 1.3;
   --leading-normal: 1.7;
   --leading-loose: 1.85;
 
@@ -230,14 +228,14 @@
   --weight-medium: 500;
   --weight-semibold: 600;
 
-  --tracking-tight: -0.014em;
-  --tracking-display: -0.03em;
+  --tracking-tight: -0.016em;
+  --tracking-display: -0.042em;
   --tracking-normal: 0;
   --tracking-wide: 0.02em;
-  --tracking-caps: 0.09em;
+  --tracking-caps: 0.11em;
 
   /* ---------------------------------------------------------------------------
-     Spacing — 4px base
+     Spacing — 4px base, with the larger Gallery rhythm at the end.
      ------------------------------------------------------------------------ */
   --space-0: 0;
   --space-1: 4px;
@@ -251,53 +249,70 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
 
   /* ---------------------------------------------------------------------------
-     Radius — sharp. Small radii are what separate an instrument panel from a
-     consumer app; 12px+ corners would round off the precision.
+     Radius — soft, unified. Gallery plates are deliberately rounder than the
+     dense instrument controls; both scale from the same six steps.
      ------------------------------------------------------------------------ */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+  --radius-3xl: 36px;
   --radius-full: 9999px;
 
   /* ---------------------------------------------------------------------------
-     Shadow — on a dark ground a shadow alone is nearly invisible, so each step
-     pairs a contact shadow with a faint accent bloom to keep the edge legible.
+     Shadow — one weak layer plus a contact line. On pure black a large soft
+     shadow is invisible; the line is what actually separates objects.
      ------------------------------------------------------------------------ */
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-sm: 0 2px 8px rgb(0 0 0 / 0.45);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(130 170 255 / 0.08);
-  --shadow-lg: 0 18px 48px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(130 170 255 / 0.1);
-  --shadow-xl: 0 32px 80px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(130 170 255 / 0.12);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.6);
+  --shadow-sm: 0 4px 14px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.04);
+  --shadow-md: 0 14px 34px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-lg: 0 24px 60px rgb(0 0 0 / 0.68), 0 0 0 1px rgb(255 255 255 / 0.07);
+  --shadow-xl: 0 40px 96px rgb(0 0 0 / 0.72), 0 0 0 1px rgb(255 255 255 / 0.08);
 
-  --ring: 0 0 0 2px rgb(37 99 235 / 0.55);
-  --ring-agent: 0 0 0 2px rgb(34 211 238 / 0.5);
-  --ring-critical: 0 0 0 2px rgb(248 113 113 / 0.5);
+  --ring: 0 0 0 2px rgb(255 255 255 / 0.45);
+  --ring-agent: 0 0 0 2px rgb(127 214 230 / 0.55);
+  --ring-critical: 0 0 0 2px rgb(255 123 114 / 0.55);
 
   /* ---------------------------------------------------------------------------
-     Motion
+     Motion — 160–240ms, ease-in-out. Anything slower is reserved for the slow
+     Gallery rotation, which is a scene, not an affordance.
      ------------------------------------------------------------------------ */
   --dur-instant: 80ms;
   --dur-fast: 160ms;
-  --dur-base: 240ms;
-  --dur-slow: 380ms;
-  --dur-slower: 560ms;
+  --dur-base: 200ms;
+  --dur-slow: 240ms;
+  --dur-slower: 480ms;
+  --dur-scene: 1200ms;
 
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* ---------------------------------------------------------------------------
+     3D perspective — shared by every tilt / parallax surface. Components read
+     these instead of declaring their own perspective, so the whole site has one
+     vanishing point.
+     ------------------------------------------------------------------------ */
+  --perspective: 1400px;
+  --tilt-max: 5deg;
+  --lift-max: 10px;
+  --depth-near: 26px;
+  --depth-far: -60px;
 
   /* ---------------------------------------------------------------------------
      Layout
      ------------------------------------------------------------------------ */
-  --sidebar-width: 236px;
-  --sidebar-width-collapsed: 60px;
-  --topbar-height: 56px;
-  --content-max: 1680px;
+  --sidebar-width: 248px;
+  --sidebar-width-collapsed: 68px;
+  --topbar-height: 60px;
+  --shell-gap: 16px;
+  --content-max: 1560px;
 
   --z-base: 0;
   --z-sticky: 100;
@@ -306,140 +321,17 @@
   --z-modal: 400;
   --z-toast: 500;
   --z-palette: 600;
+  --z-grain: 900;
 
-  /* Chart palette — categorical, tuned for the dark ground */
-  --chart-1: #2f6df0;
-  --chart-2: #22d3ee;
-  --chart-3: #34d399;
-  --chart-4: #fbbf24;
-  --chart-5: #fb923c;
-  --chart-6: #a78bfa;
-  --chart-grid: #141d33;
-  --chart-axis: #7386a6;
-}
-
-/* =============================================================================
-   Light theme — the alternate, on [data-theme="light"].
-   Same hue families, re-valued for a light ground: deeper inks, translucent
-   tints become solid washes, and the hairlines lose their glow because a
-   glowing line on white is just a grey line that looks broken.
-   ========================================================================== */
-[data-theme='light'] {
-  --background: #f4f6fb;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --surface-sunken: #f1f4f9;
-  --surface-inset: #eef2f9;
-  --surface-hover: #e8eef8;
-
-  --surface-glass: rgb(255 255 255 / 0.82);
-  --surface-glass-strong: rgb(255 255 255 / 0.94);
-
-  --topo-grid: #dde4ef;
-  --topo-edge: #9aa8bf;
-  --topo-mask: rgb(244 246 251 / 0.74);
-
-  --overlay: rgb(15 23 42 / 0.34);
-
-  --border: #dde4f0;
-  --border-strong: #c2cddf;
-  --border-subtle: #eaeff7;
-
-  --control-border: #c2cddf;
-  --control-border-hover: #a5b4cb;
-
-  --foreground: #0b1120;
-  --foreground-secondary: #33405a;
-  --muted: #5b6a86;
-  /* The light theme's text steps are held to the same measurement as the dark
-     ones, against the *darkest* light surface it lands on (--surface-inset).
-     The previous #8593ab measured 2.77:1 there and 3.11:1 on white — it was a
-     dark-theme value carried over without re-checking. #5f6e8b clears every
-     surface (4.57–5.13:1) while staying a visible step below --muted (1.06:1
-     apart), so the four-step hierarchy survives the correction. */
-  --muted-foreground: #5f6e8b;
-  --text-on-accent: #ffffff;
-  --text-on-bright: #ffffff;
-
-  --primary: #1d4ed8;
-  --primary-hover: #1e40af;
-  --primary-active: #1e3a8a;
-  --primary-soft: #e8efff;
-  --primary-border: #bfd3ff;
-
-  --agent: #0e7490;
-  --agent-hover: #155e75;
-  --agent-soft: #e0f5fa;
-  --agent-border: #a5e2ef;
-
-  --accent-ai: #0369a1;
-  --accent-ai-soft: #e0f2fe;
-  --accent-ai-border: #bae6fd;
-
-  /* Status ramps re-valued for a white ground. Each of these sits on its own
-     -soft wash, so the number to check is against that wash, not against pure
-     white — the earlier values were chosen as "looks right on white" and came
-     in at 3.35–4.41:1 on the badge itself. */
-  --success: #047857;
-  --success-soft: #ecfdf5;
-  --success-border: #a7f3d0;
-
-  --warning: #b45309;
-  --warning-soft: #fffbeb;
-  --warning-border: #fde68a;
-
-  --critical: #d61f1f;
-  --critical-soft: #fef2f2;
-  --critical-border: #fecaca;
-
-  --info: #0369a1;
-  --info-soft: #f0f9ff;
-  --info-border: #bae6fd;
-
-  --sev-high: #c2410c;
-  --sev-high-soft: #fff7ed;
-  --sev-high-border: #fed7aa;
-
-  --sev-low: #5f6e8b;
-  --sev-low-soft: #eef2f9;
-  --sev-low-border: #dde4f0;
-
-  --grid-line: rgb(19 40 82 / 0.045);
-  --grid-line-strong: rgb(19 40 82 / 0.08);
-
-  /* A dark-ground glow is a stain on white. Keep the hue, cut the alpha. */
-  --bloom-primary: rgb(29 78 216 / 0.06);
-  --bloom-agent: rgb(14 116 144 / 0.05);
-
-  --sheen: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 0.9) 0%,
-    rgb(255 255 255 / 0) 60%
-  );
-
-  --glow-primary: 0 0 0 1px rgb(29 78 216 / 0.28), 0 6px 18px -8px rgb(29 78 216 / 0.4);
-  --glow-agent: 0 0 0 1px rgb(14 116 144 / 0.25), 0 6px 18px -8px rgb(14 116 144 / 0.35);
-  --glow-critical: 0 0 0 1px rgb(214 31 31 / 0.25), 0 6px 18px -8px rgb(214 31 31 / 0.3);
-  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
-
-  --shadow-xs: 0 1px 2px rgb(11 17 32 / 0.05);
-  --shadow-sm: 0 1px 3px rgb(11 17 32 / 0.07), 0 1px 2px rgb(11 17 32 / 0.04);
-  --shadow-md: 0 4px 12px rgb(11 17 32 / 0.08), 0 1px 3px rgb(11 17 32 / 0.04);
-  --shadow-lg: 0 12px 32px rgb(11 17 32 / 0.1), 0 2px 8px rgb(11 17 32 / 0.04);
-  --shadow-xl: 0 24px 56px rgb(11 17 32 / 0.14), 0 4px 12px rgb(11 17 32 / 0.05);
-
-  --ring: 0 0 0 2px rgb(29 78 216 / 0.4);
-  --ring-agent: 0 0 0 2px rgb(14 116 144 / 0.4);
-  --ring-critical: 0 0 0 2px rgb(214 31 31 / 0.4);
-
-  --chart-1: #1d4ed8;
-  --chart-2: #0e7490;
-  --chart-3: #059669;
-  --chart-4: #b45309;
-  --chart-5: #ea580c;
-  --chart-6: #7c3aed;
-  --chart-grid: #eaeff7;
-  --chart-axis: #8593ab;
+  /* Chart palette — categorical, tuned for pure black */
+  --chart-1: #e7e9ee;
+  --chart-2: #7fd6e6;
+  --chart-3: #74e0b3;
+  --chart-4: #f3c969;
+  --chart-5: #ffa06b;
+  --chart-6: #b9a7ff;
+  --chart-grid: #121419;
+  --chart-axis: #7f838d;
 }
 
 /* =============================================================================
@@ -452,6 +344,7 @@
     --dur-base: 0.01ms;
     --dur-slow: 0.01ms;
     --dur-slower: 0.01ms;
+    --dur-scene: 0.01ms;
   }
 
   *,

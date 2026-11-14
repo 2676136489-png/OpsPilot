@@ -169,13 +169,12 @@
   box-shadow: var(--focus-ring);
 }
 
-/* Active filter = cyan, matching the sidebar's active item. One "you are here"
-   language across the whole shell; blue-on-blue everywhere was reading as two
-   unrelated products. */
+/* Active filter = bone, matching the sidebar's active item. One "you are here"
+   language across the whole shell; a cyan chip would compete with status. */
 .filter-chip.active {
-  background: var(--agent-soft);
-  border-color: var(--agent-border);
-  color: var(--agent);
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.24);
+  color: var(--foreground);
 }
 
 .filter-chip-count {
@@ -186,8 +185,8 @@
 }
 
 .filter-chip.active .filter-chip-count {
-  color: var(--agent);
-  opacity: 0.8;
+  color: var(--foreground);
+  opacity: 0.75;
 }
 
 /* --- Tabs ----------------------------------------------------------------- */

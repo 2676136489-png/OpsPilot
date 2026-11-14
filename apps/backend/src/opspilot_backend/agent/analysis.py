@@ -450,13 +450,13 @@ RECOVERY_TEMPLATES: dict[str, list[dict[str, Any]]] = {
         {
             "tool": "increase_pool_size",
             "risk_level": "MEDIUM",
-            "reason": "调高连接池上限，让排队的请求先被服务，同时再修泄漏。",
-            "expected_impact": "数据库负载升高；这只是争取时间，治不了泄漏。",
+            "reason": "提高连接池上限，先处理排队请求，再修复连接泄漏。",
+            "expected_impact": "数据库负载上升；该措施仅用于临时缓解，无法修复泄漏。",
         },
         {
             "tool": "restart_service",
             "risk_level": "HIGH",
-            "reason": "重启可以把被打满的连接池清空。",
+            "reason": "重启可释放已占满的数据库连接池。",
             "expected_impact": "短暂停机；如果泄漏还在，连接池会重新填满。",
         },
     ],
@@ -464,13 +464,13 @@ RECOVERY_TEMPLATES: dict[str, list[dict[str, Any]]] = {
         {
             "tool": "clear_deadlock",
             "risk_level": "HIGH",
-            "reason": "杀掉一直持有行锁的阻塞事务。",
+            "reason": "终止持续持有行锁的阻塞事务。",
             "expected_impact": "被阻塞行上正在执行的语句会被回滚。",
         },
         {
             "tool": "restart_postgres",
             "risk_level": "CRITICAL",
-            "reason": "如果锁清不掉，就重启数据库。",
+            "reason": "若无法清除锁，重启数据库。",
             "expected_impact": "所有连接断开；依赖它的服务会短暂全面不可用。",
         },
     ],
@@ -478,7 +478,7 @@ RECOVERY_TEMPLATES: dict[str, list[dict[str, Any]]] = {
         {
             "tool": "rollback_deployment",
             "risk_level": "CRITICAL",
-            "reason": "回退到错误率飙升之前最后一个已知正常的版本。",
+            "reason": "回滚至错误率上升前最后一个已知正常版本。",
             "expected_impact": "回退版本会暂时失去它带来的功能。",
         }
     ],
@@ -486,13 +486,13 @@ RECOVERY_TEMPLATES: dict[str, list[dict[str, Any]]] = {
         {
             "tool": "rollback_deployment",
             "risk_level": "CRITICAL",
-            "reason": "回退那个引入无界持有的版本。",
+            "reason": "回滚引入无界内存持有的版本。",
             "expected_impact": "暂时失去该功能；堆内存会永久回到基线。",
         },
         {
             "tool": "restart_service",
             "risk_level": "HIGH",
-            "reason": "在容器被 OOM 杀掉之前，先重启把泄漏的堆内存收回。",
+            "reason": "在容器触发 OOM 前重启，释放泄漏的堆内存。",
             "expected_impact": "短暂停机；泄漏会从零重新开始累积。",
         },
     ],

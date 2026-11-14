@@ -38,7 +38,7 @@ export function Sidebar({
 
   const groups: NavGroup[] = [
     {
-      label: '指挥',
+      label: '监控',
       items: [
         { to: '/', label: '指挥中心', icon: 'grid', end: true },
         { to: '/incidents', label: '故障', icon: 'alert' },
@@ -46,7 +46,7 @@ export function Sidebar({
       ],
     },
     {
-      label: 'AI 运维',
+      label: '处置',
       items: [
         { to: '/agents', label: 'Agent 运行', icon: 'cpu' },
         { to: '/approvals', label: '审批队列', icon: 'check', badge: pending || undefined },
@@ -54,9 +54,10 @@ export function Sidebar({
       ],
     },
     {
-      label: '洞察',
+      label: '分析',
       items: [
-        { to: '/evaluations', label: '评估', icon: 'flask' },
+        { to: '/capabilities', label: '能力目录', icon: 'layers' },
+        { to: '/evaluations', label: '评估报告', icon: 'flask' },
         { to: '/observability', label: '可观测性', icon: 'activity' },
       ],
     },
@@ -68,7 +69,7 @@ export function Sidebar({
         <div className="brand-mark">OP</div>
         <div className="brand-text">
           <span className="brand-name">OpsPilot</span>
-          <span className="brand-tag">故障响应指挥台</span>
+          <span className="brand-tag">故障响应平台</span>
         </div>
       </div>
 

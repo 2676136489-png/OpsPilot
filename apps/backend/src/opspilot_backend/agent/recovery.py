@@ -137,7 +137,7 @@ PROFILES: dict[str, ActionProfile] = {
             risk=RiskLevel.MEDIUM.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
             reason="调高连接池上限，让排队的请求先能被服务。",
-            impact="数据库并发压力上升；只是争取时间，并不能止住泄漏。",
+            impact="数据库并发压力上升；该措施仅用于临时缓解，无法修复泄漏。",
             verify="连接池利用率降到 80% 以下，连接超时不再出现",
             rollback_strategy=(
                 "无法就地回退：底层的泄漏修好之后，抬高的上限自然失效，因此保留原样。"
@@ -180,7 +180,7 @@ PROFILES: dict[str, ActionProfile] = {
             tool="clear_deadlock",
             risk=RiskLevel.HIGH.value,
             permission=PermissionLevel.MUTATE_INFRA.value,
-            reason="杀掉那些一直持有行锁的阻塞事务。",
+            reason="终止持续持有行锁的阻塞事务。",
             impact="被阻塞行上正在执行的语句会被回滚。",
             verify="查询延迟回到基线，锁等待消失",
             rollback_strategy=(

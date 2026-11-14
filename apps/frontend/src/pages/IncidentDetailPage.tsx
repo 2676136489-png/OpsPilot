@@ -218,7 +218,7 @@ export function IncidentDetailPage() {
               <div style={{ padding: 'var(--space-4)' }}>
                 <EmptyState
                   title="该故障尚未调查"
-                  hint="启动后 Agent 会自主取证、提出并否证假设，再给出四态结论之一。"
+                  hint="启动后，Agent 将执行证据采集、假设验证与根因判定，并输出对应结论。"
                   action={
                     <Button onClick={start} loading={starting} icon={<Icon name="lightning" size={14} />}>
                       开始调查
@@ -255,7 +255,7 @@ export function IncidentDetailPage() {
 
           <Panel
             title="恢复方案"
-            subtitle="按顺序执行；高风险步骤会先挂起等人工批准"
+            subtitle="按顺序执行；高风险步骤需人工审批后继续"
           >
             {run?.recovery_plan?.steps?.length ? (
               <>
@@ -462,7 +462,7 @@ function RootCauseBlock({
       </div>
       <ConfidenceMeter
         value={rootCause.confidence}
-        hint="证据支持度，不是正确率。100% 表示本轮采到的证据全部指向该根因，与是否查错无关。"
+        hint="证据支持度表示当前证据与根因的关联程度，不代表诊断准确率。"
       />
       {rootCause.reasoning_summary && (
         <p className="rc-reasoning">{rootCause.reasoning_summary}</p>
@@ -555,7 +555,7 @@ function EmptyForStatus({ run }: { run: AgentRun | null }) {
         <EmptyState
           compact
           title="证据不足，未给出根因"
-          hint="Agent 主动放弃下结论，而不是给出一个它无法证明的答案。"
+          hint="证据不足，未输出根因结论。"
         />
       )
     }
@@ -571,7 +571,7 @@ function EmptyForStatus({ run }: { run: AgentRun | null }) {
     }
     return <EmptyState compact title="本次调查未得出结论" />
   }
-  return <EmptyState compact title="等待诊断结果…" />
+  return <EmptyState compact title="等待诊断结果" />
 }
 
 function formatDuration(ms: number): string {

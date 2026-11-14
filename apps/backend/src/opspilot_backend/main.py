@@ -108,7 +108,9 @@ if EMBED_SIMULATOR:
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from opspilot_backend.api.v1.router import api_v1_router
 from opspilot_backend.core.config import get_settings
@@ -140,6 +142,17 @@ WEB_ROOT = Path(
 ).resolve()
 
 HAS_WEB = (WEB_ROOT / "index.html").is_file()
+
+# Swagger UI is vendored into the repository instead of loaded from jsDelivr.
+# `/docs` is part of the deployed surface too, so leaving it on a CDN would mean
+# the project is not self-contained even though the SPA itself is.
+SWAGGER_DIR = Path(__file__).resolve().parent / "static" / "swagger-ui"
+
+# The SPA entry document must never be cached: after a redeploy it still points
+# at the previous hashed bundle, which is the classic "I published but the old
+# screen is still there" failure. Hashed assets below /assets are immutable.
+NO_STORE_HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate"}
+IMMUTABLE_HEADERS = {"Cache-Control": "public, max-age=31536000, immutable"}
 
 
 @asynccontextmanager
@@ -483,12 +496,37 @@ def _stamp_database_file() -> None:
 
 app = FastAPI(
     title=settings.app_name,
-    description="OpsPilot —— 由 Agent 驱动的故障调查与恢复平台",
+    description="OpsPilot —— 故障调查与恢复平台",
     version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None,
+    redoc_url=None,
     lifespan=lifespan,
 )
+
+# Local Swagger UI. The bundle and stylesheet are committed under
+# `opspilot_backend/static/swagger-ui/`, so `/docs` makes no external requests.
+app.mount(
+    "/static/swagger-ui",
+    StaticFiles(directory=SWAGGER_DIR),
+    name="swagger-ui",
+)
+
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_ui_docs():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} · API 文档",
+        swagger_js_url="/static/swagger-ui/swagger-ui-bundle.js",
+        swagger_css_url="/static/swagger-ui/swagger-ui.css",
+        swagger_favicon_url="/favicon.svg",
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_redirect():
+    """ReDoc used a second CDN bundle; redirect to the self-hosted UI."""
+    return RedirectResponse(url="/docs")
 
 # --- Domain errors → HTTP ---
 # `domain/errors.py` documents the API layer as the single place AppError
@@ -724,7 +762,7 @@ app.include_router(api_v1_router, prefix="/api/v1")
 async def root(request: Request):
     """Root endpoint — the SPA when it is built, service info otherwise."""
     if HAS_WEB:
-        return FileResponse(WEB_ROOT / "index.html")
+        return FileResponse(WEB_ROOT / "index.html", headers=NO_STORE_HEADERS)
     return {
         "name": settings.app_name,
         "version": "0.1.0",
@@ -748,8 +786,13 @@ if HAS_WEB:
         # naive join here would turn `/../../etc/passwd` into a file read.
         candidate = (WEB_ROOT / full_path).resolve()
         if candidate.is_file() and candidate.is_relative_to(WEB_ROOT):
-            return FileResponse(candidate)
-        return FileResponse(WEB_ROOT / "index.html")
+            headers = (
+                IMMUTABLE_HEADERS
+                if candidate.is_relative_to(WEB_ROOT / "assets")
+                else NO_STORE_HEADERS
+            )
+            return FileResponse(candidate, headers=headers)
+        return FileResponse(WEB_ROOT / "index.html", headers=NO_STORE_HEADERS)
 
 
 if __name__ == "__main__":

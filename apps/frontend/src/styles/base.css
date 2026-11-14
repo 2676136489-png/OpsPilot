@@ -1,5 +1,16 @@
 /* =============================================================================
    OpsPilot Design System — Reset + global base
+   -----------------------------------------------------------------------------
+   The document ground is pure black and the atmosphere is supplied by the
+   Three.js space field behind the app. Two CSS layers still exist on <body>:
+
+     1. a low, wide bloom pair (brand ice + machine cyan) so the first paint is
+        already in the right colour temperature before WebGL starts;
+     2. a static grain tile on top of everything (`.grain-overlay`), which is
+        what makes the UI read as film rather than as a flat dark theme.
+
+   The old 40px lattice was removed together with the light theme: the Gallery
+   language has no visible grid, only material and depth.
    ========================================================================== */
 
 *,
@@ -14,26 +25,6 @@ body,
   height: 100%;
 }
 
-/*
- * The document ground.
- *
- * A flat fill is what makes a dark console look like an unfinished dark mode.
- * Five layers go down instead, in this order:
- *
- *   1. grain          — 3% fractal noise, baked opacity. Kills banding in the
- *                       large dark gradients; without it a 1600px gradient
- *                       shows visible steps on 8-bit panels.
- *   2. hairline grid  — 40px lattice at 5% white-blue. Reads as an instrument
- *                       surface, and gives the eye something to align numbers
- *                       against while scanning a table.
- *   3. + 4. glows     — one brand-blue, one machine-cyan, both anchored above
- *                       the fold so the "horizon" sits behind the top bar.
- *   5. base colour.
- *
- * `background-attachment: fixed` keeps the lattice still while content scrolls;
- * without it the grid slides with the page and the whole thing reads as a
- * texture accident rather than a designed surface.
- */
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -43,39 +34,53 @@ body {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1, 'cv05' 1;
   background-color: var(--background);
-  /* Five layers, cheapest first. The two radial blooms and the noise strength
-     are tokens because they are *tinted for the ground*: the same 17%-alpha
-     brand blue that reads as a glow on near-black reads as a blue stain on
-     white, and the same 3.5% white noise that adds grain to a dark panel is
-     invisible — and wrong — on a light one. The grid lines are already
-     theme-aware via --grid-line. */
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E"),
-    repeating-linear-gradient(
-      0deg,
-      var(--grid-line) 0 1px,
-      transparent 1px 40px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      var(--grid-line) 0 1px,
-      transparent 1px 40px
-    ),
-    radial-gradient(72rem 46rem at 14% -10%, var(--bloom-primary), transparent 62%),
-    radial-gradient(64rem 42rem at 96% 2%, var(--bloom-agent), transparent 60%);
+    radial-gradient(88rem 52rem at 12% -12%, var(--bloom-primary), transparent 60%),
+    radial-gradient(74rem 48rem at 96% 0%, var(--bloom-agent), transparent 58%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/*
- * The lattice deliberately stays *under* the panels rather than being masked
- * out. Every panel, card and table carries an opaque `--surface`, so the grid
- * shows through exactly where it is useful — the gutters between blocks — and
- * disappears where reading happens. Masking the shell instead would erase the
- * one place the texture does any work.
- */
+/* The WebGL space field paints behind the application. It is fixed so the
+   scene does not slide with content — a moving star field behind a static
+   panel reads as a bug. */
+.space-field {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Film grain sits above everything, including overlays. It is deliberately
+   pointer-events:none so it can never steal a click. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  background-image: var(--grain-tile);
+  background-size: 180px 180px;
+  opacity: 0.085;
+  mix-blend-mode: soft-light;
+}
+
+/* -----------------------------------------------------------------------------
+   Optical helpers — every tilted surface gets its vanishing point here.
+   -------------------------------------------------------------------------- */
+.perspective {
+  perspective: var(--perspective);
+  perspective-origin: 50% 40%;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
 
 h1,
 h2,
@@ -89,12 +94,6 @@ blockquote {
   margin: 0;
 }
 
-/*
- * Headings pull the display tracking. Negative tracking is what stops a
- * technical face from looking loose at large sizes — at 26px the default
- * sidebearing leaves visible gaps between glyphs that the same text at 13px
- * does not have.
- */
 h1,
 h2,
 h3 {
@@ -135,7 +134,7 @@ ol {
 }
 
 a {
-  color: var(--primary);
+  color: var(--foreground);
   text-decoration: none;
 }
 
@@ -159,11 +158,8 @@ samp {
 }
 
 /* -----------------------------------------------------------------------------
-   Focus — a lit cyan ring, never removed.
-
-   Cyan rather than the brand blue: on a near-black ground blue at 2px reads as
-   "slightly brighter", while cyan is unmistakable. The 2px offset keeps the ring
-   off the element's own edge so it survives on top of a filled button too.
+   Focus — an ice ring, never removed. On pure black a bone ring would be
+   invisible on a bone button, so focus stays on the machine hue.
    -------------------------------------------------------------------------- */
 :focus-visible {
   outline: 2px solid var(--accent-ai);
@@ -171,7 +167,6 @@ samp {
   border-radius: var(--radius-xs);
 }
 
-/* Mouse users don't get the ring; keyboard users always do. */
 :focus:not(:focus-visible) {
   outline: none;
 }
@@ -210,12 +205,11 @@ samp {
 }
 
 /* -----------------------------------------------------------------------------
-   Selection — cyan wash, dark text. The inverse pair keeps the selected text
-   above 4.5:1 instead of inheriting a low-contrast light-on-accent.
+   Selection — ice wash, black text.
    -------------------------------------------------------------------------- */
 ::selection {
-  background: var(--agent);
-  color: #04121a;
+  background: var(--accent-ai);
+  color: #04070c;
 }
 
 /* -----------------------------------------------------------------------------
@@ -253,30 +247,21 @@ samp {
   color: var(--muted-foreground);
 }
 
-/*
- * De-emphasised text and inline links.
- *
- * Both names were already used across half the pages and never defined, so
- * "muted" secondary text rendered at full foreground contrast everywhere.
- * They live here rather than in a pattern file because they are generic.
- */
 .muted {
   color: var(--muted);
 }
 
 .link {
-  color: var(--primary);
-  text-decoration: none;
+  color: var(--foreground);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
 }
 
 .link:hover {
-  text-decoration: underline;
+  text-decoration-color: var(--foreground);
 }
 
-/*
- * Page-level block used by the error boundary, which renders outside the
- * router's layout and therefore has no `.content-inner` to sit inside.
- */
 .page {
   display: flex;
   flex-direction: column;
@@ -284,7 +269,6 @@ samp {
   padding: var(--space-6);
 }
 
-/* Directional stack helpers used by page layouts */
 .stack {
   display: flex;
   flex-direction: column;

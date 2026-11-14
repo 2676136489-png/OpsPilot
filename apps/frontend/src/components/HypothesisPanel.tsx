@@ -28,8 +28,8 @@ export function HypothesisPanel({ events }: { events?: readonly AgentEvent[] }) 
 
   return (
     <Panel
-      title="候选假设与证伪"
-      subtitle={`${list.length} 个候选 · 含被排除的方向`}
+      title="候选假设与验证"
+      subtitle={`共 ${list.length} 条候选 · 包含已排除假设`}
     >
       <ul className="hypo-list">
         {list.map((h) => (

@@ -37,17 +37,6 @@
   animation: skeleton-sweep 1.4s var(--ease-in-out) infinite;
 }
 
-/* On a light ground the same 7% cyan is invisible, so the sweep needs a
-   slightly higher alpha and no tint. */
-[data-theme='light'] .skeleton::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgb(255 255 255 / 0.7),
-    transparent
-  );
-}
-
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after {
     animation: none;

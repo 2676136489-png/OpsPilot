@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
-import { Panel, PageHeader } from '../ui/Panel'
+import { Panel } from '../ui/Panel'
 import { Button } from '../ui/Button'
 import { Alert, EmptyState, LoadingBlock, SkeletonText } from '../ui/Feedback'
 import { Icon } from '../ui/Icon'
@@ -12,6 +12,10 @@ import { MetricCard } from '../components/MetricCard'
 import { ServiceGrid } from '../components/ServiceGrid'
 import { IncidentTable } from '../components/IncidentTable'
 import { ActivityFeed } from '../components/ActivityFeed'
+import { GalleryHeading } from '../components/gallery/GalleryHeading'
+import { GalleryGrid } from '../components/gallery/GalleryGrid'
+import { AboutSection } from '../components/gallery/AboutSection'
+import { NoiseButton } from '../components/gallery/NoiseButton'
 
 export function CommandCenterPage() {
   const navigate = useNavigate()
@@ -38,7 +42,7 @@ export function CommandCenterPage() {
   const inject = async (name: string) => {
     try {
       await api.simulator.injectScenario(name)
-      toast.success('故障已注入', `${name} 场景已激活`)
+      toast.success('模拟场景已注入', `场景 ${name} 已激活`)
       await Promise.all([incidents.refetch(), services.refetch()])
     } catch (e) {
       toast.error('注入失败', e instanceof Error ? e.message : String(e))
@@ -49,29 +53,33 @@ export function CommandCenterPage() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-5)' }}>
-      <PageHeader
-        title="指挥中心"
-        description="实时掌握生产环境状态、活动故障与 AI Agent 调查进展。"
+      <GalleryHeading
         actions={
           <>
-            <Button
-              variant="default"
-              icon={<Icon name="refresh" size={14} />}
+            <NoiseButton
+              variant="falling-diagonal"
+              tone="ghost"
+              icon={<Icon name="refresh" size={15} />}
               onClick={() => {
                 void services.refetch()
                 void incidents.refetch()
                 void stats.refetch()
               }}
             >
-              刷新
-            </Button>
+              刷新数据
+            </NoiseButton>
 
             <Dropdown
               menuWidth={300}
               trigger={({ toggle }) => (
-                <Button variant="primary" icon={<Icon name="lightning" size={14} />} onClick={toggle}>
-                  注入故障
-                </Button>
+                <NoiseButton
+                  variant="horizontal-sweep"
+                  tone="solid"
+                  icon={<Icon name="lightning" size={15} />}
+                  onClick={toggle}
+                >
+                  注入模拟场景
+                </NoiseButton>
               )}
             >
               {({ close }) => (
@@ -106,7 +114,7 @@ export function CommandCenterPage() {
 
       {!connected && (
         <Alert tone="critical" title="后端未连接">
-          无法访问 API。请确认后端服务运行在 8000 端口。
+          无法访问 API。请确认后端服务已启动。
         </Alert>
       )}
 
@@ -124,7 +132,7 @@ export function CommandCenterPage() {
           sub={`共 ${serviceList.length} 个服务`}
         />
         <MetricCard
-          label="Agent 成功率"
+          label="调查成功率"
           value={formatPercent(stats.data?.success_rate)}
           tone="agent"
           sub={
@@ -141,14 +149,7 @@ export function CommandCenterPage() {
         />
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.35fr) minmax(0, 1fr)',
-          gap: 'var(--space-4)',
-          alignItems: 'start',
-        }}
-      >
+      <div className="command-split">
         <Panel
           title="活动故障"
           subtitle={activeIncidents.length > 0 ? `${activeIncidents.length} 个未关闭` : undefined}
@@ -174,7 +175,7 @@ export function CommandCenterPage() {
             <EmptyState
               icon={<Icon name="check" size={18} />}
               title="暂无活动故障"
-              hint="所有服务运行正常。可注入一个模拟场景来体验完整的 AI 调查流程。"
+              hint="所有服务运行正常。可注入模拟场景，执行完整的调查流程。"
               compact
             />
           ) : (
@@ -199,7 +200,7 @@ export function CommandCenterPage() {
           ) : services.isError ? (
             <EmptyState tone="critical" title="加载服务失败" compact />
           ) : serviceList.length === 0 ? (
-            <EmptyState title="暂无服务注册" hint="注入故障场景后服务会自动注册。" compact />
+            <EmptyState title="暂无服务注册" hint="注入模拟场景后，服务会自动注册。" compact />
           ) : (
             <ServiceGrid services={serviceList.slice(0, 6)} />
           )}
@@ -207,6 +208,9 @@ export function CommandCenterPage() {
       </div>
 
       <ActivityFeed />
+
+      <GalleryGrid />
+      <AboutSection />
     </div>
   )
 }

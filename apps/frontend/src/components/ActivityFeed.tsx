@@ -199,7 +199,7 @@ export function ActivityFeed() {
         <EmptyState
           icon={<Icon name="cpu" size={18} />}
           title="暂无 Agent 活动"
-          hint="在故障上启动一次 AI 调查，这里会实时展示 Agent 的每一步动作。"
+          hint="启动调查后，这里会实时显示 Agent 的执行步骤。"
           compact
           action={
             <Button size="sm" variant="agent" onClick={() => (window.location.href = '/incidents')}>

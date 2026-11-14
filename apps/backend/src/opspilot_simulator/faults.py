@@ -369,7 +369,7 @@ FAULT_MODELS: dict[str, FaultModel] = {
         ),
         FaultModel(
             kind="cpu_spike",
-            label="CPU 打满",
+            label="CPU 饱和",
             apply=_apply_cpu_spike,
             logs=_logs_cpu_spike,
         ),
@@ -519,7 +519,7 @@ ACTION_MODELS: dict[str, ActionModel] = {
         ),
         ActionModel(
             name="clear_deadlock",
-            label="杀掉持有行锁的阻塞事务",
+            label="终止持有行锁的阻塞事务",
             risk="HIGH",
             applies_to=("datastore",),
             removes=frozenset({"slow_database"}),

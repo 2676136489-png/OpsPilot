@@ -38,7 +38,7 @@ export function IncidentsPage() {
     <>
       <PageHeader
         title="故障"
-        description="全部故障事件。点击任意一行查看详情，或直接对单条故障启动 AI 调查。"
+        description="全部故障事件。可查看详情或对单条故障启动调查。"
         actions={
           <Button
             icon={<Icon name="refresh" size={14} />}
@@ -103,7 +103,7 @@ export function IncidentsPage() {
           <EmptyState
             icon={<Icon name="check" size={20} />}
             title="没有匹配的故障"
-            hint="调整筛选条件，或在指挥中心注入一个模拟故障来生成事件。"
+            hint="调整筛选条件，或在指挥中心注入模拟场景。"
           />
         ) : (
           <IncidentTable

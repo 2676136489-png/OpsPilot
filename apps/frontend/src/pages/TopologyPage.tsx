@@ -99,7 +99,7 @@ function TopologyInner() {
     <>
       <PageHeader
         title="服务拓扑"
-        description="服务依赖关系与实时健康状态。颜色只表达健康度——一眼扫出问题服务。"
+        description="服务依赖关系与实时健康状态。颜色用于区分健康状态。"
         actions={
           <>
             <LiveDot
@@ -137,7 +137,7 @@ function TopologyInner() {
           <EmptyState
             icon={<Icon name="topology" size={20} />}
             title="暂无服务数据"
-            hint="拓扑图由服务清单生成。加载服务后这里会自动出现节点。"
+            hint="拓扑由服务清单生成，加载后自动显示节点。"
           />
         ) : (
           <div className="topo-canvas">

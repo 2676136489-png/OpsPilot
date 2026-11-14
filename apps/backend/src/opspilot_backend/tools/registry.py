@@ -698,7 +698,7 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
     ),
     "clear_deadlock": _spec(
         name="clear_deadlock",
-        description="杀掉持有行锁的阻塞事务。",
+        description="终止持有行锁的阻塞事务。",
         category="recovery",
         input_model=ClearDeadlockInput,
         output_model=MutationOutput,

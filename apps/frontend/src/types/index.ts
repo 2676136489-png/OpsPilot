@@ -555,6 +555,7 @@ export interface ListResponse<T> {
 
 export interface Scenario {
   name: string
+  title: string
   description: string
   service: string
   severity: IncidentSeverity

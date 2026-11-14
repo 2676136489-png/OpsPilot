@@ -9,12 +9,12 @@
 
 ## 现象
 
-死锁的表现和连接池耗尽不一样：
+死锁与连接池耗尽的区别如下：
 
 - 应用日志出现 PostgreSQL 的死锁检测消息：`ERROR: deadlock detected`
 - 特定事务 ID 显示回滚：`DETAIL: Process X waits for ShareLock on transaction Y`
-- 错误率飙升但延迟**不**飙升（这点和连接池耗尽不同）
-- 重试风暴 —— 客户端在死锁回滚后重试，进一步加剧压力
+- 错误率上升，延迟通常不上升（与连接池耗尽不同）
+- 重试放大：客户端在死锁回滚后重试，进一步增加压力
 - `pg_stat_activity` 显示多个会话同时卡在 `Lock` 状态
 
 ## 根因模式
@@ -54,19 +54,19 @@ Transaction B: UPDATE orders SET ... WHERE id=1;   -- 等待 A → 死锁
 
 ### 紧急处置
 
-3. **PostgreSQL 的牺牲者选择机制** —— PostgreSQL 会自动杀掉死锁环中最年轻的事务。如果因级联重试而不够用：
-   - 手动杀掉阻塞方：`SELECT pg_terminate_backend(<pid>);`
+3. **PostgreSQL 牺牲者选择机制**：PostgreSQL 会自动终止死锁环中最年轻的事务。若因级联重试仍无法恢复：
+   - 手动终止阻塞会话：`SELECT pg_terminate_backend(<pid>);`
    - 扩容只读副本，把读流量分担出去
 
 ### 长期预防
 
-4. **统一加锁顺序** —— 检查所有 UPDATE/DELETE 路径，确保它们访问表的顺序始终一致（例如始终先 orders 后 payments，绝不反过来）。
+4. **统一加锁顺序**：检查所有 UPDATE/DELETE 路径，确保访问表的顺序一致（例如始终先 orders 后 payments）。
 
-5. **保持事务简短** —— 把非关键操作（发邮件、统计分析）移出事务边界。
+5. **保持事务简短**：将非关键操作（邮件发送、统计分析）移出事务边界。
 
 6. **对队列式处理使用 SELECT ... FOR UPDATE SKIP LOCKED**，避免等待被锁的行。
 
-7. **在客户端加上带指数退避的重试**：
+7. **在客户端配置指数退避重试**：
    ```
    重试 3 次，延迟：100ms → 200ms → 400ms
    ```

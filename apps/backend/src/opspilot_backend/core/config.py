@@ -85,9 +85,9 @@ class Settings(BaseSettings):
     llm_provider: str = Field(default="auto", alias="OPSPILOT_LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_base_url: str = Field(
-        default="https://api.openai.com/v1", alias="OPENAI_BASE_URL"
+        default="https://open.bigmodel.cn/api/paas/v4", alias="OPENAI_BASE_URL"
     )
-    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    openai_model: str = Field(default="glm-4-flash", alias="OPENAI_MODEL")
     openai_temperature: float = Field(default=0.1, alias="OPENAI_TEMPERATURE")
     openai_timeout: float = Field(default=60.0, alias="OPENAI_TIMEOUT")
 

@@ -195,14 +195,14 @@ EVALUATION_NOTES = {
     "suite": "opspilot-agent-eval",
     "version": "2.0",
     "scoring": {
-        "root_cause_accuracy": "判定出的分类是否等于场景的 root_cause_category（接受领域别名，见 CATEGORY_ALIASES）",
-        "evidence_recall": "场景 expected_evidence 关键词中，有多少在已收集证据里出现过",
-        "evidence_utilisation": "已收集的证据里，最终诊断实际引用了多少",
-        "tool_selection_accuracy": "故障所要求的每一类工具是否都被真正调用过",
-        "recovery_success_rate": "某个恢复动作成功，且真实环境通过了该场景自己的判定条件",
-        "verification_accuracy": "Agent 自己给出的验证结论与环境 ground truth 的判定是否一致",
-        "false_diagnosis_rate": "给出了 CONFIRMED/PROBABLE 结论但结论是错的（弃权不计入）",
-        "escalation_rate": "没有自行收敛、而是移交人工的比例",
+        "root_cause_accuracy": "诊断输出的根因类别与场景标注一致的比例（支持领域别名，见 CATEGORY_ALIASES）",
+        "evidence_recall": "已收集证据对场景 expected_evidence 关键词的覆盖率",
+        "evidence_utilisation": "最终诊断引用的证据占已收集证据的比例",
+        "tool_selection_accuracy": "故障所需工具类型全部被调用的比例",
+        "recovery_success_rate": "恢复动作执行成功且环境通过场景判定条件的比例",
+        "verification_accuracy": "Agent 输出的验证结论与环境基准判定一致的比例",
+        "false_diagnosis_rate": "输出确定性结论但结论与标注不一致的比例（未给出结论不计入）",
+        "escalation_rate": "未能自动完成并移交人工的比例",
     },
 }
 

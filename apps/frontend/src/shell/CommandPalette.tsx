@@ -40,7 +40,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'nav-agents', group: '导航', label: 'Agent 运行', icon: 'cpu', run: () => navigate('/agents') },
       { id: 'nav-approvals', group: '导航', label: '审批队列', icon: 'check', run: () => navigate('/approvals') },
       { id: 'nav-runbooks', group: '导航', label: '运维手册', icon: 'book', run: () => navigate('/runbooks') },
-      { id: 'nav-evals', group: '导航', label: '评估', icon: 'flask', run: () => navigate('/evaluations') },
+      { id: 'nav-capabilities', group: '导航', label: '能力目录', icon: 'layers', run: () => navigate('/capabilities') },
+      { id: 'nav-evals', group: '导航', label: '评估报告', icon: 'flask', run: () => navigate('/evaluations') },
       { id: 'nav-obs', group: '导航', label: '可观测性', icon: 'activity', run: () => navigate('/observability') },
     ]
 

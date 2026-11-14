@@ -42,7 +42,7 @@ export function RunbooksPage() {
     setBusy(name)
     try {
       await api.simulator.injectScenario(name)
-      toast.success('已注入故障', `场景 ${name} 已在模拟器中激活`)
+      toast.success('已注入模拟场景', `场景 ${name} 已激活`)
     } catch (e) {
       toast.error('注入失败', toMessage(e))
     } finally {
@@ -54,7 +54,7 @@ export function RunbooksPage() {
     <>
       <PageHeader
         title="运维手册"
-        description="按故障场景组织的处置手册。每一步都对应 Agent 恢复方案中的一次受控操作。"
+        description="按服务与故障场景组织的标准处置步骤。每个场景对应一份可执行手册。"
         actions={
           <Button
             icon={<Icon name="refresh" size={14} />}
@@ -77,7 +77,7 @@ export function RunbooksPage() {
           <EmptyState
             icon={<Icon name="book" size={20} />}
             title="暂无运维手册"
-            hint="运维手册来自模拟器的场景定义。启动模拟环境后这里会出现条目。"
+            hint="运维手册由模拟场景定义生成。连接后端后显示条目。"
           />
         </Panel>
       ) : (
@@ -120,25 +120,25 @@ export function RunbooksPage() {
                             <li className="step-item">
                               <span className="step-index">1</span>
                               <span className="step-title">
-                                确认影响面：核对 <code>{service}</code> 的错误率与 P95 延迟是否偏离基线。
+                                核对 <code>{service}</code> 的错误率、P95 延迟与基线偏差，确认影响范围。
                               </span>
                             </li>
                             <li className="step-item">
                               <span className="step-index">2</span>
                               <span className="step-title">
-                                拉取最近一次部署记录与变更时间，排查是否由发布引入。
+                                检索最近一次部署与变更记录，确认是否存在时间关联。
                               </span>
                             </li>
                             <li className="step-item">
                               <span className="step-index">3</span>
                               <span className="step-title">
-                                检查下游依赖（数据库 / 缓存 / 第三方）是否出现级联异常。
+                                检查数据库、缓存与第三方依赖的健康状态。
                               </span>
                             </li>
                             <li className="step-item">
                               <span className="step-index">4</span>
                               <span className="step-title">
-                                生成恢复方案并提交审批；未获批前不得执行任何改动生产环境的操作。
+                                生成恢复方案并提交审批。未获批准前不执行生产环境变更。
                               </span>
                             </li>
                             <li className="step-item">
@@ -157,7 +157,7 @@ export function RunbooksPage() {
                               onClick={() => inject(sc.name)}
                               icon={<Icon name="lightning" size={13} />}
                             >
-                              注入此故障
+                              注入模拟场景
                             </Button>
                           </div>
                         </div>

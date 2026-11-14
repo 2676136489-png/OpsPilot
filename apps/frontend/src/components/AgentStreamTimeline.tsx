@@ -149,12 +149,12 @@ export function AgentStreamTimeline({
       <div className="agent-timeline-sub">
         {view === 'steps' ? (
           <>
-            每个节点一条，含它发起的工具调用与结果 · 共 {toolCallCount} 次工具调用
+            每个节点一条，包含工具调用与结果 · 共 {toolCallCount} 次工具调用
             {run.current_node && live ? ` · 当前节点 ${stageLabel(run.current_node)}` : ''}
           </>
         ) : (
           <>
-            服务端推送的原始事件流，含被否掉的假设与重新规划 · 断线后从游标续传
+            服务端推送的原始事件流，包含假设否决与重规划记录；断线后从游标续传。
           </>
         )}
       </div>
@@ -166,7 +166,7 @@ export function AgentStreamTimeline({
               <span>载入调查步骤…</span>
             </div>
           ) : steps.length === 0 ? (
-            <EmptyState compact title="尚无已执行的节点" hint="Agent 正在启动。" />
+            <EmptyState compact title="尚无已执行的节点" hint="调查正在启动。" />
           ) : (
             <AnimatePresence initial={false}>
               {steps.map((step) => (

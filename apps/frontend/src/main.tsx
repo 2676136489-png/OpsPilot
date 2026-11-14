@@ -21,11 +21,7 @@ import {
   registerRemount,
 } from './lib/remount'
 import { resetPortalRoot } from './lib/portal'
-import { applyInitialTheme } from './lib/theme'
 import './index.css'
-
-// Theme is applied before first paint so there is no flash of the wrong palette.
-applyInitialTheme()
 
 let root: Root | null = null
 
@@ -82,26 +78,25 @@ function renderFallback(reason: string | null) {
   )
   const container = document.createElement('div')
   container.id = 'root'
-  // Hard-coded to the console's own dark palette: this page renders with no
-  // stylesheet, so if it used a light ground it would be the one screen in the
-  // product that looks like it belongs to something else.
+  // Hard-coded to the console's own palette: this page renders with no
+  // stylesheet, so it must carry the same pure-black ground as the app.
   container.style.cssText =
     'padding:48px;max-width:720px;margin:0 auto;min-height:100vh;box-sizing:border-box;' +
-    'background:#070a12;color:#e6edf9;' +
+    'background:#000;color:#f2f3f5;' +
     'font:14px/1.7 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI","Noto Sans SC",sans-serif'
 
   const h = document.createElement('h1')
   h.textContent = '界面无法稳定渲染'
   h.style.cssText =
-    'font-size:22px;margin:0 0 14px;font-weight:600;letter-spacing:-0.02em;color:#e6edf9'
+    'font-size:24px;margin:0 0 14px;font-weight:500;letter-spacing:-0.03em;color:#f2f3f5'
 
   const p1 = document.createElement('p')
   p1.textContent =
     '页面 DOM 与 React 视图连续多次失去同步，已停止自动重建，以免反复覆盖真正的故障。'
-  p1.style.cssText = 'color:#b8c6de;margin:0'
+  p1.style.cssText = 'color:#c4c7ce;margin:0'
 
   const p2 = document.createElement('p')
-  p2.style.cssText = 'color:#fbbf24;margin-top:14px'
+  p2.style.cssText = 'color:#f3c969;margin-top:14px'
   p2.textContent = reason
     ? `检测到外部改动：${reason}。请关闭该页面的浏览器翻译后重新加载。`
     : '若浏览器装有会改写页面内容的扩展（翻译、阅读模式、取词插件），请在本站点停用后重新加载。'
@@ -109,8 +104,8 @@ function renderFallback(reason: string | null) {
   const btn = document.createElement('button')
   btn.textContent = '重新加载'
   btn.style.cssText =
-    'margin-top:24px;padding:9px 20px;border-radius:6px;border:1px solid #3a4864;' +
-    'background:#172033;color:#e6edf9;cursor:pointer;font:inherit'
+    'margin-top:24px;padding:10px 22px;border-radius:999px;border:1px solid #41454f;' +
+    'background:#111318;color:#f2f3f5;cursor:pointer;font:inherit'
   btn.addEventListener('click', () => window.location.reload())
 
   container.append(h, p1, p2, btn)

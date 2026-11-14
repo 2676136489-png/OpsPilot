@@ -44,7 +44,7 @@ export function ObservabilityPage() {
     <>
       <PageHeader
         title="可观测性"
-        description="OpsPilot 自身与所管理服务的健康状态，以及 Prometheus 格式的原始指标。"
+        description="OpsPilot 与所管理服务的健康状态，以及 Prometheus 格式的原始指标。"
         actions={
           <>
             <LiveDot

@@ -1,15 +1,22 @@
 /* =============================================================================
-   App Shell — Sidebar + TopBar + Content
+   App Shell — floating rail + floating top bar + content
+   -----------------------------------------------------------------------------
+   The chrome is no longer edge-to-edge. Both the rail and the top bar are
+   detached glass plates sitting on the black space field, with the same radius
+   family as the Gallery cards. That is what ties the operational surface to the
+   Gallery language instead of leaving it as a conventional dashboard frame.
    ========================================================================== */
 
 .app-shell {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
+  gap: var(--shell-gap);
   min-height: 100vh;
-  /* Transparent on purpose: the ground's lattice and glow live on <body>, and an
-     opaque shell would erase both. Only the chrome below is filled. */
+  padding: var(--shell-gap);
   background: transparent;
-  transition: grid-template-columns var(--dur-base) var(--ease-out);
+  transition: grid-template-columns var(--dur-base) var(--ease-in-out);
 }
 
 .app-shell[data-collapsed='true'] {
@@ -21,59 +28,80 @@
    -------------------------------------------------------------------------- */
 .sidebar {
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: var(--shell-gap);
+  height: calc(100vh - var(--shell-gap) * 2);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-3) var(--space-2);
-  /* Glass, not a solid fill: the blue glow anchored at 14% -10% on <body> has to
-     bleed through the chrome, which is what stops the left rail from reading as
-     a separate grey object pasted onto the page.
-
-     Built from --surface-glass* rather than literal rgba() dark blues. With
-     literals the sidebar stayed near-black in the light theme, and every
-     navigation label — which correctly resolves to a dark ink for a light
-     ground — landed on a dark panel at roughly 1.6:1. Tinting through tokens
-     is what makes the rail follow the theme. */
-  background: linear-gradient(
-    180deg,
-    var(--surface-glass) 0%,
-    var(--surface-glass-strong) 100%
-  );
-  backdrop-filter: blur(18px) saturate(1.4);
-  border-right: 1px solid var(--border);
-  box-shadow: 1px 0 0 rgb(130 170 255 / 0.04), 24px 0 60px -40px rgb(0 0 0 / 0.9);
+  padding: var(--space-4) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(180deg, var(--surface-glass), var(--surface-glass-strong));
+  backdrop-filter: blur(22px) saturate(1.35);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
   z-index: var(--z-sticky);
+}
+
+/* A faint noise plate under the rail's glass, so the sidebar is the same
+   material as a Gallery card rather than a flat translucent block. */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise-vertical-loop);
+  background-size: cover;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.sidebar > * {
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar-brand {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  height: 40px;
+  gap: var(--space-3);
+  height: 44px;
   padding: 0 var(--space-2);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
   flex: none;
 }
 
-/* The mark is the one place both brand hues meet: blue-to-cyan on a dark chip,
-   with a bloom around it. It is the only element allowed to carry both. */
+/* The mark is the one saturated object in the chrome: a bone ring around a
+   noise-filled chip. It is the only place the Gallery material appears at
+   30px, which is what makes it feel like a physical object. */
 .brand-mark {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   flex: none;
   border-radius: var(--radius-md);
-  background: linear-gradient(140deg, var(--primary) 0%, var(--agent) 100%);
-  color: #04121a;
+  border: 1px solid var(--border-strong);
+  background-color: #0a0b0d;
+  background-image: var(--noise-horizontal-sweep);
+  background-size: cover;
+  color: var(--foreground);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   letter-spacing: -0.02em;
-  box-shadow: 0 0 0 1px rgb(130 200 255 / 0.22), 0 0 18px -4px rgb(34 211 238 / 0.55);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    0 8px 20px -10px rgb(0 0 0 / 0.9);
+}
+
+.brand-mark::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(var(--radius-md) + 3px);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  pointer-events: none;
 }
 
 .brand-text {
@@ -94,14 +122,13 @@
   font-size: var(--text-2xs);
   color: var(--muted-foreground);
   letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -120,13 +147,11 @@
   white-space: nowrap;
 }
 
-/* A 3px rule after the label, so the group reads as a titled section rather
-   than as a run of indented words. */
 .sidebar-group-label::after {
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--border);
+  background: var(--border-subtle);
 }
 
 .nav-item {
@@ -134,7 +159,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  height: 36px;
+  height: 38px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-md);
   color: var(--foreground-secondary);
@@ -142,21 +167,22 @@
   font-weight: var(--weight-medium);
   white-space: nowrap;
   transition:
-    background-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
+    background-color var(--dur-fast) var(--ease-in-out),
+    color var(--dur-fast) var(--ease-in-out),
+    box-shadow var(--dur-fast) var(--ease-in-out),
+    transform var(--dur-fast) var(--ease-in-out);
 }
 
 .nav-item:hover {
-  background: var(--surface-inset);
+  background: rgb(255 255 255 / 0.05);
   color: var(--foreground);
   text-decoration: none;
+  transform: translateX(1px);
 }
 
 .nav-item.active {
-  background: linear-gradient(90deg, rgb(34 211 238 / 0.14) 0%, rgb(34 211 238 / 0.03) 100%);
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0.02) 100%);
   color: var(--foreground);
-  box-shadow: inset 0 0 0 1px rgb(34 211 238 / 0.18);
 }
 
 .nav-item.active::before {
@@ -168,10 +194,8 @@
   width: 3px;
   height: 18px;
   border-radius: var(--radius-full);
-  background: var(--agent);
-  /* The rail is the "you are here" signal; a bloom makes it findable at a glance
-     in a 236px column of 11 similar rows. */
-  box-shadow: 0 0 10px 0 rgb(34 211 238 / 0.75);
+  background: var(--foreground);
+  box-shadow: 0 0 12px 0 rgb(255 255 255 / 0.65);
 }
 
 .nav-item-icon {
@@ -179,7 +203,7 @@
   width: 16px;
   height: 16px;
   color: currentColor;
-  opacity: 0.85;
+  opacity: 0.82;
 }
 
 .nav-item-label {
@@ -199,10 +223,10 @@
   justify-content: center;
   border-radius: var(--radius-full);
   background: var(--critical);
-  color: var(--text-on-accent);
+  color: #120404;
   font-size: var(--text-2xs);
   font-family: var(--font-mono);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
 }
 
 .nav-item-badge-neutral {
@@ -232,7 +256,6 @@
   white-space: nowrap;
 }
 
-/* Collapsed sidebar hides labels but keeps icons and tooltips */
 .app-shell[data-collapsed='true'] .brand-text,
 .app-shell[data-collapsed='true'] .nav-item-label,
 .app-shell[data-collapsed='true'] .nav-item-badge,
@@ -257,67 +280,27 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 100vh;
+  min-height: calc(100vh - var(--shell-gap) * 2);
 }
 
 /* -----------------------------------------------------------------------------
-   Top bar — glass, with a scan line along its lower edge.
-
-   That scan is the product's one piece of deliberate motion. It reads as a
-   live link to the agent runtime, which is the thing an operator glances up to
-   check, and it is the only element in the chrome allowed to move.
+   Top bar — a glass pill, not a full-width strip.
    -------------------------------------------------------------------------- */
 .topbar {
   position: sticky;
-  top: 0;
+  top: var(--shell-gap);
   z-index: var(--z-sticky);
   display: flex;
   align-items: center;
   gap: var(--space-3);
   height: var(--topbar-height);
-  padding: 0 var(--space-5);
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
   background: var(--surface-glass);
-  backdrop-filter: blur(16px) saturate(1.6);
-  border-bottom: 1px solid var(--border);
-}
-
-.topbar::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgb(125 211 252 / 0.85) 42%,
-    rgb(47 109 240 / 0.85) 54%,
-    transparent 100%
-  );
-  background-size: 240% 100%;
-  background-repeat: no-repeat;
-  animation: horizon-scan 7s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes horizon-scan {
-  from {
-    background-position: -70% 0;
-  }
-  to {
-    background-position: 170% 0;
-  }
-}
-
-/* The scan is decoration; under reduced motion it is removed rather than
-   frozen, because a stalled gradient sitting on the primary edge reads as a
-   rendering artefact instead of as "motion was turned off". */
-@media (prefers-reduced-motion: reduce) {
-  .topbar::after {
-    animation: none;
-    background: linear-gradient(90deg, transparent, rgb(125 211 252 / 0.4), transparent);
-  }
+  backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: var(--shadow-md);
 }
 
 .topbar-left {
@@ -362,26 +345,27 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  height: 32px;
+  height: 36px;
   padding: 0 var(--space-2) 0 var(--space-3);
-  min-width: 220px;
-  border: 1px solid var(--control-border);
-  border-radius: var(--radius-md);
-  background: var(--surface-inset);
+  min-width: 230px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: rgb(255 255 255 / 0.03);
   color: var(--muted);
   font-size: var(--text-sm);
   cursor: pointer;
   transition:
-    border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
+    border-color var(--dur-fast) var(--ease-in-out),
+    background-color var(--dur-fast) var(--ease-in-out),
+    color var(--dur-fast) var(--ease-in-out),
+    box-shadow var(--dur-fast) var(--ease-in-out);
 }
 
 .topbar-search:hover {
-  border-color: var(--agent-border);
-  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  background: rgb(255 255 255 / 0.06);
   color: var(--foreground-secondary);
-  box-shadow: 0 0 0 3px rgb(34 211 238 / 0.08);
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 0.03);
 }
 
 .kbd {
@@ -403,9 +387,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  height: 24px;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-sm);
+  height: 26px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
   background: var(--warning-soft);
   border: 1px solid var(--warning-border);
   color: var(--warning);
@@ -415,48 +399,13 @@
   text-transform: uppercase;
 }
 
-/* A 5px dot, because "this is a simulated environment" is the one label on
-   screen that must never be missed, and an unadorned pill reads as decoration. */
 .env-badge::before {
   content: '';
   width: 5px;
   height: 5px;
   border-radius: var(--radius-full);
   background: var(--warning);
-  box-shadow: 0 0 8px 0 rgb(251 191 36 / 0.8);
-}
-
-/* --- Theme toggle ---------------------------------------------------------- */
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  border: 1px solid var(--control-border);
-  border-radius: var(--radius-md);
-  background: var(--surface-inset);
-  color: var(--muted);
-  cursor: pointer;
-  transition:
-    border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
-}
-
-.theme-toggle:hover {
-  border-color: var(--agent-border);
-  color: var(--agent);
-  box-shadow: 0 0 0 3px rgb(34 211 238 / 0.1);
-}
-
-.theme-toggle svg {
-  transition: transform var(--dur-slow) var(--ease-spring);
-}
-
-.theme-toggle:hover svg {
-  transform: rotate(22deg);
+  box-shadow: 0 0 8px 0 rgb(243 201 105 / 0.8);
 }
 
 .topbar-clock {
@@ -469,29 +418,11 @@
 
 /* -----------------------------------------------------------------------------
    Content region
-
-   The atmosphere layers (grid, brand bloom) are painted on <body>, so without
-   a ground of their own they show through wherever the content column is
-   short — on a 4-row incident table the entire lower half of the screen became
-   visible graph paper, which reads as an unfinished page rather than as depth.
-
-   The scrim below is transparent at the very top and bottom, so the grid still
-   bleeds through the gutters above the first panel and below the last one, and
-   along the sidebar seam. In the middle, where a page's content actually sits,
-   the ground goes solid. That is the whole intent: the grid is supposed to be
-   visible only where nothing is.
-   ----------------------------------------------------------------------------- */
+   -------------------------------------------------------------------------- */
 .content {
   flex: 1;
   min-width: 0;
-  padding: var(--space-5);
-  background: linear-gradient(
-    180deg,
-    transparent 0,
-    var(--background) 96px,
-    var(--background) calc(100% - 96px),
-    transparent 100%
-  );
+  padding: 0 0 var(--space-8);
 }
 
 .content-inner {
@@ -500,16 +431,17 @@
   width: 100%;
 }
 
-/* Route enter animation. AppShell keys this wrapper by pathname, so a
-   navigation remounts it and the animation replays — no JS touches the DOM. */
+/* Route enter — a 3D settle rather than a fade. The keyed wrapper in AppShell
+   replays this on navigation; no JS touches the DOM. */
 .route-enter {
-  animation: route-enter var(--dur-base) var(--ease-out) both;
+  animation: route-enter var(--dur-slow) var(--ease-out) both;
+  transform-origin: 50% 0%;
 }
 
 @keyframes route-enter {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translate3d(0, 10px, -30px) rotateX(1.2deg);
   }
   to {
     opacity: 1;
@@ -523,33 +455,40 @@
   }
 }
 
+/* -----------------------------------------------------------------------------
+   Page header — the editorial tier of the type system.
+   -------------------------------------------------------------------------- */
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-5);
+  margin: var(--space-2) 0 var(--space-6);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .page-title-block {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .page-title {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-semibold);
+  font-size: clamp(32px, 3.4vw, 52px);
+  font-weight: var(--weight-medium);
   letter-spacing: var(--tracking-display);
   line-height: var(--leading-tight);
+  text-wrap: balance;
 }
 
 .page-description {
-  font-size: var(--text-base);
+  font-size: var(--text-md);
   color: var(--muted);
   max-width: 76ch;
+  line-height: var(--leading-normal);
 }
 
 .page-actions {
@@ -560,7 +499,7 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Responsive — collapse the sidebar to icon rail, then to a top strip
+   Responsive — collapse the sidebar to an icon rail, then tighten the shell
    -------------------------------------------------------------------------- */
 @media (max-width: 1180px) {
   .app-shell {
@@ -582,9 +521,29 @@
   }
 }
 
+@media (max-width: 860px) {
+  :root {
+    --shell-gap: 10px;
+  }
+
+  .sidebar {
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--radius-xl);
+  }
+
+  .topbar {
+    border-radius: var(--radius-lg);
+  }
+
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 720px) {
   .content {
-    padding: var(--space-3);
+    padding-bottom: var(--space-6);
   }
   .topbar {
     padding: 0 var(--space-3);
@@ -592,5 +551,8 @@
   .topbar-search,
   .topbar-clock {
     display: none;
+  }
+  .breadcrumb {
+    font-size: var(--text-sm);
   }
 }
