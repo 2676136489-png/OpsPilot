@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <g transform="translate(68 28)" stroke="#F4F2ED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 12 52 22 32 32 12 22Z" fill="#F4F2ED" fill-opacity=".12"/>
+    <path d="M12 22 32 32 52 22"/>
+    <path d="M12 31 32 41 52 31" opacity=".62"/>
+    <path d="M12 40 32 50 52 40" opacity=".34"/>
+    <circle cx="32" cy="22" r="2.2" fill="#F4F2ED" stroke="none"/>
+  </g>
+  <text x="100" y="130" text-anchor="middle" fill="#F4F2ED" font-family="'IBM Plex Sans', 'Segoe UI', 'PingFang SC', sans-serif" font-size="30" letter-spacing="-1.2">
+    <tspan font-weight="400">Ops</tspan><tspan font-weight="600">Pilot</tspan>
+  </text>
+  <text x="100" y="151" text-anchor="middle" fill="#8C8C90" font-family="'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace" font-size="7" letter-spacing="2.4">INCIDENT RESPONSE</text>
+</svg>

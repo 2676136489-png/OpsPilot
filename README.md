@@ -1,4 +1,7 @@
-# OpsPilot
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="brand/ops-pilot-horizontal-dark.svg" />
+  <img src="brand/ops-pilot-horizontal-light.svg" alt="OpsPilot" width="260" />
+</picture>
 
 OpsPilot 是一个面向生产环境的故障响应平台，覆盖故障定级、证据采集、假设验证、根因诊断、恢复审批、执行回滚与恢复验证。
 

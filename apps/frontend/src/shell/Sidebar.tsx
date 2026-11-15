@@ -66,7 +66,9 @@ export function Sidebar({
   return (
     <aside className="sidebar" aria-label="主导航">
       <div className="sidebar-brand">
-        <div className="brand-mark">OP</div>
+        <div className="brand-mark" aria-hidden="true">
+          <img src="/brand/ops-pilot-mark.svg" alt="" width={30} height={30} />
+        </div>
         <div className="brand-text">
           <span className="brand-name">OpsPilot</span>
           <span className="brand-tag">故障响应平台</span>

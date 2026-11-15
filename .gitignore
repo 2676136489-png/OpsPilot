@@ -72,6 +72,7 @@ apps/backend/alembic/versions/__pycache__/
 
 # Agent working files
 .workbuddy/
+.trae-html-share-packages/
 
 # Hosting app descriptor — contains an absolute local path
 *.genie

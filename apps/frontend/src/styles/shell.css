@@ -70,38 +70,21 @@
   flex: none;
 }
 
-/* The mark is the one saturated object in the chrome: a bone ring around a
-   noise-filled chip. It is the only place the Gallery material appears at
-   30px, which is what makes it feel like a physical object. */
+/* The Stack mark is the only brand object in the chrome. It keeps its own
+   silhouette instead of sitting inside a second tile, so the three plates stay
+   legible at 30px. */
 .brand-mark {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 34px;
   height: 34px;
   flex: none;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-strong);
-  background-color: #0a0b0d;
-  background-image: var(--noise-horizontal-sweep);
-  background-size: cover;
-  color: var(--foreground);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  letter-spacing: -0.02em;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.16),
-    0 8px 20px -10px rgb(0 0 0 / 0.9);
 }
 
-.brand-mark::after {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: calc(var(--radius-md) + 3px);
-  border: 1px solid rgb(255 255 255 / 0.08);
-  pointer-events: none;
+.brand-mark img {
+  display: block;
+  width: 30px;
+  height: 30px;
 }
 
 .brand-text {
